@@ -13,12 +13,19 @@
     "prepare": "husky install",
     "build": "tsc",
     "dev": "tsx  -r \"dotenv-flow/config\" src/index.ts",
-    "start": "node -r \"dotenv-flow/config\" dist/index.js"
+    "start": "node -r \"dotenv-flow/config\" dist/index.js",
+    "jest": "NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules\" jest",
+    "test": "NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules\" jest"
   },
-  "dependencies": {},
+  "dependencies": {
+    "lodash": "^4.17.21",
+    "zod": "^3.23.8"
+  },
   "devDependencies": {
+    "@jest/globals": "^29.7.0",
     "@tsconfig/node18": "^18.2.4",
     "@types/jest": "^29.5.10",
+    "@types/lodash": "^4.17.6",
     "@types/node": "^20.10.0",
     "@typescript-eslint/eslint-plugin": "^7.16.0",
     "@typescript-eslint/parser": "^7.16.0",
