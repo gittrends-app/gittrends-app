@@ -1,3 +1,5 @@
+import { graphql } from '@octokit/graphql';
+import { graphql as GraphQL } from '@octokit/graphql/types';
 import { retry } from '@octokit/plugin-retry';
 import { throttling } from '@octokit/plugin-throttling';
 import { Octokit as RestOctokit } from '@octokit/rest';
@@ -26,5 +28,18 @@ export function createRestClient(): RestOctokit {
       }
     },
     log: { debug: consola.debug, info: consola.debug, warn: consola.warn, error: consola.error }
+  });
+}
+
+/**
+ *
+ * @returns
+ */
+export function createGraphqlClient(): GraphQL {
+  return graphql.defaults({
+    baseUrl: env.GITHUB_API_BASE_URL,
+    headers: {
+      authorization: `token ${env.GITHUB_API_TOKEN}`
+    }
   });
 }
