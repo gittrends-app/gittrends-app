@@ -1,6 +1,6 @@
 import consola from 'consola';
 import { createRestClient } from '../github/client.js';
-import { watchers } from '../github/repository.js';
+import watchers from '../github/repository/watchers.js';
 
 (async () => {
   consola.info('Getting watchers of octokit/octokit.js...');

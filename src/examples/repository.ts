@@ -1,7 +1,7 @@
 import consola from 'consola';
 import stringify from 'stringify-object';
 import { createRestClient } from '../github/client.js';
-import { get } from '../github/repository.js';
+import get from '../github/repository/get.js';
 
 (async () => {
   const owner = 'octokit';
