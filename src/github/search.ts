@@ -1,10 +1,19 @@
 import { Octokit } from '@octokit/rest';
+import min from 'lodash/min.js';
 import { Repository, repositorySchema } from '../entities/repository.js';
+
+type SearchRepositoriesMetadata = {
+  count: number;
+  minStargazers: number;
+  maxStargazers?: number;
+};
 
 type SearchRepositoriesParams = {
   client: Octokit;
   language?: string;
-  onEachPage?: (data: Repository[], page: number) => void;
+  minStargazers?: number;
+  maxStargazers?: number;
+  onEach?: (data: Repository[], metadata: SearchRepositoriesMetadata) => void;
 };
 
 /**
@@ -19,19 +28,43 @@ export async function searchRepositories(
 ): Promise<Repository[]> {
   const { client, language } = params;
 
-  let page = 1;
-  let count = total;
-  let query = 'stars:>=1';
-  if (language) query += ` language:${language}`;
+  const repos: Repository[] = [];
 
-  return client.paginate(
-    client.search.repos,
-    { q: query, sort: 'stars', order: 'desc', per_page: 100, page },
-    (response, done) => {
-      const repos = response.data.map((data) => repositorySchema.parse(data)).slice(0, count);
-      params.onEachPage?.(repos, page++);
-      if ((count -= repos.length) <= 0) done();
-      return repos;
-    }
-  );
+  let count = 0;
+  let maxStargazers = Math.max(params.maxStargazers || Infinity, 1);
+  const minStargazers = Math.max(params.minStargazers || 1, 1);
+
+  while (count < total) {
+    const page = 1;
+
+    let query = `stars:${minStargazers}..${maxStargazers === Infinity ? '*' : maxStargazers}`;
+    if (language) query += ` language:${language}`;
+
+    const _repos = await client.paginate(
+      client.search.repos,
+      { q: query, sort: 'stars', order: 'desc', per_page: 100, page },
+      (response, done) => {
+        const res = response.data
+          .map((data) => repositorySchema.parse(data))
+          .filter((repo) => repos.every((r) => r.id !== repo.id))
+          .slice(0, total - count);
+
+        if ((count += res.length) === total) done();
+
+        params.onEach?.(res, {
+          count,
+          minStargazers,
+          maxStargazers: maxStargazers === Infinity ? undefined : maxStargazers
+        });
+
+        return res;
+      }
+    );
+
+    _repos.forEach((repo) => repos.push(repo));
+
+    maxStargazers = min(repos.map((repo) => repo.stargazers_count)) || Infinity;
+  }
+
+  return repos;
 }

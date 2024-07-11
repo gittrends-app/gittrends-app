@@ -4,9 +4,12 @@ import { searchRepositories } from '../github/search.js';
 
 (async () => {
   consola.info('Searching for repositories...');
-  const repos = await searchRepositories(50, {
+  const repos = await searchRepositories(1250, {
     client: createRestClient(),
-    onEachPage: (data, page) => consola.info(`Page ${page}: ${data.length} repositories found ...`)
+    onEach: (_, meta) =>
+      consola.info(
+        `${meta.count} repositories found (${meta.minStargazers}..${meta.maxStargazers || '*'}) ...`
+      )
   });
 
   consola.info(`Found ${repos.length} repositories:`);

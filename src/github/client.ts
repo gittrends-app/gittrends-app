@@ -1,9 +1,10 @@
 import { retry } from '@octokit/plugin-retry';
 import { throttling } from '@octokit/plugin-throttling';
 import { Octokit as RestOctokit } from '@octokit/rest';
+import consola from 'consola';
 import env from '../env.js';
 
-const FullOctokit = RestOctokit.plugin(retry).plugin(throttling);
+const FullOctokit = RestOctokit.plugin(throttling).plugin(retry);
 
 /**
  * Create a new GitHub REST API client.
@@ -18,11 +19,12 @@ export function createRestClient(): RestOctokit {
     throttle: {
       enabled: true,
       onRateLimit: (retryAfter, options) => {
-        return options.request.retryCount <= 1;
+        return options.request.retryCount < 3;
       },
       onSecondaryRateLimit: (retryAfter, options) => {
-        options.request.retryCount <= 1;
+        return options.request.retryCount < 3;
       }
-    }
+    },
+    log: { debug: consola.debug, info: consola.debug, warn: consola.warn, error: consola.error }
   });
 }
