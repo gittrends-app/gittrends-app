@@ -15,7 +15,7 @@
     "tsx": "tsx -r \"dotenv-flow/config\"",
     "dev": "tsx  -r \"dotenv-flow/config\" src/index.ts",
     "start": "node -r \"dotenv-flow/config\" dist/index.js",
-    "test": "jest",
+    "test": "jest --no-cache",
     "verify": "run-p lint test build"
   },
   "dependencies": {
