@@ -1,13 +1,11 @@
 import consola from 'consola';
-import { createGraphqlClient } from '../github/client.js';
 import stargazers from '../github/repository/stargazers.js';
 
 (async () => {
   consola.info('Getting stargazers of octokit/rest.js...');
   const iterator = stargazers({
     owner: 'octokit',
-    name: 'rest.js',
-    client: createGraphqlClient()
+    name: 'rest.js'
   });
 
   consola.info('Found stargazers:');

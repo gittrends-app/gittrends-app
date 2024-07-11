@@ -1,11 +1,9 @@
 import consola from 'consola';
-import { createRestClient } from '../github/client.js';
 import { searchRepositories } from '../github/search.js';
 
 (async () => {
   consola.info('Searching for repositories...');
   const repos = await searchRepositories(1250, {
-    client: createRestClient(),
     onEach: (_, meta) =>
       consola.info(
         `${meta.count} repositories found (${meta.minStargazers}..${meta.maxStargazers || '*'}) ...`

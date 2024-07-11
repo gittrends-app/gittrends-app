@@ -1,5 +1,5 @@
-import { Octokit } from '@octokit/rest';
 import { Repository, repositorySchema } from '../../entities/repository.js';
+import { rest } from '../client.js';
 
 /**
  * Get a repository by owner and name.
@@ -8,12 +8,8 @@ import { Repository, repositorySchema } from '../../entities/repository.js';
  * @param name - The name of the repository.
  * @param props - The properties to pass to the function.
  */
-export default async function get(
-  owner: string,
-  name: string,
-  props: { client: Octokit }
-): Promise<Repository | undefined> {
-  return props.client.repos.get({ owner, repo: name }).then((response) => {
+export default async function get(owner: string, name: string): Promise<Repository | undefined> {
+  return rest.repos.get({ owner, repo: name }).then((response) => {
     if (response.status !== 200) return undefined;
     return repositorySchema.parse(response.data);
   });

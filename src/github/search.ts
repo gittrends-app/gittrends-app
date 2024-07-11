@@ -1,6 +1,6 @@
-import { Octokit } from '@octokit/rest';
 import min from 'lodash/min.js';
 import { Repository, repositorySchema } from '../entities/repository.js';
+import { rest } from './client.js';
 
 type SearchRepositoriesMetadata = {
   count: number;
@@ -9,7 +9,6 @@ type SearchRepositoriesMetadata = {
 };
 
 type SearchRepositoriesParams = {
-  client: Octokit;
   language?: string;
   minStargazers?: number;
   maxStargazers?: number;
@@ -26,7 +25,7 @@ export async function searchRepositories(
   total = 1000,
   params: SearchRepositoriesParams
 ): Promise<Repository[]> {
-  const { client, language } = params;
+  const { language } = params;
 
   const repos: Repository[] = [];
 
@@ -40,8 +39,8 @@ export async function searchRepositories(
     let query = `stars:${minStargazers}..${maxStargazers === Infinity ? '*' : maxStargazers}`;
     if (language) query += ` language:${language}`;
 
-    const _repos = await client.paginate(
-      client.search.repos,
+    const _repos = await rest.paginate(
+      rest.search.repos,
       { q: query, sort: 'stars', order: 'desc', per_page: 100, page },
       (response, done) => {
         const res = response.data

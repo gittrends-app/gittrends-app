@@ -1,7 +1,7 @@
 import { Repository, StargazerEdge } from '@octokit/graphql-schema';
-import { graphql } from '@octokit/graphql/types';
 import { PartialDeep } from 'type-fest';
 import { Stargazer, stargazerSchema } from '../../entities/stargazer.js';
+import { graphql } from '../client.js';
 import { ResourceIterator } from './index.js';
 
 /**
@@ -33,7 +33,6 @@ type StargazersMetadata = {
 type StargazersOptions = {
   owner: string;
   name: string;
-  client: graphql;
   endCursor?: string;
 };
 
@@ -52,7 +51,7 @@ export default function stargazers(
     [Symbol.asyncIterator]() {
       return {
         async next() {
-          const { repository } = await options.client<{ repository: Repository }>({
+          const { repository } = await graphql<{ repository: Repository }>({
             query: `
             query stargazers($owner: String!, $repo: String!, $endCursor: String){
               repository(owner: $owner, name: $repo) {

@@ -1,5 +1,5 @@
-import { Octokit } from '@octokit/rest';
 import { User, userSchema } from '../../entities/user.js';
+import { rest } from '../client.js';
 
 /**
  * Get the watchers of a repository by owner and name.
@@ -11,13 +11,13 @@ import { User, userSchema } from '../../entities/user.js';
 export default async function watchers(
   owner: string,
   name: string,
-  props: { client: Octokit; onEach?: (data: User[], metadata: { count: number }) => void }
+  props: { onEach?: (data: User[], metadata: { count: number }) => void }
 ): Promise<User[]> {
-  const { client, onEach } = props;
+  const { onEach } = props;
 
   let count = 0;
-  return client.paginate(
-    client.activity.listWatchersForRepo,
+  return rest.paginate(
+    rest.activity.listWatchersForRepo,
     { owner, repo: name, per_page: 100 },
     (response) => {
       if (response.status !== 200)

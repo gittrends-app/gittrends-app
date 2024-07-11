@@ -1,11 +1,9 @@
 import consola from 'consola';
-import { createRestClient } from '../github/client.js';
 import watchers from '../github/repository/watchers.js';
 
 (async () => {
   consola.info('Getting watchers of octokit/octokit.js...');
   const users = await watchers('octokit', 'octokit.js', {
-    client: createRestClient(),
     onEach: (_, meta) => consola.info(`${meta.count} watchers found...`)
   });
 
