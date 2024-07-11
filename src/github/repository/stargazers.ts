@@ -2,7 +2,7 @@ import { Repository, StargazerEdge } from '@octokit/graphql-schema';
 import { PartialDeep } from 'type-fest';
 import { Stargazer, stargazerSchema } from '../../entities/stargazer.js';
 import { graphql } from '../client.js';
-import { ResourceIterator } from './index.js';
+import { RepositoryParams, ResourceIterator } from './index.js';
 
 /**
  * Transforms the data from the GitHub API into a Stargazer entity.
@@ -30,9 +30,7 @@ type StargazersMetadata = {
   hasNextPage: boolean;
 };
 
-type StargazersOptions = {
-  owner: string;
-  name: string;
+type StargazersParams = RepositoryParams & {
   endCursor?: string;
 };
 
@@ -40,7 +38,7 @@ type StargazersOptions = {
  * Retrieves the stargazers of a repository.
  */
 export default function stargazers(
-  options: StargazersOptions
+  options: StargazersParams
 ): ResourceIterator<Stargazer, StargazersMetadata> {
   const metadata: StargazersMetadata = {
     endCursor: options.endCursor,

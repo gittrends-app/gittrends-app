@@ -8,7 +8,7 @@ type SearchRepositoriesMetadata = {
   maxStargazers?: number;
 };
 
-type SearchRepositoriesParams = {
+type SearchOptions = {
   language?: string;
   minStargazers?: number;
   maxStargazers?: number;
@@ -19,19 +19,16 @@ type SearchRepositoriesParams = {
  * Search for repositories on GitHub.
  *
  * @param total - The total number of repositories to return.
- * @param params - The search parameters.
+ * @param opts - The search parameters.
  */
-export async function searchRepositories(
-  total = 1000,
-  params: SearchRepositoriesParams
-): Promise<Repository[]> {
-  const { language } = params;
+export async function searchRepositories(total = 1000, opts: SearchOptions): Promise<Repository[]> {
+  const { language } = opts;
 
   const repos: Repository[] = [];
 
   let count = 0;
-  let maxStargazers = Math.max(params.maxStargazers || Infinity, 1);
-  const minStargazers = Math.max(params.minStargazers || 1, 1);
+  let maxStargazers = Math.max(opts.maxStargazers || Infinity, 1);
+  const minStargazers = Math.max(opts.minStargazers || 1, 1);
 
   while (count < total) {
     const page = 1;
@@ -50,7 +47,7 @@ export async function searchRepositories(
 
         if ((count += res.length) === total) done();
 
-        params.onEach?.(res, {
+        opts.onEach?.(res, {
           count,
           minStargazers,
           maxStargazers: maxStargazers === Infinity ? undefined : maxStargazers

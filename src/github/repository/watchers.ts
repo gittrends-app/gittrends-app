@@ -1,5 +1,6 @@
 import { User, userSchema } from '../../entities/user.js';
 import { rest } from '../client.js';
+import { RepositoryParams } from './index.js';
 
 /**
  * Get the watchers of a repository by owner and name.
@@ -9,11 +10,9 @@ import { rest } from '../client.js';
  * @param props - The properties to pass to the function.
  */
 export default async function watchers(
-  owner: string,
-  name: string,
-  props: { onEach?: (data: User[], metadata: { count: number }) => void }
+  options: RepositoryParams & { onEach?: (data: User[], metadata: { count: number }) => void }
 ): Promise<User[]> {
-  const { onEach } = props;
+  const { owner, name, onEach } = options;
 
   let count = 0;
   return rest.paginate(

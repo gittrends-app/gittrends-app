@@ -6,7 +6,7 @@ import get from '../github/repository/get.js';
   const owner = 'octokit';
   const name = 'rest.js';
 
-  const repo = await get(owner, name);
+  const repo = await get({ owner, name });
 
   if (!repo) {
     consola.error(`Repository ${owner}/${name} not found.`);

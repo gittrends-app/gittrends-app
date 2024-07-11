@@ -3,7 +3,9 @@ import watchers from '../github/repository/watchers.js';
 
 (async () => {
   consola.info('Getting watchers of octokit/octokit.js...');
-  const users = await watchers('octokit', 'octokit.js', {
+  const users = await watchers({
+    owner: 'octokit',
+    name: 'octokit.js',
     onEach: (_, meta) => consola.info(`${meta.count} watchers found...`)
   });
 
