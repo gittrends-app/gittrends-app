@@ -10,14 +10,20 @@
   },
   "scripts": {
     "lint": "eslint src --ext .ts",
-    "prepare": "husky install",
+    "prepare": "husky",
     "build": "tsc",
+    "tsx": "tsx -r \"dotenv-flow/config\"",
     "dev": "tsx  -r \"dotenv-flow/config\" src/index.ts",
     "start": "node -r \"dotenv-flow/config\" dist/index.js",
-    "jest": "NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules\" jest",
-    "test": "NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules\" jest"
+    "test": "jest",
+    "verify": "run-p lint test build"
   },
   "dependencies": {
+    "@octokit/plugin-retry": "^7.1.1",
+    "@octokit/plugin-throttling": "^9.3.0",
+    "@octokit/rest": "^21.0.0",
+    "@octokit/types": "^13.5.0",
+    "consola": "^3.2.3",
     "lodash": "^4.17.21",
     "zod": "^3.23.8"
   },
@@ -37,6 +43,7 @@
     "eslint-config-prettier": "^9.1.0",
     "husky": "^9.0.11",
     "jest": "^29.7.0",
+    "npm-run-all": "^4.1.5",
     "prettier": "^3.1.0",
     "prettier-plugin-organize-imports": "^4.0.0",
     "ts-jest": "^29.2.0",

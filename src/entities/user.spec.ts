@@ -24,10 +24,10 @@ describe('User entity', () => {
     expect(result).not.toHaveProperty('bio');
   });
 
-  it('should add __typename and __updated_at to user', () => {
+  it('should add __typename and __obtained_at to user', () => {
     const result = userSchema.parse(baseFields);
     expect(result).toHaveProperty('__typename', 'User');
-    expect(result).toHaveProperty('__updated_at', expect.any(Date));
+    expect(result).toHaveProperty('__obtained_at', expect.any(Date));
   });
 
   it('should parse organizations from search', () => {
@@ -87,7 +87,7 @@ describe('User entity', () => {
       type: 'User',
       site_admin: false,
       __typename: 'User',
-      __updated_at: expect.any(Date)
+      __obtained_at: expect.any(Date)
     });
   });
 
@@ -148,7 +148,7 @@ describe('User entity', () => {
       created_at: new Date('2012-11-29T05:47:03Z'),
       updated_at: new Date('2022-11-27T13:00:41Z'),
       __typename: 'User',
-      __updated_at: expect.any(Date)
+      __obtained_at: expect.any(Date)
     });
   });
 });

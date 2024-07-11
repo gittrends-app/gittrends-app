@@ -46,14 +46,19 @@ describe('Repository entity', () => {
   });
 
   it('should remove null fields', () => {
-    const result = repositorySchema.parse({ ...baseFields, bio: null });
+    const result = repositorySchema.parse({ ...baseFields, description: null });
     expect(result).not.toHaveProperty('bio');
   });
 
-  it('should add __typename and __updated_at to user', () => {
+  it('should remove empty strings', () => {
+    const result = repositorySchema.parse({ ...baseFields, homepage: '' });
+    expect(result).not.toHaveProperty('homepage');
+  });
+
+  it('should add __typename and __obtained_at to user', () => {
     const result = repositorySchema.parse(baseFields);
     expect(result).toHaveProperty('__typename', 'Repository');
-    expect(result).toHaveProperty('__updated_at', expect.any(Date));
+    expect(result).toHaveProperty('__obtained_at', expect.any(Date));
   });
 
   it('should parse repository from search', () => {
@@ -252,7 +257,7 @@ describe('Repository entity', () => {
       watchers: 393343,
       default_branch: 'main',
       __typename: 'Repository',
-      __updated_at: expect.any(Date)
+      __obtained_at: expect.any(Date)
     });
   });
 
@@ -440,7 +445,7 @@ describe('Repository entity', () => {
       network_count: 78548,
       subscribers_count: 6748,
       __typename: 'Repository',
-      __updated_at: expect.any(Date)
+      __obtained_at: expect.any(Date)
     });
   });
 });
