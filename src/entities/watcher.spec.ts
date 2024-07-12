@@ -1,9 +1,8 @@
 import { describe, expect, it } from '@jest/globals';
-import { stargazerSchema } from './stargazer.js';
+import { watcherSchema } from './watcher.js';
 
-describe('Stargazer entity', () => {
+describe('Watcher entity', () => {
   const sample = {
-    starred_at: '2014-06-10T17:13:03Z',
     user: {
       login: 'danielbruns',
       id: 1478925,
@@ -28,15 +27,15 @@ describe('Stargazer entity', () => {
   };
 
   it('should validate required fields', () => {
-    expect(() => stargazerSchema.parse(sample)).not.toThrowError();
+    expect(() => watcherSchema.parse(sample)).not.toThrowError();
     for (const key of Object.keys(sample)) {
-      expect(() => stargazerSchema.parse({ ...sample, [key]: undefined })).toThrowError();
+      expect(() => watcherSchema.parse({ ...sample, [key]: undefined })).toThrowError();
     }
   });
 
   it('should add __typename and __obtained_at to user', () => {
-    const result = stargazerSchema.parse(sample);
-    expect(result).toHaveProperty('__typename', 'Stargazer');
+    const result = watcherSchema.parse(sample);
+    expect(result).toHaveProperty('__typename', 'Watcher');
     expect(result).toHaveProperty('__obtained_at', expect.any(Date));
   });
 });

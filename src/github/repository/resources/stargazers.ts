@@ -39,6 +39,7 @@ type StargazerEdge = {
 
 type StargazersQuery = {
   repository: {
+    databaseId: number;
     stargazers: {
       pageInfo: {
         endCursor: string;
@@ -66,8 +67,9 @@ export default function stargazers(options: ResourcesParams): IterableResource<S
         const { repository } = await graphql<StargazersQuery>({
           query: `
             query stargazers($id: ID!, $endCursor: String) {
-              node(id: $id) {
+              repository: node(id: $id) {
                 ... on Repository {
+                  databaseId
                   stargazers (first: 100, orderBy:  { field: STARRED_AT, direction: ASC }, after: $endCursor) {
                     pageInfo {
                       endCursor
@@ -96,7 +98,7 @@ export default function stargazers(options: ResourcesParams): IterableResource<S
 
         const stars = (repository.stargazers.edges || [])
           .map((edge) => edge && transform(edge))
-          .map((data) => stargazerSchema.parse(data));
+          .map((data) => stargazerSchema.parse({ ...data, __repository: repository.databaseId }));
 
         metadata.endCursor = repository.stargazers.pageInfo.endCursor || undefined;
         metadata.hasNextPage = repository.stargazers.pageInfo.hasNextPage || false;

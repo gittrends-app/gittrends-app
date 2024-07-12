@@ -1,7 +1,8 @@
 import { GetResponseDataTypeFromEndpointMethod, OctokitResponse } from '@octokit/types';
 import { ZodSchema } from 'zod';
 import { Tag, tagSchema } from '../../../entities/tag.js';
-import { User, userSchema } from '../../../entities/user.js';
+import { userSchema } from '../../../entities/user.js';
+import { Watcher, watcherSchema } from '../../../entities/watcher.js';
 import { rest } from '../../client.js';
 import stargazers from './stargazers.js';
 
@@ -18,7 +19,7 @@ export type IterableResource<T> = AsyncIterable<{
 type Endpoints = {
   'GET /repositories/:repo/subscribers': {
     response: GetResponseDataTypeFromEndpointMethod<typeof rest.activity.listWatchersForRepo>;
-    result: User;
+    result: Watcher;
   };
   'GET /repositories/:repo/tags': {
     response: GetResponseDataTypeFromEndpointMethod<typeof rest.repos.listTags>;
@@ -55,7 +56,9 @@ function resourceIterator<R extends keyof Endpoints>(
         );
 
         yield {
-          data: response.data.map((data: Record<string, any>) => resource.schema.parse(data)),
+          data: response.data.map((data: Record<string, any>) =>
+            resource.schema.parse({ ...data, __repository: repo })
+          ),
           metadata: { repo, page: currentPage++ }
         };
 
@@ -70,7 +73,12 @@ function resourceIterator<R extends keyof Endpoints>(
  */
 export function watchers(options: Parameters<typeof resourceIterator>[1]) {
   return resourceIterator(
-    { url: 'GET /repositories/:repo/subscribers', schema: userSchema },
+    {
+      url: 'GET /repositories/:repo/subscribers',
+      schema: userSchema.transform((v) =>
+        watcherSchema.parse({ user: v, __repository: options.repo })
+      )
+    },
     options
   );
 }

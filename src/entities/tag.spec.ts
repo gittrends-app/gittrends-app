@@ -8,7 +8,8 @@ describe('Tag entity', () => {
       sha: '11902a838028edef305dfe2f96be929bc4d114d8',
       url: 'https://api.github.com/repos/kubernetes/kubernetes/commits/11902a838028edef305dfe2f96be929bc4d114d8'
     },
-    node_id: 'MDM6UmVmMjA1ODA0OTg6cmVmcy90YWdzL3YxLjI2LjY='
+    node_id: 'MDM6UmVmMjA1ODA0OTg6cmVmcy90YWdzL3YxLjI2LjY=',
+    __repository: 20580498
   };
 
   it('should validate required fields', () => {
@@ -34,14 +35,16 @@ describe('Tag entity', () => {
           sha: '11902a838028edef305dfe2f96be929bc4d114d8',
           url: 'https://api.github.com/repos/kubernetes/kubernetes/commits/11902a838028edef305dfe2f96be929bc4d114d8'
         },
-        node_id: 'MDM6UmVmMjA1ODA0OTg6cmVmcy90YWdzL3YxLjI2LjY='
+        node_id: 'MDM6UmVmMjA1ODA0OTg6cmVmcy90YWdzL3YxLjI2LjY=',
+        __repository: 20580498
       })
     ).toEqual({
       name: 'v1.26.6',
       commit: '11902a838028edef305dfe2f96be929bc4d114d8',
       node_id: 'MDM6UmVmMjA1ODA0OTg6cmVmcy90YWdzL3YxLjI2LjY=',
       __typename: 'Tag',
-      __obtained_at: expect.any(Date)
+      __obtained_at: expect.any(Date),
+      __repository: 20580498
     });
   });
 });

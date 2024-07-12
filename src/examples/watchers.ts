@@ -16,7 +16,7 @@ import { watchers } from '../github/repository/resources/index.js';
   for await (const { data, metadata } of iterator) {
     consola.info(`Metadata: ${stringifyObject(metadata)}`);
     for (const watcher of data) {
-      consola.info(`${index++}. ${watcher.login} (id: ${watcher.id})`);
+      consola.info(`${index++}. ${watcher.user.login} (id: ${watcher.user.id})`);
     }
   }
 

@@ -85,4 +85,9 @@ export const repositorySchema = z.preprocess(
   })
 );
 
+export const repositoryResourceSchema = z.object({
+  __repository: z.union([z.number(), repositorySchema.transform((v) => v.id)])
+});
+
 export type Repository = z.infer<typeof repositorySchema>;
+export type RepositoryResource = z.infer<typeof repositoryResourceSchema>;
