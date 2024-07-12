@@ -1,6 +1,6 @@
 import { PartialDeep } from 'type-fest';
 import { Stargazer, stargazerSchema } from '../../../entities/stargazer.js';
-import { graphql } from '../../client.js';
+import { clients } from '../../clients.js';
 import { IterableResource, ResourcesParams } from './index.js';
 
 /**
@@ -64,7 +64,7 @@ export default function stargazers(options: ResourcesParams): IterableResource<S
       };
 
       do {
-        const { repository } = await graphql<StargazersQuery>({
+        const { repository } = await clients.graphql<StargazersQuery>({
           query: `
             query stargazers($id: ID!, $endCursor: String) {
               repository: node(id: $id) {

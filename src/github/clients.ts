@@ -1,4 +1,5 @@
 import { graphql as graphqlClient } from '@octokit/graphql';
+import { graphql } from '@octokit/graphql/types';
 import { retry } from '@octokit/plugin-retry';
 import { throttling } from '@octokit/plugin-throttling';
 import { Octokit } from '@octokit/rest';
@@ -8,7 +9,7 @@ import env from '../env.js';
 const FullOctokit = Octokit.plugin(throttling).plugin(retry);
 
 // The restClient is an instance of the Octokit class with the throttling and retry plugins enabled.
-export const rest: Octokit = new FullOctokit({
+const rest = new FullOctokit({
   baseUrl: env.GITHUB_API_BASE_URL,
   auth: env.GITHUB_API_TOKEN,
   retry: { enabled: true },
@@ -25,9 +26,11 @@ export const rest: Octokit = new FullOctokit({
 });
 
 // The graphqlClient is an instance of the graphql function with the default options.
-export const graphql = graphqlClient.defaults({
+const graphql = graphqlClient.defaults({
   baseUrl: env.GITHUB_API_BASE_URL,
   headers: {
     authorization: `token ${env.GITHUB_API_TOKEN}`
   }
 });
+
+export const clients: { rest: Octokit; graphql: graphql } = { rest, graphql };

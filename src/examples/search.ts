@@ -1,9 +1,9 @@
 import consola from 'consola';
-import { searchRepositories } from '../github/search.js';
+import { github } from '../github/index.js';
 
 (async () => {
   consola.info('Searching for repositories...');
-  const repos = await searchRepositories(1250, {
+  const repos = await github.search.repos(1250, {
     onEach: (_, meta) =>
       consola.info(
         `${meta.count} repositories found (${meta.minStargazers}..${meta.maxStargazers || '*'}) ...`

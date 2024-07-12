@@ -1,6 +1,6 @@
 import min from 'lodash/min.js';
 import { Repository, repositorySchema } from '../entities/repository.js';
-import { rest } from './client.js';
+import { clients } from './clients.js';
 
 type SearchRepositoriesMetadata = {
   count: number;
@@ -21,7 +21,7 @@ type SearchOptions = {
  * @param total - The total number of repositories to return.
  * @param opts - The search parameters.
  */
-export async function searchRepositories(total = 1000, opts: SearchOptions): Promise<Repository[]> {
+async function repos(total = 1000, opts: SearchOptions): Promise<Repository[]> {
   const { language } = opts;
 
   const repos: Repository[] = [];
@@ -36,8 +36,8 @@ export async function searchRepositories(total = 1000, opts: SearchOptions): Pro
     let query = `stars:${minStargazers}..${maxStargazers === Infinity ? '*' : maxStargazers}`;
     if (language) query += ` language:${language}`;
 
-    const _repos = await rest.paginate(
-      rest.search.repos,
+    const _repos = await clients.rest.paginate(
+      clients.rest.search.repos,
       { q: query, sort: 'stars', order: 'desc', per_page: 100, page },
       (response, done) => {
         const res = response.data
@@ -64,3 +64,5 @@ export async function searchRepositories(total = 1000, opts: SearchOptions): Pro
 
   return repos;
 }
+
+export default { repos };

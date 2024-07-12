@@ -4,7 +4,7 @@ import { Release, releaseSchema } from '../../../entities/release.js';
 import { Tag, tagSchema } from '../../../entities/tag.js';
 import { userSchema } from '../../../entities/user.js';
 import { Watcher, watcherSchema } from '../../../entities/watcher.js';
-import { rest } from '../../client.js';
+import { clients } from '../../clients.js';
 import stargazers from './stargazers.js';
 
 export type ResourcesParams = {
@@ -19,15 +19,17 @@ export type IterableResource<T> = AsyncIterable<{
 
 type Endpoints = {
   'GET /repositories/:repo/subscribers': {
-    response: GetResponseDataTypeFromEndpointMethod<typeof rest.activity.listWatchersForRepo>;
+    response: GetResponseDataTypeFromEndpointMethod<
+      typeof clients.rest.activity.listWatchersForRepo
+    >;
     result: Watcher;
   };
   'GET /repositories/:repo/tags': {
-    response: GetResponseDataTypeFromEndpointMethod<typeof rest.repos.listTags>;
+    response: GetResponseDataTypeFromEndpointMethod<typeof clients.rest.repos.listTags>;
     result: Tag;
   };
   'GET /repositories/:repo/releases': {
-    response: GetResponseDataTypeFromEndpointMethod<typeof rest.repos.listReleases>;
+    response: GetResponseDataTypeFromEndpointMethod<typeof clients.rest.repos.listReleases>;
     result: Release;
   };
 };
@@ -51,14 +53,12 @@ function resourceIterator<R extends keyof Endpoints>(
       let currentPage = Math.max(Number(page) || 1, 1);
 
       do {
-        const response: OctokitResponse<Endpoints[R]['response']> = await rest.request<string>(
-          resource.url,
-          {
+        const response: OctokitResponse<Endpoints[R]['response']> =
+          await clients.rest.request<string>(resource.url, {
             repo,
             per_page: 100,
             page: currentPage
-          }
-        );
+          });
 
         yield {
           data: response.data.map((data: Record<string, any>) =>
@@ -76,7 +76,7 @@ function resourceIterator<R extends keyof Endpoints>(
 /**
  * Get the tags of a repository by its id
  */
-export function watchers(options: Parameters<typeof resourceIterator>[1]) {
+function watchers(options: Parameters<typeof resourceIterator>[1]) {
   return resourceIterator(
     {
       url: 'GET /repositories/:repo/subscribers',
@@ -91,14 +91,14 @@ export function watchers(options: Parameters<typeof resourceIterator>[1]) {
 /**
  * Get the tags of a repository by its id
  */
-export function tags(options: Parameters<typeof resourceIterator>[1]) {
+function tags(options: Parameters<typeof resourceIterator>[1]) {
   return resourceIterator({ url: 'GET /repositories/:repo/tags', schema: tagSchema }, options);
 }
 
 /**
  * Get the releases of a repository by its id
  */
-export function releases(options: Parameters<typeof resourceIterator>[1]) {
+function releases(options: Parameters<typeof resourceIterator>[1]) {
   return resourceIterator(
     { url: 'GET /repositories/:repo/releases', schema: releaseSchema },
     options
@@ -106,7 +106,7 @@ export function releases(options: Parameters<typeof resourceIterator>[1]) {
 }
 
 // Export all functions
-export default { watchers, tags, stargazers, releases } satisfies Record<
+export const resources = { watchers, tags, stargazers, releases } satisfies Record<
   string,
   (options: Parameters<typeof resourceIterator>[1]) => IterableResource<any>
 >;

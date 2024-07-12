@@ -1,7 +1,7 @@
 import consola from 'consola';
 import stringifyObject from 'stringify-object';
+import { github } from '../github/index.js';
 import get from '../github/repository/get.js';
-import { watchers } from '../github/repository/resources/index.js';
 
 (async () => {
   consola.info('Getting tags of octokit/rest.js...');
@@ -9,7 +9,7 @@ import { watchers } from '../github/repository/resources/index.js';
   if (!repo) throw new Error('Repository octokit/rest.js not found.');
 
   consola.info('Getting watchers of octokit/rest.js...');
-  const iterator = watchers({ repo: repo.id });
+  const iterator = github.repos.watchers({ repo: repo.id });
 
   consola.info('Found watchers:');
   let index = 1;

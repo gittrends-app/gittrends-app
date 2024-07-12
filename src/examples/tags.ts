@@ -1,14 +1,13 @@
 import consola from 'consola';
 import stringifyObject from 'stringify-object';
-import get from '../github/repository/get.js';
-import { tags } from '../github/repository/resources/index.js';
+import { github } from '../github/index.js';
 
 (async () => {
   consola.info('Getting tags of octokit/rest.js...');
-  const repo = await get({ owner: 'octokit', name: 'rest.js' });
+  const repo = await github.repos.get({ owner: 'octokit', name: 'rest.js' });
   if (!repo) throw new Error('Repository octokit/rest.js not found.');
 
-  const iterator = tags({ repo: repo.id });
+  const iterator = github.repos.tags({ repo: repo.id });
 
   consola.info('Found tags:');
   let index = 1;
