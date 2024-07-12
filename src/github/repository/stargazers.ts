@@ -1,4 +1,3 @@
-import { Repository, StargazerEdge } from '@octokit/graphql-schema';
 import { PartialDeep } from 'type-fest';
 import { Stargazer, stargazerSchema } from '../../entities/stargazer.js';
 import { graphql } from '../client.js';
@@ -12,7 +11,7 @@ import { RepositoryParams, ResourceIterator } from './index.js';
  */
 function transform(edge: StargazerEdge): PartialDeep<Stargazer> {
   return {
-    starred_at: edge.starredAt,
+    starred_at: edge.starredAt as any,
     user: {
       id: edge.node.databaseId?.valueOf(),
       login: edge.node.login,
@@ -34,6 +33,31 @@ type StargazersParams = RepositoryParams & {
   endCursor?: string;
 };
 
+type StargazerEdge = {
+  starredAt: string;
+  node: {
+    id: string;
+    login: string;
+    databaseId: number;
+    avatarUrl: string;
+    url: string;
+    __typename: string;
+    isSiteAdmin: boolean;
+  };
+};
+
+type StargazersQuery = {
+  repository: {
+    stargazers: {
+      pageInfo: {
+        endCursor: string;
+        hasNextPage: boolean;
+      };
+      edges: StargazerEdge[];
+    };
+  };
+};
+
 /**
  * Retrieves the stargazers of a repository.
  */
@@ -49,7 +73,7 @@ export default function stargazers(
     [Symbol.asyncIterator]() {
       return {
         async next() {
-          const { repository } = await graphql<{ repository: Repository }>({
+          const { repository } = await graphql<StargazersQuery>({
             query: `
             query stargazers($owner: String!, $repo: String!, $endCursor: String){
               repository(owner: $owner, name: $repo) {
