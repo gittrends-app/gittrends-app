@@ -1,7 +1,7 @@
 import { PartialDeep } from 'type-fest';
 import { Stargazer, stargazerSchema } from '../../entities/stargazer.js';
 import { graphql } from '../client.js';
-import { RepositoryParams, ResourceIterator } from './index.js';
+import { IterableResource, RepositoryParams } from './index.js';
 
 /**
  * Transforms the data from the GitHub API into a Stargazer entity.
@@ -63,18 +63,19 @@ type StargazersQuery = {
  */
 export default function stargazers(
   options: StargazersParams
-): ResourceIterator<Stargazer, StargazersMetadata> {
-  const metadata: StargazersMetadata = {
-    endCursor: options.endCursor,
-    hasNextPage: true
-  };
+): IterableResource<Stargazer, StargazersMetadata> {
+  const { owner, name, endCursor } = options;
 
   return {
-    [Symbol.asyncIterator]() {
-      return {
-        async next() {
-          const { repository } = await graphql<StargazersQuery>({
-            query: `
+    [Symbol.asyncIterator]: async function* () {
+      const metadata: StargazersMetadata = {
+        endCursor: endCursor,
+        hasNextPage: true
+      };
+
+      do {
+        const { repository } = await graphql<StargazersQuery>({
+          query: `
             query stargazers($owner: String!, $repo: String!, $endCursor: String){
               repository(owner: $owner, name: $repo) {
                   stargazers (first: 100, orderBy:  { field: STARRED_AT, direction: ASC }, after: $endCursor) {
@@ -98,32 +99,23 @@ export default function stargazers(
                 }
             }
             `,
-            owner: options.owner,
-            repo: options.name,
-            endCursor: metadata.endCursor
-          });
+          owner: owner,
+          repo: name,
+          endCursor: metadata.endCursor
+        });
 
-          const stars = (repository.stargazers.edges || [])
-            .map((edge) => edge && transform(edge))
-            .map((data) => stargazerSchema.parse(data));
+        const stars = (repository.stargazers.edges || [])
+          .map((edge) => edge && transform(edge))
+          .map((data) => stargazerSchema.parse(data));
 
-          metadata.endCursor = repository.stargazers.pageInfo.endCursor || undefined;
-          metadata.hasNextPage = repository.stargazers.pageInfo.hasNextPage || false;
+        metadata.endCursor = repository.stargazers.pageInfo.endCursor || undefined;
+        metadata.hasNextPage = repository.stargazers.pageInfo.hasNextPage || false;
 
-          return {
-            done: stars.length === 0,
-            value: {
-              data: stars,
-              info: {
-                owner: options.owner,
-                name: options.name,
-                resource: 'stargazers',
-                ...metadata
-              }
-            }
-          };
-        }
-      };
+        yield {
+          data: stars,
+          metadata: { owner, name, resource: 'stargazers', ...metadata }
+        };
+      } while (metadata.hasNextPage);
     }
   };
 }

@@ -1,6 +1,6 @@
 import { User, userSchema } from '../../entities/user.js';
 import { rest } from '../client.js';
-import { RepositoryParams } from './index.js';
+import { IterableResource, RepositoryParams } from './index.js';
 
 /**
  * Get the watchers of a repository by owner and name.
@@ -9,22 +9,30 @@ import { RepositoryParams } from './index.js';
  * @param name - The name of the repository.
  * @param props - The properties to pass to the function.
  */
-export default async function watchers(
-  options: RepositoryParams & { onEach?: (data: User[], metadata: { count: number }) => void }
-): Promise<User[]> {
-  const { owner, name, onEach } = options;
+export default function watchers(
+  options: RepositoryParams & { page?: number }
+): IterableResource<User, { page?: number }> {
+  const { owner, name, page } = options;
 
-  let count = 0;
-  return rest.paginate(
-    rest.activity.listWatchersForRepo,
-    { owner, repo: name, per_page: 100 },
-    (response) => {
-      if (response.status !== 200)
-        throw new Error(`Failed to get watchers for ${owner}/${name} (status: ${response.status})`);
-      count += response.data.length;
-      const watchers = response.data.map((user) => userSchema.parse(user));
-      onEach?.(watchers, { count });
-      return watchers;
+  return {
+    [Symbol.asyncIterator]: async function* () {
+      let currentPage = Math.max(page || 1, 1);
+
+      do {
+        const response = await rest.activity.listWatchersForRepo({
+          owner,
+          repo: name,
+          per_page: 100,
+          page: currentPage
+        });
+
+        yield {
+          data: response.data.map((user) => userSchema.parse(user)),
+          metadata: { owner, name, resource: 'watchers', page: currentPage++ }
+        };
+
+        if (response.data.length < 100) break;
+      } while (true);
     }
-  );
+  };
 }

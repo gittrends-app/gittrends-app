@@ -2,16 +2,18 @@ import consola from 'consola';
 import watchers from '../github/repository/watchers.js';
 
 (async () => {
-  consola.info('Getting watchers of octokit/octokit.js...');
-  const users = await watchers({
+  consola.info('Getting watchers of octokit/rest.js...');
+  const iterator = watchers({
     owner: 'octokit',
-    name: 'octokit.js',
-    onEach: (_, meta) => consola.info(`${meta.count} watchers found...`)
+    name: 'octokit.js'
   });
 
   consola.info('Found watchers:');
-  for await (const [index, user] of users.entries()) {
-    consola.info(`${index + 1}. ${user.login} (id: ${user.id})`);
+  let index = 1;
+  for await (const { data } of iterator) {
+    for (const watcher of data) {
+      consola.info(`${index++}. ${watcher.login} (id: ${watcher.id})`);
+    }
   }
 
   consola.success('Watchers retrieved.');

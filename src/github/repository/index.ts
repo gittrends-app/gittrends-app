@@ -6,9 +6,9 @@ export type RepositoryParams = {
   name: string;
 };
 
-export type ResourceIterator<T, K = Record<string, any>> = AsyncIterable<{
+export type IterableResource<T, K = Record<string, any>> = AsyncIterable<{
   data: T[];
-  info: RepositoryParams & { resource: string } & K;
+  metadata: RepositoryParams & { resource: string } & K;
 }>;
 
 export default { get, watchers };
