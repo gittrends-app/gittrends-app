@@ -7,7 +7,7 @@ export const tagSchema = z
     commit: z.object({ sha: z.string() }).transform((commit) => commit.sha),
     node_id: z.string(),
     __typename: z.literal('Tag').default('Tag'),
-    __obtained_at: z.date().default(new Date())
+    __obtained_at: z.date().default(() => new Date())
   })
   .merge(repositoryResourceSchema);
 

@@ -7,7 +7,7 @@ export const stargazerSchema = z
     starred_at: z.coerce.date(),
     user: userSchema,
     __typename: z.literal('Stargazer').default('Stargazer'),
-    __obtained_at: z.date().default(new Date())
+    __obtained_at: z.date().default(() => new Date())
   })
   .merge(repositoryResourceSchema);
 

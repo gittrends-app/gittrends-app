@@ -31,7 +31,7 @@ export const userSchema = z.preprocess(
     disk_usage: z.number().int().optional(),
     collaborators: z.number().int().optional(),
     __typename: z.literal('User').default('User'),
-    __obtained_at: z.date().default(new Date())
+    __obtained_at: z.date().default(() => new Date())
   })
 );
 

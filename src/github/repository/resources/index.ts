@@ -1,5 +1,6 @@
 import { GetResponseDataTypeFromEndpointMethod, OctokitResponse } from '@octokit/types';
 import { ZodSchema } from 'zod';
+import { Release, releaseSchema } from '../../../entities/release.js';
 import { Tag, tagSchema } from '../../../entities/tag.js';
 import { userSchema } from '../../../entities/user.js';
 import { Watcher, watcherSchema } from '../../../entities/watcher.js';
@@ -24,6 +25,10 @@ type Endpoints = {
   'GET /repositories/:repo/tags': {
     response: GetResponseDataTypeFromEndpointMethod<typeof rest.repos.listTags>;
     result: Tag;
+  };
+  'GET /repositories/:repo/releases': {
+    response: GetResponseDataTypeFromEndpointMethod<typeof rest.repos.listReleases>;
+    result: Release;
   };
 };
 
@@ -90,8 +95,18 @@ export function tags(options: Parameters<typeof resourceIterator>[1]) {
   return resourceIterator({ url: 'GET /repositories/:repo/tags', schema: tagSchema }, options);
 }
 
+/**
+ * Get the releases of a repository by its id
+ */
+export function releases(options: Parameters<typeof resourceIterator>[1]) {
+  return resourceIterator(
+    { url: 'GET /repositories/:repo/releases', schema: releaseSchema },
+    options
+  );
+}
+
 // Export all functions
-export default { watchers, tags, stargazers } satisfies Record<
+export default { watchers, tags, stargazers, releases } satisfies Record<
   string,
   (options: Parameters<typeof resourceIterator>[1]) => IterableResource<any>
 >;

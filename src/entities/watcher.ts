@@ -6,7 +6,7 @@ export const watcherSchema = z
   .object({
     user: userSchema,
     __typename: z.literal('Watcher').default('Watcher'),
-    __obtained_at: z.date().default(new Date())
+    __obtained_at: z.date().default(() => new Date())
   })
   .merge(repositoryResourceSchema);
 

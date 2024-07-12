@@ -81,7 +81,7 @@ export const repositorySchema = z.preprocess(
       })
       .optional(),
     __typename: z.literal('Repository').default('Repository'),
-    __obtained_at: z.date().default(new Date())
+    __obtained_at: z.date().default(() => new Date())
   })
 );
 
