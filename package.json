@@ -15,8 +15,8 @@
     "tsx": "tsx -r \"dotenv-flow/config\"",
     "dev": "tsx  -r \"dotenv-flow/config\" src/index.ts",
     "start": "node -r \"dotenv-flow/config\" dist/index.js",
-    "test": "jest --no-cache",
-    "verify": "run-p lint test build"
+    "test": "jest --collect-coverage",
+    "verify": "run-s lint build test"
   },
   "dependencies": {
     "@octokit/graphql": "^8.1.1",
