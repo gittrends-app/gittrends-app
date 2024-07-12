@@ -102,4 +102,8 @@ describe('Asset entity', () => {
         'https://github.com/kubernetes/kubernetes/releases/download/v1.26.5/kubernetes.tar.gz'
     });
   });
+
+  it('should allow uploader to be a number', () => {
+    expect(() => assetSchema.parse({ ...baseFields, uploader: 33505452 })).not.toThrowError();
+  });
 });

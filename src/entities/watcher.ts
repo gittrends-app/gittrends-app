@@ -4,7 +4,7 @@ import { userSchema } from './user.js';
 
 export const watcherSchema = z
   .object({
-    user: userSchema,
+    user: z.union([userSchema, z.number()]),
     __typename: z.literal('Watcher').default('Watcher'),
     __obtained_at: z.date().default(() => new Date())
   })

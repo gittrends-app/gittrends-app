@@ -14,7 +14,7 @@ export const assetSchema = z.object({
   download_count: z.number().int(),
   created_at: z.coerce.date(),
   updated_at: z.coerce.date(),
-  uploader: userSchema.optional()
+  uploader: z.union([userSchema, z.number()]).optional()
 });
 
 export type Asset = z.infer<typeof assetSchema>;

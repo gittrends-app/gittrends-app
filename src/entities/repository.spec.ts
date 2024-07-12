@@ -448,4 +448,9 @@ describe('Repository entity', () => {
       __obtained_at: expect.any(Date)
     });
   });
+
+  it('should allow owner and organization to be a id', () => {
+    expect(() => repositorySchema.parse({ ...baseFields, user: 1 })).not.toThrowError();
+    expect(() => repositorySchema.parse({ ...baseFields, organization: 1 })).not.toThrowError();
+  });
 });

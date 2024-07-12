@@ -38,4 +38,8 @@ describe('Watcher entity', () => {
     expect(result).toHaveProperty('__typename', 'Watcher');
     expect(result).toHaveProperty('__obtained_at', expect.any(Date));
   });
+
+  it('should allow user to be a id', () => {
+    expect(() => watcherSchema.parse({ ...sample, user: 1 })).not.toThrowError();
+  });
 });

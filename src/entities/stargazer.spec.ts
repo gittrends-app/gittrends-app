@@ -39,4 +39,8 @@ describe('Stargazer entity', () => {
     expect(result).toHaveProperty('__typename', 'Stargazer');
     expect(result).toHaveProperty('__obtained_at', expect.any(Date));
   });
+
+  it('should allow user to be a id', () => {
+    expect(() => stargazerSchema.parse({ ...sample, user: 1 })).not.toThrowError();
+  });
 });

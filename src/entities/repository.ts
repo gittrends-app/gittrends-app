@@ -9,7 +9,7 @@ export const repositorySchema = z.preprocess(
     node_id: z.string(),
     name: z.string(),
     full_name: z.string(),
-    owner: userSchema,
+    owner: z.union([userSchema, z.number()]),
     private: z.boolean(),
     description: z.string().optional(),
     fork: z.boolean().optional(),
@@ -59,7 +59,7 @@ export const repositorySchema = z.preprocess(
       .object({ key: z.string() })
       .transform((v) => v.key)
       .optional(),
-    organization: userSchema.optional(),
+    organization: z.union([userSchema, z.number()]).optional(),
     parent: z
       .object({ id: z.number().int() })
       .transform((v) => v.id)

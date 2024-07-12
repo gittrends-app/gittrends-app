@@ -150,4 +150,8 @@ describe('Release entity', () => {
       __repository: 272836
     });
   });
+
+  it('should allow author to be a number', () => {
+    expect(() => releaseSchema.parse({ ...baseFields, author: 33505452 })).not.toThrowError();
+  });
 });

@@ -20,7 +20,7 @@ export const releaseSchema = z.preprocess(
       prerelease: z.boolean(),
       created_at: z.coerce.date(),
       published_at: z.coerce.date().optional(),
-      author: userSchema,
+      author: z.union([userSchema, z.number()]),
       assets: z.array(assetSchema),
       body_html: z.string().optional(),
       body_text: z.string().optional(),

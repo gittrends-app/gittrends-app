@@ -5,7 +5,7 @@ import { userSchema } from './user.js';
 export const stargazerSchema = z
   .object({
     starred_at: z.coerce.date(),
-    user: userSchema,
+    user: z.union([userSchema, z.number()]),
     __typename: z.literal('Stargazer').default('Stargazer'),
     __obtained_at: z.date().default(() => new Date())
   })

@@ -15,7 +15,7 @@ import stargazers from '../github/repository/resources/stargazers.js';
   for await (const { data } of iterator) {
     for (const star of data) {
       consola.info(
-        `${index++}. ${star.user?.login} (id: ${star.user?.id}) at ${star.starred_at.toISOString()}`
+        `${index++}. ${typeof star.user === 'number' ? star.user : star.user?.login} at ${star.starred_at.toISOString()}`
       );
     }
   }
