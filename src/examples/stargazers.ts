@@ -1,12 +1,14 @@
 import consola from 'consola';
-import stargazers from '../github/repository/stargazers.js';
+import get from '../github/repository/get.js';
+import stargazers from '../github/repository/resources/stargazers.js';
 
 (async () => {
+  consola.info('Getting tags of octokit/rest.js...');
+  const repo = await get({ owner: 'octokit', name: 'rest.js' });
+  if (!repo) throw new Error('Repository octokit/rest.js not found.');
+
   consola.info('Getting stargazers of octokit/rest.js...');
-  const iterator = stargazers({
-    owner: 'octokit',
-    name: 'rest.js'
-  });
+  const iterator = stargazers({ repo: repo.node_id });
 
   consola.info('Found stargazers:');
   let index = 1;

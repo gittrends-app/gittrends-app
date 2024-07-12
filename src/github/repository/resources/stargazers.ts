@@ -1,7 +1,7 @@
 import { PartialDeep } from 'type-fest';
-import { Stargazer, stargazerSchema } from '../../entities/stargazer.js';
-import { graphql } from '../client.js';
-import { IterableResource, RepositoryParams } from './index.js';
+import { Stargazer, stargazerSchema } from '../../../entities/stargazer.js';
+import { graphql } from '../../client.js';
+import { IterableResource, ResourcesParams } from './index.js';
 
 /**
  * Transforms the data from the GitHub API into a Stargazer entity.
@@ -23,15 +23,6 @@ function transform(edge: StargazerEdge): PartialDeep<Stargazer> {
     }
   };
 }
-
-type StargazersMetadata = {
-  endCursor?: string;
-  hasNextPage: boolean;
-};
-
-type StargazersParams = RepositoryParams & {
-  endCursor?: string;
-};
 
 type StargazerEdge = {
   starredAt: string;
@@ -61,23 +52,22 @@ type StargazersQuery = {
 /**
  * Retrieves the stargazers of a repository.
  */
-export default function stargazers(
-  options: StargazersParams
-): IterableResource<Stargazer, StargazersMetadata> {
-  const { owner, name, endCursor } = options;
+export default function stargazers(options: ResourcesParams): IterableResource<Stargazer> {
+  const { repo, page } = options;
 
   return {
     [Symbol.asyncIterator]: async function* () {
-      const metadata: StargazersMetadata = {
-        endCursor: endCursor,
+      const metadata = {
+        endCursor: page,
         hasNextPage: true
       };
 
       do {
         const { repository } = await graphql<StargazersQuery>({
           query: `
-            query stargazers($owner: String!, $repo: String!, $endCursor: String){
-              repository(owner: $owner, name: $repo) {
+            query stargazers($id: ID!, $endCursor: String) {
+              node(id: $id) {
+                ... on Repository {
                   stargazers (first: 100, orderBy:  { field: STARRED_AT, direction: ASC }, after: $endCursor) {
                     pageInfo {
                       endCursor
@@ -97,10 +87,10 @@ export default function stargazers(
                     }
                   }
                 }
+              }
             }
             `,
-          owner: owner,
-          repo: name,
+          id: repo,
           endCursor: metadata.endCursor
         });
 
@@ -113,7 +103,7 @@ export default function stargazers(
 
         yield {
           data: stars,
-          metadata: { owner, name, resource: 'stargazers', ...metadata }
+          metadata: { repo, page: metadata.endCursor }
         };
       } while (metadata.hasNextPage);
     }
