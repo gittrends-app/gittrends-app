@@ -1,8 +1,8 @@
 import omitBy from 'lodash/omitBy.js';
 import { z } from 'zod';
-import { assetSchema } from './asset.js';
-import { reactableSchema } from './reactable.js';
 import { repositoryResourceSchema } from './repository.js';
+import { assetSchema } from './shared/asset.js';
+import { reactableSchema } from './shared/reactable.js';
 import { userSchema } from './user.js';
 
 export const releaseSchema = z.preprocess(

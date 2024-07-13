@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { userSchema } from './user.js';
+import { userSchema } from '../user.js';
 
 export const assetSchema = z.object({
   url: z.string().url(),
