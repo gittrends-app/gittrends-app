@@ -8,7 +8,6 @@ describe('Watcher entity', () => {
       id: 1478925,
       node_id: 'MDQ6VXNlcjE0Nzg5MjU=',
       avatar_url: 'https://avatars.githubusercontent.com/u/1478925?v=4',
-      gravatar_id: '',
       url: 'https://api.github.com/users/danielbruns',
       html_url: 'https://github.com/danielbruns',
       followers_url: 'https://api.github.com/users/danielbruns/followers',

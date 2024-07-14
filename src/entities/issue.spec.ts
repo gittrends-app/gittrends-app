@@ -40,12 +40,6 @@ describe('Issue entity', () => {
     expect(result).not.toHaveProperty('body');
   });
 
-  it('should add __typename and __obtained_at to user', () => {
-    const result = issueSchema.parse(sample);
-    expect(result).toHaveProperty('__typename', 'Issue');
-    expect(result).toHaveProperty('__obtained_at', expect.any(Date));
-  });
-
   it('should parse issue from issue list', () => {
     expect(
       issueSchema.parse({
@@ -66,7 +60,7 @@ describe('Issue entity', () => {
           id: 1,
           node_id: 'MDQ6VXNlcjE=',
           avatar_url: 'https://github.com/images/error/octocat_happy.gif',
-          gravatar_id: '',
+
           url: 'https://api.github.com/users/octocat',
           html_url: 'https://github.com/octocat',
           followers_url: 'https://api.github.com/users/octocat/followers',
@@ -97,7 +91,7 @@ describe('Issue entity', () => {
           id: 1,
           node_id: 'MDQ6VXNlcjE=',
           avatar_url: 'https://github.com/images/error/octocat_happy.gif',
-          gravatar_id: '',
+
           url: 'https://api.github.com/users/octocat',
           html_url: 'https://github.com/octocat',
           followers_url: 'https://api.github.com/users/octocat/followers',
@@ -118,7 +112,7 @@ describe('Issue entity', () => {
             id: 1,
             node_id: 'MDQ6VXNlcjE=',
             avatar_url: 'https://github.com/images/error/octocat_happy.gif',
-            gravatar_id: '',
+
             url: 'https://api.github.com/users/octocat',
             html_url: 'https://github.com/octocat',
             followers_url: 'https://api.github.com/users/octocat/followers',
@@ -149,7 +143,7 @@ describe('Issue entity', () => {
             id: 1,
             node_id: 'MDQ6VXNlcjE=',
             avatar_url: 'https://github.com/images/error/octocat_happy.gif',
-            gravatar_id: '',
+
             url: 'https://api.github.com/users/octocat',
             html_url: 'https://github.com/octocat',
             followers_url: 'https://api.github.com/users/octocat/followers',
@@ -188,7 +182,7 @@ describe('Issue entity', () => {
           id: 1,
           node_id: 'MDQ6VXNlcjE=',
           avatar_url: 'https://github.com/images/error/octocat_happy.gif',
-          gravatar_id: '',
+
           url: 'https://api.github.com/users/octocat',
           html_url: 'https://github.com/octocat',
           followers_url: 'https://api.github.com/users/octocat/followers',

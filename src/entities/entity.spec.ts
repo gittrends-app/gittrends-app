@@ -10,4 +10,14 @@ describe('Entity', () => {
       __obtained_at: expect.any(Date)
     });
   });
+
+  it('should throw an error if resource is empty', () => {
+    expect(() => createEntity('', z.object({ id: z.number() }))).toThrowError();
+    expect(() => createEntity('NotEmtpty', z.object({ id: z.number() }))).not.toThrowError();
+  });
+
+  it('should throw an error if schema is empty', () => {
+    expect(() => createEntity('Empty', z.object({}))).toThrowError();
+    expect(() => createEntity('Empty', z.object({ key: z.undefined() }))).not.toThrowError();
+  });
 });

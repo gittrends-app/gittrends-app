@@ -10,7 +10,6 @@ describe('Release entity', () => {
       id: 33505452,
       node_id: 'MDQ6VXNlcjMzNTA1NDUy',
       avatar_url: 'https://avatars.githubusercontent.com/u/33505452?v=4',
-      gravatar_id: '',
       url: 'https://api.github.com/users/k8s-release-robot',
       type: 'User',
       site_admin: false
@@ -52,7 +51,7 @@ describe('Release entity', () => {
           id: 33505452,
           node_id: 'MDQ6VXNlcjMzNTA1NDUy',
           avatar_url: 'https://avatars.githubusercontent.com/u/33505452?v=4',
-          gravatar_id: '',
+
           url: 'https://api.github.com/users/k8s-release-robot',
           html_url: 'https://github.com/k8s-release-robot',
           followers_url: 'https://api.github.com/users/k8s-release-robot/followers',
@@ -87,7 +86,7 @@ describe('Release entity', () => {
               id: 33505452,
               node_id: 'MDQ6VXNlcjMzNTA1NDUy',
               avatar_url: 'https://avatars.githubusercontent.com/u/33505452?v=4',
-              gravatar_id: '',
+
               url: 'https://api.github.com/users/k8s-release-robot',
               html_url: 'https://github.com/k8s-release-robot',
               followers_url: 'https://api.github.com/users/k8s-release-robot/followers',

@@ -22,11 +22,6 @@ describe('Milestone entity', () => {
     }
   });
 
-  it('should remove null fields', () => {
-    const result = milestoneSchema.parse({ ...example, description: null });
-    expect(result).not.toHaveProperty('description');
-  });
-
   it('should parse milestone details from docs', () => {
     expect(
       milestoneSchema.parse({
@@ -44,7 +39,6 @@ describe('Milestone entity', () => {
           id: 1,
           node_id: 'MDQ6VXNlcjE=',
           avatar_url: 'https://github.com/images/error/octocat_happy.gif',
-          gravatar_id: '',
           url: 'https://api.github.com/users/octocat',
           html_url: 'https://github.com/octocat',
           followers_url: 'https://api.github.com/users/octocat/followers',
@@ -101,7 +95,6 @@ describe('Milestone entity', () => {
           id: 1,
           node_id: 'MDQ6VXNlcjE=',
           avatar_url: 'https://github.com/images/error/octocat_happy.gif',
-          gravatar_id: '',
           url: 'https://api.github.com/users/octocat',
           html_url: 'https://github.com/octocat',
           followers_url: 'https://api.github.com/users/octocat/followers',

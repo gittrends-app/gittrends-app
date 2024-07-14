@@ -1,8 +1,8 @@
-import omitBy from 'lodash/omitBy.js';
 import { z } from 'zod';
+import { createEntity } from './entity.js';
 
-export const userSchema = z.preprocess(
-  (obj: any) => omitBy(obj, (value) => value === null),
+export const userSchema = createEntity(
+  'User',
   z.object({
     login: z.string(),
     id: z.number().int(),
@@ -29,9 +29,7 @@ export const userSchema = z.preprocess(
     updated_at: z.coerce.date().optional(),
     suspended_at: z.coerce.date().optional(),
     disk_usage: z.number().int().optional(),
-    collaborators: z.number().int().optional(),
-    __typename: z.literal('User').default('User'),
-    __obtained_at: z.date().default(() => new Date())
+    collaborators: z.number().int().optional()
   })
 );
 

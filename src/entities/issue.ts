@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { createEntity } from './entity.js';
-import { repositoryResourceSchema, repositorySchema } from './repository.js';
+import { repoResourceSchema, repositorySchema } from './repository.js';
 import { milestoneSchema } from './shared/milestone.js';
 import { reactableSchema } from './shared/reactable.js';
 import { userSchema } from './user.js';
@@ -74,7 +74,7 @@ export const issueSchema = createEntity(
       ]),
       reactions: reactableSchema.optional()
     })
-    .merge(repositoryResourceSchema)
+    .merge(repoResourceSchema)
 );
 
 export type Issue = z.infer<typeof issueSchema>;

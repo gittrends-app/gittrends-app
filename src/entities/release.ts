@@ -1,12 +1,12 @@
-import omitBy from 'lodash/omitBy.js';
 import { z } from 'zod';
-import { repositoryResourceSchema } from './repository.js';
+import { createEntity } from './entity.js';
+import { repoResourceSchema } from './repository.js';
 import { assetSchema } from './shared/asset.js';
 import { reactableSchema } from './shared/reactable.js';
 import { userSchema } from './user.js';
 
-export const releaseSchema = z.preprocess(
-  (data: any) => omitBy(data, (value) => value === null || value === ''),
+export const releaseSchema = createEntity(
+  'Release',
   z
     .object({
       url: z.string().url(),
@@ -26,11 +26,9 @@ export const releaseSchema = z.preprocess(
       body_text: z.string().optional(),
       mentions_count: z.number().int().optional(),
       discussion_url: z.string().url().optional(),
-      reactions: reactableSchema.optional(),
-      __typename: z.literal('Release').default('Release'),
-      __obtained_at: z.date().default(() => new Date())
+      reactions: reactableSchema.optional()
     })
-    .merge(repositoryResourceSchema)
+    .merge(repoResourceSchema)
 );
 
 export type Release = z.infer<typeof releaseSchema>;

@@ -1,9 +1,9 @@
-import omitBy from 'lodash/omitBy.js';
 import { z } from 'zod';
+import { createEntity } from './entity.js';
 import { userSchema } from './user.js';
 
-export const repositorySchema = z.preprocess(
-  (data: any) => omitBy(data, (value) => value === null || value === ''),
+export const repositorySchema = createEntity(
+  'Repository',
   z.object({
     id: z.number().int(),
     node_id: z.string(),
@@ -79,15 +79,13 @@ export const repositorySchema = z.preprocess(
         name: z.string(),
         html_url: z.string().url().optional()
       })
-      .optional(),
-    __typename: z.literal('Repository').default('Repository'),
-    __obtained_at: z.date().default(() => new Date())
+      .optional()
   })
 );
 
-export const repositoryResourceSchema = z.object({
+export const repoResourceSchema = z.object({
   __repository: z.union([z.number(), repositorySchema.transform((v) => v.id)])
 });
 
 export type Repository = z.infer<typeof repositorySchema>;
-export type RepositoryResource = z.infer<typeof repositoryResourceSchema>;
+export type RepositoryResource = z.infer<typeof repoResourceSchema>;
