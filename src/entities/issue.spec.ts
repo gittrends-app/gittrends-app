@@ -1,5 +1,5 @@
 import { describe, expect, it } from '@jest/globals';
-import { schema } from './issue.js';
+import { issueSchema } from './issue.js';
 
 describe('Issue entity', () => {
   const sample = {
@@ -29,26 +29,26 @@ describe('Issue entity', () => {
   };
 
   it('should validate required fields', () => {
-    expect(() => schema.parse(sample)).not.toThrowError();
+    expect(() => issueSchema.parse(sample)).not.toThrowError();
     for (const key of Object.keys(sample)) {
-      expect(() => schema.parse({ ...sample, [key]: undefined })).toThrowError();
+      expect(() => issueSchema.parse({ ...sample, [key]: undefined })).toThrowError();
     }
   });
 
   it('should remove null fields', () => {
-    const result = schema.parse({ ...sample, body: null });
+    const result = issueSchema.parse({ ...sample, body: null });
     expect(result).not.toHaveProperty('body');
   });
 
   it('should add __typename and __obtained_at to user', () => {
-    const result = schema.parse(sample);
+    const result = issueSchema.parse(sample);
     expect(result).toHaveProperty('__typename', 'Issue');
     expect(result).toHaveProperty('__obtained_at', expect.any(Date));
   });
 
   it('should parse issue from issue list', () => {
     expect(
-      schema.parse({
+      issueSchema.parse({
         id: 1,
         node_id: 'MDU6SXNzdWUx',
         url: 'https://api.github.com/repos/octocat/Hello-World/issues/1347',

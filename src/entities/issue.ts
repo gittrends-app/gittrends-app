@@ -1,12 +1,12 @@
-import omitBy from 'lodash/omitBy.js';
 import { z } from 'zod';
+import { createEntity } from './entity.js';
 import { repositoryResourceSchema, repositorySchema } from './repository.js';
 import { milestoneSchema } from './shared/milestone.js';
 import { reactableSchema } from './shared/reactable.js';
 import { userSchema } from './user.js';
 
-export const schema = z.preprocess(
-  (data: any) => omitBy(data, (value) => value === null || value === ''),
+export const issueSchema = createEntity(
+  'Issue',
   z
     .object({
       id: z.number().int(),
@@ -72,11 +72,9 @@ export const schema = z.preprocess(
         'NONE',
         'OWNER'
       ]),
-      reactions: reactableSchema.optional(),
-      __typename: z.literal('Issue').default('Issue'),
-      __obtained_at: z.date().default(() => new Date())
+      reactions: reactableSchema.optional()
     })
     .merge(repositoryResourceSchema)
 );
 
-export type Issue = z.infer<typeof schema>;
+export type Issue = z.infer<typeof issueSchema>;
