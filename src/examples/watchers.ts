@@ -13,7 +13,7 @@ import get from '../github/repository/get.js';
 
   consola.info('Found watchers:');
   let index = 1;
-  for await (const { data, metadata } of iterator) {
+  for await (const { data, params: metadata } of iterator) {
     consola.info(`Metadata: ${stringifyObject(metadata)}`);
     for (const watcher of data) {
       consola.info(

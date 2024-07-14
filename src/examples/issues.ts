@@ -10,8 +10,8 @@ import { github } from '../github/index.js';
   const iterator = github.repos.issues({ repo: repo.id });
 
   consola.info('Found issues:');
-  for await (const { data, metadata } of iterator) {
-    consola.info(`Metadata: ${stringifyObject(metadata)}`);
+  for await (const { data, params } of iterator) {
+    consola.info(`Metadata: ${stringifyObject(params)}`);
     for (const issue of data) {
       consola.info(`${issue.number++}. ${issue.title} (${issue.state})`);
     }

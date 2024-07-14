@@ -12,11 +12,12 @@ export type ResourcesParams = {
   repo: number | string;
   page?: number | string;
   per_page?: number;
+  [key: string]: unknown;
 };
 
 export type IterableResource<T> = AsyncIterable<{
   data: T[];
-  metadata: ResourcesParams;
+  params: ResourcesParams;
 }>;
 
 type Endpoints = {
@@ -80,7 +81,7 @@ function resourceIterator<R extends keyof Endpoints>(
           data: response.data.map((data: Record<string, any>) =>
             resource.schema.parse({ ...data, __repository: repo })
           ),
-          metadata: { repo, page: currentPage++ }
+          params: { repo, page: currentPage++, per_page: perPage, ...requestParams }
         };
 
         if (response.data.length < 100) break;

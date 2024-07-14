@@ -12,8 +12,8 @@ import get from '../github/repository/get.js';
 
   consola.info('Found tags:');
   let index = 1;
-  for await (const { data, metadata } of iterator) {
-    consola.info(`Metadata: ${stringifyObject(metadata)}`);
+  for await (const { data, params } of iterator) {
+    consola.info(`Metadata: ${stringifyObject(params)}`);
     for (const tag of data) {
       consola.info(
         `${index++}. ${tag.name} (source: ${tag.target_commitish} - at: ${tag.published_at?.toISOString()})`

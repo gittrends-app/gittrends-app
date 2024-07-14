@@ -53,8 +53,8 @@ type StargazersQuery = {
 /**
  * Retrieves the stargazers of a repository.
  */
-export default function stargazers(options: ResourcesParams): IterableResource<Stargazer> {
-  const { repo, page } = options;
+export default function (options: ResourcesParams): IterableResource<Stargazer> {
+  const { repo, page, per_page: perPage } = options;
 
   return {
     [Symbol.asyncIterator]: async function* () {
@@ -66,11 +66,11 @@ export default function stargazers(options: ResourcesParams): IterableResource<S
       do {
         const { repository } = await clients.graphql<StargazersQuery>({
           query: `
-            query stargazers($id: ID!, $endCursor: String) {
+            query stargazers($id: ID!, $perPage: Int, $endCursor: String) {
               repository: node(id: $id) {
                 ... on Repository {
                   databaseId
-                  stargazers (first: 100, orderBy:  { field: STARRED_AT, direction: ASC }, after: $endCursor) {
+                  stargazers (first: $perPage, orderBy:  { field: STARRED_AT, direction: ASC }, after: $endCursor) {
                     pageInfo {
                       endCursor
                       hasNextPage
@@ -93,6 +93,7 @@ export default function stargazers(options: ResourcesParams): IterableResource<S
             }
             `,
           id: repo,
+          perPage: perPage || 100,
           endCursor: metadata.endCursor
         });
 
@@ -105,7 +106,7 @@ export default function stargazers(options: ResourcesParams): IterableResource<S
 
         yield {
           data: stars,
-          metadata: { repo, page: metadata.endCursor }
+          params: { repo, page: metadata.endCursor }
         };
       } while (metadata.hasNextPage);
     }
