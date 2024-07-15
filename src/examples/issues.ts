@@ -1,5 +1,4 @@
 import consola from 'consola';
-import stringifyObject from 'stringify-object';
 import { github } from '../github/index.js';
 
 (async () => {
@@ -7,13 +6,14 @@ import { github } from '../github/index.js';
   const repo = await github.repos.get({ owner: 'octokit', name: 'rest.js' });
   if (!repo) throw new Error('Repository octokit/rest.js not found.');
 
-  const iterator = github.repos.issues({ repo: repo.id });
+  const iterator = github.repos.issues({ repo: repo.id, per_page: 10 });
 
   consola.info('Found issues:');
-  for await (const { data, params } of iterator) {
-    consola.info(`Metadata: ${stringifyObject(params)}`);
+  for await (const { data } of iterator) {
     for (const issue of data) {
-      consola.info(`${issue.number++}. ${issue.title} (${issue.state})`);
+      consola.info(
+        `${issue.number}. ${issue.title.slice(0, 50)}${issue.title.length ? '...' : ''} (${issue.state} - ${typeof issue.__timeline === 'number' ? issue.__timeline : issue.__timeline?.length} events)`
+      );
     }
   }
 

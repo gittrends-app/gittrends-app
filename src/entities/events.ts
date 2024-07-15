@@ -14,7 +14,7 @@ const baseSchema = z
     commit_id: z.string().optional(),
     commit_url: z.string().url().optional(),
     created_at: z.coerce.date(),
-    __issue_number: z.number().int()
+    __issue: z.number().int()
   })
   .merge(repoResourceSchema);
 

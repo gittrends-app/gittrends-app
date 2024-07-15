@@ -97,7 +97,7 @@ function resourceIterator<R extends keyof Endpoints>(
               return resource.schema.parse({
                 ...data,
                 __repository: repo,
-                __issue_number: requestParams.number
+                __issue: requestParams.number
               });
             } catch (error: any) {
               if (error instanceof ZodError)
@@ -111,7 +111,7 @@ function resourceIterator<R extends keyof Endpoints>(
           params: { repo, page: currentPage++, per_page: perPage, ...requestParams }
         };
 
-        if (response.data.length < 100) break;
+        if (response.data.length < (perPage || 100)) break;
       } while (true);
     }
   };
@@ -153,17 +153,33 @@ function releases(options: ResourcesParams) {
  * Get the issues of a repository by its id
  *
  */
-function issues(options: ResourcesParams & { since?: Date }) {
-  return resourceIterator(
-    { url: 'GET /repositories/:repo/issues', schema: issueSchema },
-    {
-      ...options,
-      state: 'all',
-      sort: 'updated',
-      direction: 'asc',
-      since: options.since?.toISOString()
+function issues(options: ResourcesParams & { since?: Date }): IterableResource<Issue> {
+  return {
+    [Symbol.asyncIterator]: async function* () {
+      const it = resourceIterator(
+        { url: 'GET /repositories/:repo/issues', schema: issueSchema },
+        {
+          ...options,
+          state: 'all',
+          sort: 'updated',
+          direction: 'asc',
+          since: options.since?.toISOString()
+        }
+      );
+
+      for await (const { data, params } of it) {
+        for (const issue of data) {
+          for await (const tl of timeline({ repo: options.repo, issue: issue.number })) {
+            const events = tl.data.map((e) => ({ ...e, __issue: issue.id }));
+            if (Array.isArray(issue.__timeline)) issue.__timeline.push(...events);
+            else issue.__timeline = events;
+          }
+        }
+
+        yield { data, params };
+      }
     }
-  );
+  };
 }
 
 /**
@@ -182,8 +198,7 @@ export const resources = {
   tags,
   stargazers,
   releases,
-  issues,
-  timeline
+  issues
 } satisfies Record<
   string,
   (options: ResourcesParams & { issue: number }) => IterableResource<RepositoryResource>

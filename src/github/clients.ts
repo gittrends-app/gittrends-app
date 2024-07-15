@@ -22,7 +22,7 @@ const rest = new FullOctokit({
       return options.request.retryCount < 3;
     }
   },
-  log: { debug: consola.debug, info: consola.debug, warn: consola.warn, error: consola.error }
+  log: { debug: () => void 0, info: () => void 0, warn: consola.warn, error: consola.error }
 });
 
 // The graphqlClient is an instance of the graphql function with the default options.
