@@ -168,90 +168,94 @@ const convertedNoteToIssueEventSchema = baseSchema.merge(
   })
 );
 
-const timelineCrossReferencesEventSchema = baseSchema.merge(
-  z.object({
-    event: z.literal('cross-referenced'),
-    id: z.number().int().optional(),
-    node_id: z.string().optional(),
-    url: z.string().url().optional(),
-    updated_at: z.string(),
-    source: z.object({
-      type: z.string().optional(),
-      issue: z
-        .object({
-          id: z.number().int(),
-          node_id: z.string(),
-          number: z.number().int(),
-          title: z.string(),
-          repository: z.object({ id: z.number().int() }).transform((v) => v.id)
-        })
-        .optional()
-    })
-  })
-);
-
-const commitedEventSchema = baseSchema.merge(
-  z.object({
-    event: z.literal('committed'),
-    author: z.object({
-      date: z.string(),
-      email: z.string(),
-      name: z.string()
-    }),
-    committer: z.object({
-      date: z.string(),
-      email: z.string(),
-      name: z.string()
-    }),
-    message: z.string(),
-    tree: z.object({
-      sha: z.string(),
-      url: z.string().url()
-    }),
-    parents: z.array(
-      z.object({
-        sha: z.string(),
-        url: z.string().url(),
-        html_url: z.string().url()
+const timelineCrossReferencesEventSchema = baseSchema
+  .merge(
+    z.object({
+      event: z.literal('cross-referenced'),
+      updated_at: z.string(),
+      source: z.object({
+        type: z.string().optional(),
+        issue: z
+          .object({
+            id: z.number().int(),
+            node_id: z.string(),
+            number: z.number().int(),
+            title: z.string(),
+            repository: z.object({ id: z.number().int() }).transform((v) => v.id)
+          })
+          .optional()
       })
-    ),
-    verification: z.object({
-      verified: z.boolean(),
-      reason: z.string(),
-      signature: z.string().optional(),
-      payload: z.string().optional()
-    }),
-    html_url: z.string().url()
-  })
-);
+    })
+  )
+  .omit({ id: true, node_id: true, url: true });
 
-const reviewedEventSchema = baseSchema.merge(
-  z.object({
-    event: z.literal('reviewed'),
-    user: userSchema,
-    body: z.string().optional(),
-    state: z.string(),
-    html_url: z.string().url(),
-    pull_request_url: z.string().url(),
-    _links: z.object({
-      html: z.object({ href: z.string() }),
-      pull_request: z.object({ href: z.string() })
-    }),
-    submitted_at: z.string().optional(),
-    body_html: z.string().optional(),
-    body_text: z.string().optional(),
-    author_association: z.enum([
-      'COLLABORATOR',
-      'CONTRIBUTOR',
-      'FIRST_TIMER',
-      'FIRST_TIME_CONTRIBUTOR',
-      'MANNEQUIN',
-      'MEMBER',
-      'NONE',
-      'OWNER'
-    ])
-  })
-);
+const commitedEventSchema = baseSchema
+  .merge(
+    z.object({
+      event: z.literal('committed'),
+      sha: z.string(),
+      author: z.object({
+        date: z.string(),
+        email: z.string(),
+        name: z.string()
+      }),
+      committer: z.object({
+        date: z.string(),
+        email: z.string(),
+        name: z.string()
+      }),
+      message: z.string(),
+      tree: z.object({
+        sha: z.string(),
+        url: z.string().url()
+      }),
+      parents: z.array(
+        z.object({
+          sha: z.string(),
+          url: z.string().url(),
+          html_url: z.string().url()
+        })
+      ),
+      verification: z.object({
+        verified: z.boolean(),
+        reason: z.string(),
+        signature: z.string().optional(),
+        payload: z.string().optional()
+      }),
+      html_url: z.string().url()
+    })
+  )
+  .omit({ id: true, created_at: true, actor: true, commit_id: true, commit_url: true });
+
+const reviewedEventSchema = baseSchema
+  .merge(
+    z.object({
+      event: z.literal('reviewed'),
+      user: userSchema,
+      body: z.string().optional(),
+      state: z.string(),
+      html_url: z.string().url(),
+      pull_request_url: z.string().url(),
+      _links: z.object({
+        html: z.object({ href: z.string() }),
+        pull_request: z.object({ href: z.string() })
+      }),
+      submitted_at: z.string().optional(),
+      body_html: z.string().optional(),
+      body_text: z.string().optional(),
+      author_association: z.enum([
+        'COLLABORATOR',
+        'CONTRIBUTOR',
+        'FIRST_TIMER',
+        'FIRST_TIME_CONTRIBUTOR',
+        'MANNEQUIN',
+        'MEMBER',
+        'NONE',
+        'OWNER'
+      ])
+    })
+  )
+  .omit({ url: true, actor: true, created_at: true });
 
 const assignedEventSchema = baseSchema.merge(
   z.object({
@@ -386,15 +390,7 @@ const commentedEventSchema = baseSchema.merge(
 //   })
 // );
 
-const mentionedEventSchema = baseSchema.merge(z.object({ event: z.literal('mentioned') }));
-const subscribedEventSchema = baseSchema.merge(z.object({ event: z.literal('subscribed') }));
-const unsubscribedEventSchema = baseSchema.merge(z.object({ event: z.literal('unsubscribed') }));
-const closedEventSchema = baseSchema.merge(z.object({ event: z.literal('closed') }));
-const reopenedEventSchema = baseSchema.merge(z.object({ event: z.literal('reopened') }));
-const transferredEventSchema = baseSchema.merge(z.object({ event: z.literal('transferred') }));
-const referencedEventSchema = baseSchema.merge(z.object({ event: z.literal('referenced') }));
-const pinnedEventSchema = baseSchema.merge(z.object({ event: z.literal('pinned') }));
-const unpinnedEventSchema = baseSchema.merge(z.object({ event: z.literal('unpinned') }));
+const base = (name: string) => baseSchema.merge(z.object({ event: z.literal(name) }));
 
 const unlockedEventSchema = baseSchema.merge(
   z.object({
@@ -403,62 +399,72 @@ const unlockedEventSchema = baseSchema.merge(
   })
 );
 
-export const timelineEventSchema = createEntityFromUnion(
+const complexSchemas = createEntityFromUnion(
   'TimelineEvent',
   z.discriminatedUnion('event', [
-    labeledEventSchema,
-    unlabeledEventSchema,
-    milestonedEventSchema,
-    demilestonedEventSchema,
-    renamedEventSchema,
-    reviewRequestedEventSchema,
-    reviewRequestedRemovedEventSchema,
-    reviewDismissedEventSchema,
-    lockedEventSchema,
+    // commitCommentedEventSchema,
+    // lineCommentedEventSchema,
+    // stateChangeEventSchema,
     addedToProjectEventSchema,
+    assignedEventSchema,
+    commentedEventSchema,
+    convertedNoteToIssueEventSchema,
+    demilestonedEventSchema,
+    labeledEventSchema,
+    lockedEventSchema,
+    milestonedEventSchema,
     movedColumnInProjectEventSchema,
     removedFromProjectEventSchema,
-    convertedNoteToIssueEventSchema,
-    timelineCrossReferencesEventSchema,
+    renamedEventSchema,
+    reviewDismissedEventSchema,
+    reviewRequestedEventSchema,
+    reviewRequestedRemovedEventSchema,
+    unassignedEventSchema,
+    unlabeledEventSchema,
+    unlockedEventSchema,
+    // partial schemas
     commitedEventSchema,
     reviewedEventSchema,
-    assignedEventSchema,
-    unassignedEventSchema,
-    commentedEventSchema,
-    // lineCommentedEventSchema,
-    // commitCommentedEventSchema,
-    // stateChangeEventSchema,
-    mentionedEventSchema,
-    subscribedEventSchema,
-    unsubscribedEventSchema,
-    closedEventSchema,
-    reopenedEventSchema,
-    unlockedEventSchema,
-    transferredEventSchema,
-    referencedEventSchema,
-    pinnedEventSchema,
-    unpinnedEventSchema
+    timelineCrossReferencesEventSchema
   ])
 );
 
-export type TimelineEvent = z.infer<typeof timelineEventSchema>;
+const simpleSchemas = createEntityFromUnion(
+  'TimelineEvent',
+  z.discriminatedUnion('event', [
+    base('auto_merge_disabled'),
+    base('auto_squash_enabled'),
+    base('automatic_base_change_failed'),
+    base('automatic_base_change_succeeded'),
+    base('base_ref_changed'),
+    base('closed'),
+    base('connected'),
+    base('convert_to_draft'),
+    base('converted_to_discussion'),
+    base('deployed'),
+    base('deployment_environment_changed'),
+    base('disconnected'),
+    base('head_ref_deleted'),
+    base('head_ref_force_pushed'),
+    base('head_ref_restored'),
+    base('mentioned'),
+    base('marked_as_duplicate'),
+    base('merged'),
+    base('pinned'),
+    base('ready_for_review'),
+    base('referenced'),
+    base('reopened'),
+    base('subscribed'),
+    base('transferred'),
+    base('unmarked_as_duplicate'),
+    base('unpinned'),
+    base('unsubscribed'),
+    base('user_blocked')
+  ])
+);
 
-// missing:
-// - automatic_base_change_failed
-// - automatic_base_change_succeeded
-// - base_ref_changed
-// - connected
-// - convert_to_draft
-// - converted_to_discussion
-// - deployed
-// - deployment_environment_changed
-// - disconnected
-// - head_ref_deleted
-// - head_ref_restored
-// - head_ref_force_pushed
-// - marked_as_duplicate
-// - merged
-// - ready_for_review
-// - referenced
-// - unmarked_as_duplicate
-// - user_blocked
+export const timelineEventSchema: z.ZodUnion<[typeof simpleSchemas, typeof complexSchemas]> =
+  z.union([simpleSchemas, complexSchemas]);
+
+export type TimelineBaseEvent = z.infer<typeof baseSchema>;
+export type TimelineEvent = z.infer<typeof timelineEventSchema>;

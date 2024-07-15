@@ -1,5 +1,6 @@
 import consola from 'consola';
 import treeify from 'treeify';
+import { TimelineBaseEvent } from '../entities/events.js';
 import { github } from '../github/index.js';
 
 (async () => {
@@ -15,7 +16,9 @@ import { github } from '../github/index.js';
       consola.info('Found timeline events:');
       for await (const { data } of eventsIt) {
         for (const event of data) {
-          consola.info(`${event.event} at ${event.created_at.toISOString()}`);
+          consola.info(
+            `${event.event} at ${(event as unknown as TimelineBaseEvent).created_at?.toISOString()}`
+          );
           // eslint-disable-next-line no-console
           treeify.asLines(event as any, true, console.log);
         }
