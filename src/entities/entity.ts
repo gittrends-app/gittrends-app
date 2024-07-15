@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import sanitize from '../helpers/sanitize.js';
 
-const _schema = z.object({
+const entitySchema = z.object({
   __typename: z.string(),
   __obtained_at: z.date().default(() => new Date())
 });
@@ -15,7 +15,7 @@ export function createEntity<T extends z.SomeZodObject>(name: string, schema: T)
 
   return z.preprocess(
     (data: any) => sanitize(data),
-    _schema.merge(z.object({ __typename: z.literal(name).default(name) })).merge(schema)
+    entitySchema.merge(z.object({ __typename: z.literal(name).default(name) })).merge(schema)
   );
 }
 
@@ -35,10 +35,10 @@ export function createEntityFromUnion<T extends z.ZodDiscriminatedUnion<string, 
     z.discriminatedUnion(
       schema.discriminator,
       schema.options.map((obj) =>
-        _schema.merge(z.object({ __typename: z.literal(name).default(name) })).merge(obj)
+        entitySchema.merge(z.object({ __typename: z.literal(name).default(name) })).merge(obj)
       ) as any
     ) as T
   );
 }
 
-export type Enity = z.infer<typeof _schema>;
+export type Enity = z.infer<typeof entitySchema>;

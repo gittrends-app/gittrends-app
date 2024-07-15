@@ -85,7 +85,10 @@ function resourceIterator<R extends keyof Endpoints>(
             repo,
             page: currentPage,
             per_page: perPage || 100,
-            ...requestParams
+            ...requestParams,
+            mediaType: {
+              previews: ['starfox']
+            }
           });
 
         yield {

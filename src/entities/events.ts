@@ -113,8 +113,7 @@ const addedToProjectEventSchema = baseSchema.merge(
         url: z.string().url(),
         project_id: z.number().int(),
         project_url: z.string().url(),
-        column_name: z.string(),
-        previous_column_name: z.string().optional()
+        column_name: z.string()
       })
       .optional()
   })
@@ -145,8 +144,7 @@ const removedFromProjectEventSchema = baseSchema.merge(
         url: z.string().url(),
         project_id: z.number().int(),
         project_url: z.string().url(),
-        column_name: z.string(),
-        previous_column_name: z.string().optional()
+        column_name: z.string()
       })
       .optional()
   })
@@ -161,8 +159,7 @@ const convertedNoteToIssueEventSchema = baseSchema.merge(
         url: z.string().url(),
         project_id: z.number().int(),
         project_url: z.string().url(),
-        column_name: z.string(),
-        previous_column_name: z.string().optional()
+        column_name: z.string()
       })
       .optional()
   })
@@ -172,7 +169,7 @@ const timelineCrossReferencesEventSchema = baseSchema
   .merge(
     z.object({
       event: z.literal('cross-referenced'),
-      updated_at: z.string(),
+      updated_at: z.coerce.date(),
       source: z.object({
         type: z.string().optional(),
         issue: z
@@ -195,12 +192,12 @@ const commitedEventSchema = baseSchema
       event: z.literal('committed'),
       sha: z.string(),
       author: z.object({
-        date: z.string(),
+        date: z.coerce.date(),
         email: z.string(),
         name: z.string()
       }),
       committer: z.object({
-        date: z.string(),
+        date: z.coerce.date(),
         email: z.string(),
         name: z.string()
       }),
@@ -240,7 +237,7 @@ const reviewedEventSchema = baseSchema
         html: z.object({ href: z.string() }),
         pull_request: z.object({ href: z.string() })
       }),
-      submitted_at: z.string().optional(),
+      submitted_at: z.coerce.date().optional(),
       body_html: z.string().optional(),
       body_text: z.string().optional(),
       author_association: z.enum([
@@ -281,7 +278,7 @@ const commentedEventSchema = baseSchema.merge(
     body_html: z.string().optional(),
     html_url: z.string().url(),
     user: userSchema,
-    updated_at: z.string(),
+    updated_at: z.coerce.date(),
     issue_url: z.string().url(),
     author_association: z.enum([
       'COLLABORATOR',
@@ -384,11 +381,11 @@ const commentedEventSchema = baseSchema.merge(
 //   })
 // );
 
-// const stateChangeEventSchema = baseSchema.merge(
-//   z.object({
-//     state_reason: z.string().optional().optional()
-//   })
-// );
+const stateChangeEventSchema = baseSchema.merge(
+  z.object({
+    state_reason: z.string().optional().optional()
+  })
+);
 
 const base = (name: string) => baseSchema.merge(z.object({ event: z.literal(name) }));
 
@@ -404,7 +401,6 @@ const complexSchemas = createEntityFromUnion(
   z.discriminatedUnion('event', [
     // commitCommentedEventSchema,
     // lineCommentedEventSchema,
-    // stateChangeEventSchema,
     addedToProjectEventSchema,
     assignedEventSchema,
     commentedEventSchema,
@@ -419,6 +415,7 @@ const complexSchemas = createEntityFromUnion(
     reviewDismissedEventSchema,
     reviewRequestedEventSchema,
     reviewRequestedRemovedEventSchema,
+    stateChangeEventSchema,
     unassignedEventSchema,
     unlabeledEventSchema,
     unlockedEventSchema,
@@ -447,8 +444,8 @@ const simpleSchemas = createEntityFromUnion(
     base('head_ref_deleted'),
     base('head_ref_force_pushed'),
     base('head_ref_restored'),
-    base('mentioned'),
     base('marked_as_duplicate'),
+    base('mentioned'),
     base('merged'),
     base('pinned'),
     base('ready_for_review'),
