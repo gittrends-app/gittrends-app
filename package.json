@@ -27,6 +27,7 @@
     "consola": "^3.2.3",
     "lodash": "^4.17.21",
     "stringify-object": "^5.0.0",
+    "treeify": "^1.1.0",
     "type-fest": "^4.21.0",
     "zod": "^3.23.8"
   },
@@ -37,6 +38,7 @@
     "@types/lodash": "^4.17.6",
     "@types/node": "^20.10.0",
     "@types/stringify-object": "^4.0.5",
+    "@types/treeify": "^1.0.3",
     "@typescript-eslint/eslint-plugin": "^7.16.0",
     "@typescript-eslint/parser": "^7.16.0",
     "commitizen": "^4.3.0",

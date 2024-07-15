@@ -1,7 +1,11 @@
 import { GetResponseDataTypeFromEndpointMethod, OctokitResponse } from '@octokit/types';
-import { ZodSchema } from 'zod';
+import consola from 'consola';
+import stringifyObject from 'stringify-object';
+import { ZodError, ZodSchema } from 'zod';
+import { TimelineEvent, timelineEventSchema } from '../../../entities/events.js';
 import { Issue, issueSchema } from '../../../entities/issue.js';
 import { Release, releaseSchema } from '../../../entities/release.js';
+import { RepositoryResource } from '../../../entities/repository.js';
 import { Tag, tagSchema } from '../../../entities/tag.js';
 import { userSchema } from '../../../entities/user.js';
 import { Watcher, watcherSchema } from '../../../entities/watcher.js';
@@ -48,6 +52,13 @@ type Endpoints = {
       since?: string;
     };
   };
+  'GET /repositories/:repo/issues/:number/timeline': {
+    response: GetResponseDataTypeFromEndpointMethod<
+      typeof clients.rest.issues.listEventsForTimeline
+    >;
+    result: TimelineEvent;
+    params: ResourcesParams & { number: number };
+  };
 };
 
 /**
@@ -78,9 +89,22 @@ function resourceIterator<R extends keyof Endpoints>(
           });
 
         yield {
-          data: response.data.map((data: Record<string, any>) =>
-            resource.schema.parse({ ...data, __repository: repo })
-          ),
+          data: response.data.map((data: Record<string, any>) => {
+            try {
+              return resource.schema.parse({
+                ...data,
+                __repository: repo,
+                __issue_number: requestParams.number
+              });
+            } catch (error: any) {
+              if (error instanceof ZodError)
+                consola.error(
+                  `${error.message || error}: `,
+                  stringifyObject(data, { indent: '  ' })
+                );
+              throw error;
+            }
+          }),
           params: { repo, page: currentPage++, per_page: perPage, ...requestParams }
         };
 
@@ -139,8 +163,25 @@ function issues(options: ResourcesParams & { since?: Date }) {
   );
 }
 
+/**
+ * Get the timeline of an issue by its id
+ */
+function timeline({ issue, ...options }: ResourcesParams & { issue: number }) {
+  return resourceIterator(
+    { url: 'GET /repositories/:repo/issues/:number/timeline', schema: timelineEventSchema },
+    { ...options, number: issue }
+  );
+}
+
 // Export all functions
-export const resources = { watchers, tags, stargazers, releases, issues } satisfies Record<
+export const resources = {
+  watchers,
+  tags,
+  stargazers,
+  releases,
+  issues,
+  timeline
+} satisfies Record<
   string,
-  (options: ResourcesParams) => IterableResource<any>
+  (options: ResourcesParams & { issue: number }) => IterableResource<RepositoryResource>
 >;

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { zodSanitize } from '../helpers/sanitize.js';
+import sanitize from '../helpers/sanitize.js';
 
 const _schema = z.object({
   __typename: z.string(),
@@ -9,11 +9,35 @@ const _schema = z.object({
 /**
  * Create an entity schema with a default __typename field.
  */
-export function createEntity<T extends z.ZodObject<any>>(name: string, schema: T) {
+export function createEntity<T extends z.SomeZodObject>(name: string, schema: T) {
   if (!name) throw new Error('Entity name cannot be empty');
   else if (Object.keys(schema.shape).length === 0) throw new Error('Entity schema cannot be empty');
-  return zodSanitize(
-    _schema.merge(z.object({ __typename: z.string().default(name) })).merge(schema)
+
+  return z.preprocess(
+    (data: any) => sanitize(data),
+    _schema.merge(z.object({ __typename: z.literal(name).default(name) })).merge(schema)
+  );
+}
+
+/**
+ *
+ */
+export function createEntityFromUnion<T extends z.ZodDiscriminatedUnion<string, z.SomeZodObject[]>>(
+  name: string,
+  schema: T
+) {
+  if (!name) throw new Error('Entity name cannot be empty');
+  else if (schema.options.some((o) => Object.keys(o.shape).length === 0))
+    throw new Error('Entity schema cannot be empty');
+
+  return z.preprocess(
+    (data: any) => sanitize(data),
+    z.discriminatedUnion(
+      schema.discriminator,
+      schema.options.map((obj) =>
+        _schema.merge(z.object({ __typename: z.literal(name).default(name) })).merge(obj)
+      ) as any
+    ) as T
   );
 }
 
