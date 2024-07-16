@@ -1,110 +1,31 @@
-import { OctokitResponse } from '@octokit/types';
-import consola from 'consola';
-import stringifyObject from 'stringify-object';
-import { ZodError, ZodType } from 'zod';
 import { timelineEventSchema } from '../../../entities/events.js';
 import { Issue, issueSchema, PullRequest, pullRequestSchema } from '../../../entities/issue.js';
 import { releaseSchema } from '../../../entities/release.js';
+import { RepositoryResource } from '../../../entities/repository.js';
 import { tagSchema } from '../../../entities/tag.js';
 import { userSchema } from '../../../entities/user.js';
 import { watcherSchema } from '../../../entities/watcher.js';
-import { clients } from '../../clients.js';
-import { IterableEndpoints, ResourceEndpoints } from '../../endpoints.js';
+import { ResourceEndpoints } from '../../endpoints.js';
+import { IterableResource, iterator, PageableParams } from '../../iterator.js';
+import { request } from '../../request.js';
 import stargazers from './stargazers.js';
 
-export type ResourcesParams = {
+export type ResourcesParams = PageableParams & {
   repo: number | string;
-  page?: number | string;
-  per_page?: number;
-  [key: string]: unknown;
 };
-
-export type IterableResource<T> = AsyncIterable<{
-  data: T[];
-  params: ResourcesParams;
-}>;
-
-/**
- * Get a resource of a repository
- *
- */
-async function request<K extends keyof ResourceEndpoints>(
-  resource: { url: K; schema: ZodType },
-  params: ResourceEndpoints[K]['params']
-): Promise<ResourceEndpoints[K]['result'] | undefined> {
-  return clients.rest
-    .request<string>(resource.url, { ...params })
-    .then((response: OctokitResponse<ResourceEndpoints[K]['response']>) => {
-      if (response.status !== 200)
-        throw new Error(`Failed to get ${resource.url} - ${response.status}`);
-      return resource.schema.parse({ ...response.data, __repository: params.repo });
-    });
-}
 
 /**
  * Get a pull request by number.
  */
 function pullRequest(params: ResourceEndpoints['GET /repositories/:repo/pulls/:number']['params']) {
   return request(
-    { url: 'GET /repositories/:repo/pulls/:number', schema: pullRequestSchema },
+    {
+      url: 'GET /repositories/:repo/pulls/:number',
+      schema: pullRequestSchema,
+      metadata: { __repository: params.repo }
+    },
     params
   );
-}
-
-/**
- * Get resources of a repository
- *
- * @param url - The URL of the endpoint.
- * @param schema - The schema to parse the data.
- * @param params - The properties to pass to the function.
- *
- */
-function iterator<R extends keyof IterableEndpoints>(
-  resource: { url: R; schema: ZodType },
-  params: IterableEndpoints[R]['params']
-): IterableResource<IterableEndpoints[R]['result']> {
-  const { repo, page, per_page: perPage, ...requestParams } = params;
-
-  return {
-    [Symbol.asyncIterator]: async function* () {
-      let currentPage = Math.max(Number(page) || 1, 1);
-
-      do {
-        const response: OctokitResponse<IterableEndpoints[R]['response']> =
-          await clients.rest.request<string>(resource.url, {
-            repo,
-            page: currentPage,
-            per_page: perPage || 100,
-            ...requestParams,
-            mediaType: {
-              previews: ['starfox']
-            }
-          });
-
-        yield {
-          data: response.data.map((data: Record<string, any>) => {
-            try {
-              return resource.schema.parse({
-                ...data,
-                __repository: repo,
-                __issue: requestParams.number
-              });
-            } catch (error: any) {
-              if (error instanceof ZodError)
-                consola.error(
-                  `${error.message || error}: `,
-                  stringifyObject(data, { indent: '  ' })
-                );
-              throw error;
-            }
-          }),
-          params: { repo, page: currentPage++, per_page: perPage, ...requestParams }
-        };
-
-        if (response.data.length < (perPage || 100)) break;
-      } while (true);
-    }
-  };
 }
 
 /**
@@ -116,7 +37,8 @@ function watchers(options: ResourcesParams) {
       url: 'GET /repositories/:repo/subscribers',
       schema: userSchema.transform((v) =>
         watcherSchema.parse({ user: v, __repository: options.repo })
-      )
+      ),
+      metadata: { __repository: options.repo }
     },
     options
   );
@@ -126,14 +48,28 @@ function watchers(options: ResourcesParams) {
  * Get the tags of a repository by its id
  */
 function tags(options: ResourcesParams) {
-  return iterator({ url: 'GET /repositories/:repo/tags', schema: tagSchema }, options);
+  return iterator(
+    {
+      url: 'GET /repositories/:repo/tags',
+      schema: tagSchema,
+      metadata: { __repository: options.repo }
+    },
+    options
+  );
 }
 
 /**
  * Get the releases of a repository by its id
  */
 function releases(options: ResourcesParams) {
-  return iterator({ url: 'GET /repositories/:repo/releases', schema: releaseSchema }, options);
+  return iterator(
+    {
+      url: 'GET /repositories/:repo/releases',
+      schema: releaseSchema,
+      metadata: { __repository: options.repo }
+    },
+    options
+  );
 }
 
 /**
@@ -146,7 +82,11 @@ function issues(
   return {
     [Symbol.asyncIterator]: async function* () {
       const it = iterator(
-        { url: 'GET /repositories/:repo/issues', schema: issueSchema },
+        {
+          url: 'GET /repositories/:repo/issues',
+          schema: issueSchema,
+          metadata: { __repository: options.repo }
+        },
         {
           ...options,
           state: 'all',
@@ -181,7 +121,11 @@ function issues(
  */
 function timeline({ issue, ...options }: ResourcesParams & { issue: number }) {
   return iterator(
-    { url: 'GET /repositories/:repo/issues/:number/timeline', schema: timelineEventSchema },
+    {
+      url: 'GET /repositories/:repo/issues/:number/timeline',
+      schema: timelineEventSchema,
+      metadata: { __repository: options.repo, __issue: issue }
+    },
     { ...options, number: issue }
   );
 }
@@ -194,4 +138,7 @@ export const resources = {
   releases,
   issues,
   pullRequest
-};
+} satisfies Record<
+  string,
+  (...args: any[]) => IterableResource<RepositoryResource> | Promise<RepositoryResource | undefined>
+>;

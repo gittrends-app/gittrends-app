@@ -1,7 +1,8 @@
 import { PartialDeep } from 'type-fest';
 import { Stargazer, stargazerSchema } from '../../../entities/stargazer.js';
 import { clients } from '../../clients.js';
-import { IterableResource, ResourcesParams } from './index.js';
+import { IterableResource } from '../../iterator.js';
+import { ResourcesParams } from './index.js';
 
 /**
  * Transforms the data from the GitHub API into a Stargazer entity.

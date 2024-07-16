@@ -2,7 +2,9 @@ import { GetResponseDataTypeFromEndpointMethod } from '@octokit/types';
 import { TimelineEvent } from '../entities/events.js';
 import { Issue, PullRequest } from '../entities/issue.js';
 import { Release } from '../entities/release.js';
+import { Repository } from '../entities/repository.js';
 import { Tag } from '../entities/tag.js';
+import { User } from '../entities/user.js';
 import { Watcher } from '../entities/watcher.js';
 import { clients } from './clients.js';
 import { ResourcesParams } from './repository/resources/index.js';
@@ -49,5 +51,25 @@ export type ResourceEndpoints = {
     response: GetResponseDataTypeFromEndpointMethod<typeof clients.rest.pulls.get>;
     result: PullRequest;
     params: ResourcesParams & { number: number };
+  };
+  'GET /repos/:owner/:name': {
+    response: GetResponseDataTypeFromEndpointMethod<typeof clients.rest.repos.get>;
+    result: Repository;
+    params: { owner: string; name: string };
+  };
+  'GET /repositories/:repo': {
+    response: GetResponseDataTypeFromEndpointMethod<typeof clients.rest.repos.get>;
+    result: Repository;
+    params: { repo: number };
+  };
+  'GET /user/:id': {
+    response: GetResponseDataTypeFromEndpointMethod<typeof clients.rest.users.getByUsername>;
+    result: User;
+    params: { id: number };
+  };
+  'GET /users/:login': {
+    response: GetResponseDataTypeFromEndpointMethod<typeof clients.rest.users.getByUsername>;
+    result: User;
+    params: { login: string };
   };
 };

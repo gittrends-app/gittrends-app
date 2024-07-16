@@ -1,11 +1,6 @@
-import { GetResponseDataTypeFromEndpointMethod, OctokitResponse } from '@octokit/types';
 import { MergeExclusive } from 'type-fest';
 import { Repository, repositorySchema } from '../../entities/repository.js';
-import { clients } from '../clients.js';
-
-type RequestResponse = OctokitResponse<
-  GetResponseDataTypeFromEndpointMethod<typeof clients.rest.repos.get>
->;
+import { request } from '../request.js';
 
 /**
  * Get a repository by owner and name.
@@ -18,11 +13,8 @@ export default async function get(
   const { owner, name, repo } = params;
 
   const [url, args] = repo
-    ? [`/repositories/${repo}`, {}]
-    : [`/repos/:owner/:name`, { owner, name }];
+    ? ['GET /repositories/:repo' as const, { repo }]
+    : ['GET /repos/:owner/:name' as const, { owner, name }];
 
-  return clients.rest.request(url, args).then((response: RequestResponse) => {
-    if (response.status !== 200) return undefined;
-    return repositorySchema.parse(response.data);
-  });
+  return request({ url, schema: repositorySchema }, args as any);
 }
