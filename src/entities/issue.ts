@@ -100,14 +100,20 @@ export const pullRequestSchema = createEntity(
       head: z.object({
         label: z.string(),
         ref: z.string(),
-        repo: repositorySchema.innerType().pick({ id: true, name: true, full_name: true }),
+        repo: repositorySchema
+          .innerType()
+          .pick({ id: true, name: true, full_name: true })
+          .optional(),
         sha: z.string(),
         user: userSchema.optional()
       }),
       base: z.object({
         label: z.string(),
         ref: z.string(),
-        repo: repositorySchema.innerType().pick({ id: true, name: true, full_name: true }),
+        repo: repositorySchema
+          .innerType()
+          .pick({ id: true, name: true, full_name: true })
+          .optional(),
         sha: z.string(),
         user: userSchema.optional()
       }),
@@ -125,8 +131,8 @@ export const pullRequestSchema = createEntity(
         .object({
           enabled_by: userSchema,
           merge_method: z.enum(['merge', 'squash', 'rebase']),
-          commit_title: z.string(),
-          commit_message: z.string()
+          commit_title: z.string().optional(),
+          commit_message: z.string().optional()
         })
         .optional(),
       merged: z.boolean(),

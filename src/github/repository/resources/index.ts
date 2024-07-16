@@ -1,15 +1,15 @@
-import { GetResponseDataTypeFromEndpointMethod, OctokitResponse } from '@octokit/types';
+import { OctokitResponse } from '@octokit/types';
 import consola from 'consola';
 import stringifyObject from 'stringify-object';
-import { ZodError, ZodSchema } from 'zod';
-import { TimelineEvent, timelineEventSchema } from '../../../entities/events.js';
-import { Issue, issueSchema } from '../../../entities/issue.js';
-import { Release, releaseSchema } from '../../../entities/release.js';
-import { RepositoryResource } from '../../../entities/repository.js';
-import { Tag, tagSchema } from '../../../entities/tag.js';
+import { ZodError, ZodType } from 'zod';
+import { timelineEventSchema } from '../../../entities/events.js';
+import { Issue, issueSchema, PullRequest, pullRequestSchema } from '../../../entities/issue.js';
+import { releaseSchema } from '../../../entities/release.js';
+import { tagSchema } from '../../../entities/tag.js';
 import { userSchema } from '../../../entities/user.js';
-import { Watcher, watcherSchema } from '../../../entities/watcher.js';
+import { watcherSchema } from '../../../entities/watcher.js';
 import { clients } from '../../clients.js';
+import { IterableEndpoints, ResourceEndpoints } from '../../endpoints.js';
 import stargazers from './stargazers.js';
 
 export type ResourcesParams = {
@@ -24,42 +24,32 @@ export type IterableResource<T> = AsyncIterable<{
   params: ResourcesParams;
 }>;
 
-type Endpoints = {
-  'GET /repositories/:repo/subscribers': {
-    response: GetResponseDataTypeFromEndpointMethod<
-      typeof clients.rest.activity.listWatchersForRepo
-    >;
-    result: Watcher;
-    params: ResourcesParams;
-  };
-  'GET /repositories/:repo/tags': {
-    response: GetResponseDataTypeFromEndpointMethod<typeof clients.rest.repos.listTags>;
-    result: Tag;
-    params: ResourcesParams;
-  };
-  'GET /repositories/:repo/releases': {
-    response: GetResponseDataTypeFromEndpointMethod<typeof clients.rest.repos.listReleases>;
-    result: Release;
-    params: ResourcesParams;
-  };
-  'GET /repositories/:repo/issues': {
-    response: GetResponseDataTypeFromEndpointMethod<typeof clients.rest.issues.list>;
-    result: Issue;
-    params: ResourcesParams & {
-      state: 'open' | 'closed' | 'all';
-      sort: 'created' | 'updated';
-      direction: 'asc' | 'desc';
-      since?: string;
-    };
-  };
-  'GET /repositories/:repo/issues/:number/timeline': {
-    response: GetResponseDataTypeFromEndpointMethod<
-      typeof clients.rest.issues.listEventsForTimeline
-    >;
-    result: TimelineEvent;
-    params: ResourcesParams & { number: number };
-  };
-};
+/**
+ * Get a resource of a repository
+ *
+ */
+async function request<K extends keyof ResourceEndpoints>(
+  resource: { url: K; schema: ZodType },
+  params: ResourceEndpoints[K]['params']
+): Promise<ResourceEndpoints[K]['result'] | undefined> {
+  return clients.rest
+    .request<string>(resource.url, { ...params })
+    .then((response: OctokitResponse<ResourceEndpoints[K]['response']>) => {
+      if (response.status !== 200)
+        throw new Error(`Failed to get ${resource.url} - ${response.status}`);
+      return resource.schema.parse({ ...response.data, __repository: params.repo });
+    });
+}
+
+/**
+ * Get a pull request by number.
+ */
+function pullRequest(params: ResourceEndpoints['GET /repositories/:repo/pulls/:number']['params']) {
+  return request(
+    { url: 'GET /repositories/:repo/pulls/:number', schema: pullRequestSchema },
+    params
+  );
+}
 
 /**
  * Get resources of a repository
@@ -69,10 +59,10 @@ type Endpoints = {
  * @param params - The properties to pass to the function.
  *
  */
-function resourceIterator<R extends keyof Endpoints>(
-  resource: { url: R; schema: ZodSchema },
-  params: Endpoints[R]['params']
-): IterableResource<Endpoints[R]['result']> {
+function iterator<R extends keyof IterableEndpoints>(
+  resource: { url: R; schema: ZodType },
+  params: IterableEndpoints[R]['params']
+): IterableResource<IterableEndpoints[R]['result']> {
   const { repo, page, per_page: perPage, ...requestParams } = params;
 
   return {
@@ -80,7 +70,7 @@ function resourceIterator<R extends keyof Endpoints>(
       let currentPage = Math.max(Number(page) || 1, 1);
 
       do {
-        const response: OctokitResponse<Endpoints[R]['response']> =
+        const response: OctokitResponse<IterableEndpoints[R]['response']> =
           await clients.rest.request<string>(resource.url, {
             repo,
             page: currentPage,
@@ -121,7 +111,7 @@ function resourceIterator<R extends keyof Endpoints>(
  * Get the tags of a repository by its id
  */
 function watchers(options: ResourcesParams) {
-  return resourceIterator(
+  return iterator(
     {
       url: 'GET /repositories/:repo/subscribers',
       schema: userSchema.transform((v) =>
@@ -136,27 +126,26 @@ function watchers(options: ResourcesParams) {
  * Get the tags of a repository by its id
  */
 function tags(options: ResourcesParams) {
-  return resourceIterator({ url: 'GET /repositories/:repo/tags', schema: tagSchema }, options);
+  return iterator({ url: 'GET /repositories/:repo/tags', schema: tagSchema }, options);
 }
 
 /**
  * Get the releases of a repository by its id
  */
 function releases(options: ResourcesParams) {
-  return resourceIterator(
-    { url: 'GET /repositories/:repo/releases', schema: releaseSchema },
-    options
-  );
+  return iterator({ url: 'GET /repositories/:repo/releases', schema: releaseSchema }, options);
 }
 
 /**
  * Get the issues of a repository by its id
  *
  */
-function issues(options: ResourcesParams & { since?: Date }): IterableResource<Issue> {
+function issues(
+  options: ResourcesParams & { since?: Date }
+): IterableResource<Issue | PullRequest> {
   return {
     [Symbol.asyncIterator]: async function* () {
-      const it = resourceIterator(
+      const it = iterator(
         { url: 'GET /repositories/:repo/issues', schema: issueSchema },
         {
           ...options,
@@ -169,6 +158,11 @@ function issues(options: ResourcesParams & { since?: Date }): IterableResource<I
 
       for await (const { data, params } of it) {
         for (const issue of data) {
+          if (issue.pull_request) {
+            const pr = await pullRequest({ repo: options.repo, number: issue.number });
+            Object.assign(issue, pr);
+          }
+
           for await (const tl of timeline({ repo: options.repo, issue: issue.number })) {
             const events = tl.data.map((e) => ({ ...e, __issue: issue.id }));
             if (Array.isArray(issue.__timeline)) issue.__timeline.push(...events);
@@ -186,7 +180,7 @@ function issues(options: ResourcesParams & { since?: Date }): IterableResource<I
  * Get the timeline of an issue by its id
  */
 function timeline({ issue, ...options }: ResourcesParams & { issue: number }) {
-  return resourceIterator(
+  return iterator(
     { url: 'GET /repositories/:repo/issues/:number/timeline', schema: timelineEventSchema },
     { ...options, number: issue }
   );
@@ -198,8 +192,6 @@ export const resources = {
   tags,
   stargazers,
   releases,
-  issues
-} satisfies Record<
-  string,
-  (options: ResourcesParams & { issue: number }) => IterableResource<RepositoryResource>
->;
+  issues,
+  pullRequest
+};
