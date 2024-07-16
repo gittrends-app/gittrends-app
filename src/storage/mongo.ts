@@ -2,7 +2,9 @@ import omit from 'lodash/omit.js';
 import { Collection, Db, WithId } from 'mongodb';
 import { Entity } from '../entities/entity.js';
 import { Repository } from '../entities/repository.js';
+import { Stargazer } from '../entities/stargazer.js';
 import { User } from '../entities/user.js';
+import { Watcher } from '../entities/watcher.js';
 import { extract } from '../helpers/extract.js';
 import { Storage } from './index.js';
 
@@ -77,6 +79,18 @@ export default function (db: Db) {
 
   return {
     users: usersStorage,
-    repos: wrapper(storage<Repository>(db.collection('repos'), (v) => v.node_id))
+    repos: wrapper(storage<Repository>(db.collection('repos'), (v) => v.node_id)),
+    watchers: wrapper(
+      storage<Watcher>(
+        db.collection('watchers'),
+        (v) => `${v.__repository}__${typeof v.user === 'number' ? v.user : v.user.id}`
+      )
+    ),
+    stargazers: wrapper(
+      storage<Stargazer>(
+        db.collection('stargazers'),
+        (v) => `${v.__repository}__${typeof v.user === 'number' ? v.user : v.user.id}`
+      )
+    )
   };
 }
