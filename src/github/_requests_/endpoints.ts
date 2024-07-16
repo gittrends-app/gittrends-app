@@ -1,13 +1,13 @@
 import { GetResponseDataTypeFromEndpointMethod } from '@octokit/types';
-import { TimelineEvent } from '../entities/events.js';
-import { Issue, PullRequest } from '../entities/issue.js';
-import { Release } from '../entities/release.js';
-import { Repository } from '../entities/repository.js';
-import { Tag } from '../entities/tag.js';
-import { User } from '../entities/user.js';
-import { Watcher } from '../entities/watcher.js';
-import { clients } from './clients.js';
-import { ResourcesParams } from './repository/resources/index.js';
+import { TimelineEvent } from '../../entities/events.js';
+import { Issue, PullRequest } from '../../entities/issue.js';
+import { Release } from '../../entities/release.js';
+import { Repository } from '../../entities/repository.js';
+import { Tag } from '../../entities/tag.js';
+import { User } from '../../entities/user.js';
+import { Watcher } from '../../entities/watcher.js';
+import { clients } from '../clients.js';
+import { ResourcesParams } from '../repository/resources/index.js';
 
 export type IterableEndpoints = {
   'GET /repositories/:repo/subscribers': {

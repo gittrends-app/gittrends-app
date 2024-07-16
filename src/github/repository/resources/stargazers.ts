@@ -1,7 +1,7 @@
 import { PartialDeep } from 'type-fest';
 import { Stargazer, stargazerSchema } from '../../../entities/stargazer.js';
+import { IterableResource } from '../../_requests_/iterator.js';
 import { clients } from '../../clients.js';
-import { IterableResource } from '../../iterator.js';
 import { ResourcesParams } from './index.js';
 
 /**

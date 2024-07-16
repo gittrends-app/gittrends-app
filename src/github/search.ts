@@ -1,8 +1,11 @@
 import min from 'lodash/min.js';
 import { Repository, repositorySchema } from '../entities/repository.js';
+import { IterableResource } from './_requests_/iterator.js';
 import { clients } from './clients.js';
 
 type SearchRepositoriesMetadata = {
+  page: number;
+  per_page: number;
   count: number;
   minStargazers: number;
   maxStargazers?: number;
@@ -12,7 +15,6 @@ type SearchOptions = {
   language?: string;
   minStargazers?: number;
   maxStargazers?: number;
-  onEach?: (data: Repository[], metadata: SearchRepositoriesMetadata) => void;
 };
 
 /**
@@ -21,48 +23,54 @@ type SearchOptions = {
  * @param total - The total number of repositories to return.
  * @param opts - The search parameters.
  */
-async function repos(total = 1000, opts: SearchOptions): Promise<Repository[]> {
-  const { language } = opts;
+function repos(
+  total = 1000,
+  opts?: SearchOptions
+): IterableResource<Repository, SearchRepositoriesMetadata> {
+  const { language } = opts || {};
 
-  const repos: Repository[] = [];
-
+  let page = 1;
   let count = 0;
-  let maxStargazers = Math.max(opts.maxStargazers || Infinity, 1);
-  const minStargazers = Math.max(opts.minStargazers || 1, 1);
 
-  while (count < total) {
-    const page = 1;
+  let maxStargazers = Math.max(opts?.maxStargazers || Infinity, 1);
+  let maxStargazersRepos: Repository[] = [];
 
-    let query = `stars:${minStargazers}..${maxStargazers === Infinity ? '*' : maxStargazers}`;
-    if (language) query += ` language:${language}`;
+  const minStargazers = Math.max(opts?.minStargazers || 1, 1);
 
-    const _repos = await clients.rest.paginate(
-      clients.rest.search.repos,
-      { q: query, sort: 'stars', order: 'desc', per_page: 100, page },
-      (response, done) => {
-        const res = response.data
-          .map((data) => repositorySchema.parse(data))
-          .filter((repo) => repos.every((r) => r.id !== repo.id))
-          .slice(0, total - count);
+  return {
+    [Symbol.asyncIterator]: async function* () {
+      do {
+        let query = `stars:${minStargazers}..${maxStargazers === Infinity ? '*' : maxStargazers}`;
+        if (language) query += ` language:${language}`;
 
-        if ((count += res.length) === total) done();
-
-        opts.onEach?.(res, {
-          count,
-          minStargazers,
-          maxStargazers: maxStargazers === Infinity ? undefined : maxStargazers
+        const it = clients.rest.paginate.iterator(clients.rest.search.repos, {
+          q: query,
+          sort: 'stars',
+          order: 'desc',
+          per_page: 100,
+          page: 1
         });
 
-        return res;
-      }
-    );
+        for await (const response of it) {
+          const _repos = response.data
+            .map((data) => repositorySchema.parse(data))
+            .filter((repo) => maxStargazersRepos.every((r) => r.id !== repo.id))
+            .slice(0, total - count);
 
-    _repos.forEach((repo) => repos.push(repo));
+          count += _repos.length;
+          maxStargazers = min(_repos.map((repo) => repo.stargazers_count)) || Infinity;
+          maxStargazersRepos = _repos.filter((repo) => repo.stargazers_count === maxStargazers);
 
-    maxStargazers = min(repos.map((repo) => repo.stargazers_count)) || Infinity;
-  }
+          yield {
+            data: _repos,
+            params: { page: page++, per_page: 100, count, minStargazers, maxStargazers }
+          };
 
-  return repos;
+          if (count >= total) return;
+        }
+      } while (true);
+    }
+  };
 }
 
 export default { repos };

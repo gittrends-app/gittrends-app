@@ -2,7 +2,7 @@ import { OctokitResponse } from '@octokit/types';
 import consola from 'consola';
 import stringifyObject from 'stringify-object';
 import { ZodError, ZodType } from 'zod';
-import { clients } from './clients.js';
+import { clients } from '../clients.js';
 import { IterableEndpoints } from './endpoints.js';
 
 export type PageableParams = {
@@ -11,9 +11,9 @@ export type PageableParams = {
   [key: string]: unknown;
 };
 
-export type IterableResource<T> = AsyncIterable<{
+export type IterableResource<T, P extends object = object> = AsyncIterable<{
   data: T[];
-  params: PageableParams;
+  params: PageableParams & P;
 }>;
 
 /**

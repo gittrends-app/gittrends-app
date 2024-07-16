@@ -5,9 +5,9 @@ import { RepositoryResource } from '../../../entities/repository.js';
 import { tagSchema } from '../../../entities/tag.js';
 import { userSchema } from '../../../entities/user.js';
 import { watcherSchema } from '../../../entities/watcher.js';
-import { ResourceEndpoints } from '../../endpoints.js';
-import { IterableResource, iterator, PageableParams } from '../../iterator.js';
-import { request } from '../../request.js';
+import { ResourceEndpoints } from '../../_requests_/endpoints.js';
+import { IterableResource, iterator, PageableParams } from '../../_requests_/iterator.js';
+import { request } from '../../_requests_/request.js';
 import stargazers from './stargazers.js';
 
 export type ResourcesParams = PageableParams & {

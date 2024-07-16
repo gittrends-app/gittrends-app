@@ -1,6 +1,6 @@
 import { MergeExclusive } from 'type-fest';
 import { Repository, repositorySchema } from '../../entities/repository.js';
-import { request } from '../request.js';
+import { request } from '../_requests_/request.js';
 
 /**
  * Get a repository by owner and name.

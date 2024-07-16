@@ -1,6 +1,6 @@
 import { OctokitResponse } from '@octokit/types';
 import { ZodType } from 'zod';
-import { clients } from './clients.js';
+import { clients } from '../clients.js';
 import { ResourceEndpoints } from './endpoints.js';
 
 /**
