@@ -20,11 +20,13 @@ import { createMongoStorage } from '../storage/index.js';
     validate: (value) => /.*\/.*/.test(value) || 'Invalid repository name.'
   });
 
-  const resource: 'watchers' | 'stargazers' = await select({
+  const resource: 'tags' | 'releases' | 'watchers' | 'stargazers' = await select({
     message: 'Select the resource to retrieve:',
     choices: [
-      { name: 'Stargazers', value: 'stargazers' },
-      { name: 'Watchers', value: 'watchers' }
+      { value: 'tags' },
+      { value: 'releases' },
+      { value: 'stargazers' },
+      { value: 'watchers' }
     ]
   });
 
@@ -50,6 +52,19 @@ import { createMongoStorage } from '../storage/index.js';
         consola.log(chalk.bgGreen(`\nPage ${params.page}: ${data.length} ${resource} ...`));
         await storage[resource].save(data as any, true);
         for (const { user } of data) consola.log(`${index++}. ${(user as User).login}`);
+      }
+      break;
+    }
+
+    case 'tags':
+    case 'releases': {
+      const iterator = github.repos[resource]({ repo: repo.id });
+
+      let index = 1;
+      for await (const { data, params } of iterator) {
+        consola.log(chalk.bgGreen(`\nPage ${params.page}: ${data.length} ${resource} ...`));
+        await storage[resource].save(data as any, true);
+        for (const { name } of data) consola.log(`${index++}. ${name}`);
       }
       break;
     }

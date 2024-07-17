@@ -1,8 +1,10 @@
 import omit from 'lodash/omit.js';
 import { Collection, Db, WithId } from 'mongodb';
 import { Entity } from '../entities/entity.js';
+import { Release } from '../entities/release.js';
 import { Repository } from '../entities/repository.js';
 import { Stargazer } from '../entities/stargazer.js';
+import { Tag } from '../entities/tag.js';
 import { User } from '../entities/user.js';
 import { Watcher } from '../entities/watcher.js';
 import { extract } from '../helpers/extract.js';
@@ -17,9 +19,12 @@ function storage<T extends Entity>(collection: Collection, key: (obj: T) => stri
       return collection.findOne<WithId<T>>(query).then((data) => omit(data, '_id') as unknown as T);
     },
     save: async (data, replace) => {
+      const items = Array.isArray(data) ? data : [data];
+      if (!items.length) return;
+
       await collection
         .bulkWrite(
-          (Array.isArray(data) ? data : [data]).map((item) => ({
+          items.map((item) => ({
             ...(replace
               ? {
                   replaceOne: {
@@ -91,6 +96,8 @@ export default function (db: Db) {
         db.collection('stargazers'),
         (v) => `${v.__repository}__${typeof v.user === 'number' ? v.user : v.user.id}`
       )
-    )
+    ),
+    tags: wrapper(storage<Tag>(db.collection('tags'), (v) => v.node_id)),
+    releases: wrapper(storage<Release>(db.collection('releases'), (v) => v.node_id))
   };
 }
