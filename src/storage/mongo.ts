@@ -1,6 +1,9 @@
 import omit from 'lodash/omit.js';
 import { Collection, Db, WithId } from 'mongodb';
+import objectHash from 'object-hash';
 import { Entity } from '../entities/entity.js';
+import { TimelineEvent } from '../entities/events.js';
+import { Issue, PullRequest } from '../entities/issue.js';
 import { Release } from '../entities/release.js';
 import { Repository } from '../entities/repository.js';
 import { Stargazer } from '../entities/stargazer.js';
@@ -70,8 +73,9 @@ function storage<T extends Entity>(collection: Collection, key: (obj: T) => stri
  */
 export default function (db: Db) {
   const usersStorage = storage<User>(db.collection('users'), (v) => v.node_id);
+  const timelineStorage = storage<any>(db.collection('timeline'), (v) => objectHash(v));
 
-  const wrapper = <T extends Entity>(storage: Storage<T>): Storage<T> => {
+  const withUser = <T extends Entity>(storage: Storage<T>): Storage<T> => {
     const saveEntity = storage.save.bind(storage);
 
     storage.save = async function (entities, replace) {
@@ -82,22 +86,51 @@ export default function (db: Db) {
     return storage;
   };
 
+  const withTimeline = <T extends Issue>(storage: Storage<T>): Storage<T> => {
+    const saveEntity = storage.save.bind(storage);
+
+    storage.save = async function (entities, replace) {
+      const events = (Array.isArray(entities) ? entities : [entities]).reduce(
+        (memo: Array<TimelineEvent>, entity) =>
+          Array.isArray(entity.__timeline)
+            ? memo.concat(entity.__timeline as Array<TimelineEvent>)
+            : memo,
+        []
+      );
+
+      const data = (Array.isArray(entities) ? entities : [entities]).map((entity) => ({
+        ...entity,
+        __timeline:
+          entity.__timeline && Array.isArray(entity.__timeline)
+            ? entity.__timeline.length
+            : entity.__timeline
+      }));
+
+      await Promise.all([timelineStorage.save(events, false), saveEntity(data, replace)]);
+    };
+
+    return storage;
+  };
+
   return {
     users: usersStorage,
-    repos: wrapper(storage<Repository>(db.collection('repos'), (v) => v.node_id)),
-    watchers: wrapper(
+    repos: withUser(storage<Repository>(db.collection('repos'), (v) => v.node_id)),
+    watchers: withUser(
       storage<Watcher>(
         db.collection('watchers'),
         (v) => `${v.__repository}__${typeof v.user === 'number' ? v.user : v.user.id}`
       )
     ),
-    stargazers: wrapper(
+    stargazers: withUser(
       storage<Stargazer>(
         db.collection('stargazers'),
         (v) => `${v.__repository}__${typeof v.user === 'number' ? v.user : v.user.id}`
       )
     ),
-    tags: wrapper(storage<Tag>(db.collection('tags'), (v) => v.node_id)),
-    releases: wrapper(storage<Release>(db.collection('releases'), (v) => v.node_id))
+    tags: withUser(storage<Tag>(db.collection('tags'), (v) => v.node_id)),
+    releases: withUser(storage<Release>(db.collection('releases'), (v) => v.node_id)),
+    issues: withUser(
+      withTimeline(storage<Issue | PullRequest>(db.collection('issues'), (v) => v.node_id))
+    )
   };
 }

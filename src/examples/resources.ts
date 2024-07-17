@@ -20,12 +20,13 @@ import { createMongoStorage } from '../storage/index.js';
     validate: (value) => /.*\/.*/.test(value) || 'Invalid repository name.'
   });
 
-  const resource: 'tags' | 'releases' | 'watchers' | 'stargazers' = await select({
+  const resource = await select({
     message: 'Select the resource to retrieve:',
     choices: [
-      { value: 'tags' },
+      { value: 'issues' },
       { value: 'releases' },
       { value: 'stargazers' },
+      { value: 'tags' },
       { value: 'watchers' }
     ]
   });
@@ -65,6 +66,20 @@ import { createMongoStorage } from '../storage/index.js';
         consola.log(chalk.bgGreen(`\nPage ${params.page}: ${data.length} ${resource} ...`));
         await storage[resource].save(data as any, true);
         for (const { name } of data) consola.log(`${index++}. ${name}`);
+      }
+      break;
+    }
+
+    case 'issues': {
+      const iterator = github.repos[resource]({ repo: repo.id, per_page: 25 });
+
+      for await (const { data, params } of iterator) {
+        consola.log(chalk.bgGreen(`\nPage ${params.page}: ${data.length} ${resource} ...`));
+        await storage[resource].save(data as any, true);
+        for (const issue of data)
+          consola.info(
+            `${issue.__typename.toUpperCase()}-${issue.number}. ${issue.title.slice(0, 50)}${issue.title.length ? '...' : ''} (${issue.state} - ${typeof issue.__timeline === 'number' ? issue.__timeline : issue.__timeline?.length} events)`
+          );
       }
       break;
     }
