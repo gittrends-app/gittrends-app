@@ -37,7 +37,6 @@ export function iterator<R extends keyof IterableEndpoints>(
       do {
         const response: OctokitResponse<IterableEndpoints[R]['response']> =
           await clients.rest.request<string>(resource.url, {
-            mediaType: { previews: ['starfox'] },
             page: currentPage,
             per_page: perPage || 100,
             ...requestParams

@@ -12,6 +12,7 @@ const FullOctokit = Octokit.plugin(throttling).plugin(retry);
 const rest = new FullOctokit({
   baseUrl: env.GITHUB_API_BASE_URL,
   auth: env.GITHUB_API_TOKEN,
+  mediaType: { previews: ['starfox'] },
   retry: { enabled: true },
   throttle: {
     enabled: true,
