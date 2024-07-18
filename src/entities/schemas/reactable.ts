@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const reactableSchema = z.object({
+export default z.object({
   total_count: z.number().int(),
   '+1': z.number().int(),
   '-1': z.number().int(),
@@ -11,5 +11,3 @@ export const reactableSchema = z.object({
   eyes: z.number().int(),
   rocket: z.number().int()
 });
-
-export type Reactable = z.infer<typeof reactableSchema>;

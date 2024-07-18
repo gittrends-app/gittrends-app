@@ -1,11 +1,10 @@
 import { describe, expect, it } from '@jest/globals';
-import { pullRequestSchema } from './issue.js';
+import pullRequestSchema from './pull_request.js';
 
 describe('PullRequest', () => {
   it('should parse full PR from docs', () => {
     expect(
       pullRequestSchema.parse({
-        __repository: 123456789,
         url: 'https://api.github.com/repos/octocat/Hello-World/pulls/1347',
         id: 1,
         node_id: 'MDExOlB1bGxSZXF1ZXN0MQ==',
@@ -542,9 +541,6 @@ describe('PullRequest', () => {
         changed_files: 5
       })
     ).toEqual({
-      __repository: 123456789,
-      __typename: 'PullRequest',
-      __obtained_at: expect.any(Date),
       url: 'https://api.github.com/repos/octocat/Hello-World/pulls/1347',
       id: 1,
       node_id: 'MDExOlB1bGxSZXF1ZXN0MQ==',

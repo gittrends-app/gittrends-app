@@ -1,11 +1,14 @@
 import { GetResponseDataTypeFromEndpointMethod } from '@octokit/types';
-import { TimelineEvent } from '../../entities/events.js';
-import { Issue, PullRequest } from '../../entities/issue.js';
-import { Release } from '../../entities/release.js';
-import { Repository } from '../../entities/repository.js';
-import { Tag } from '../../entities/tag.js';
-import { User } from '../../entities/user.js';
-import { Watcher } from '../../entities/watcher.js';
+import {
+  Issue,
+  PullRequest,
+  Release,
+  Repository,
+  Tag,
+  TimelineEvent,
+  User,
+  Watcher
+} from '../../entities/entity.js';
 import { clients } from '../clients.js';
 import { ResourcesParams } from '../repository/resources/index.js';
 

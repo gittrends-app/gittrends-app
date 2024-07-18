@@ -1,5 +1,5 @@
 import { describe, expect, it } from '@jest/globals';
-import { userSchema } from './user';
+import userSchema from './user';
 
 describe('User entity', () => {
   const baseFields = {
@@ -22,12 +22,6 @@ describe('User entity', () => {
   it('should remove null fields', () => {
     const result = userSchema.parse({ ...baseFields, bio: null });
     expect(result).not.toHaveProperty('bio');
-  });
-
-  it('should add __typename and __obtained_at to user', () => {
-    const result = userSchema.parse(baseFields);
-    expect(result).toHaveProperty('__typename', 'User');
-    expect(result).toHaveProperty('__obtained_at', expect.any(Date));
   });
 
   it('should parse organizations from search', () => {
@@ -82,9 +76,7 @@ describe('User entity', () => {
       avatar_url: 'https://avatars.githubusercontent.com/u/170270?v=4',
       url: 'https://api.github.com/users/sindresorhus',
       type: 'User',
-      site_admin: false,
-      __typename: 'User',
-      __obtained_at: expect.any(Date)
+      site_admin: false
     });
   });
 
@@ -141,9 +133,7 @@ describe('User entity', () => {
       followers: 10892,
       following: 0,
       created_at: new Date('2012-11-29T05:47:03Z'),
-      updated_at: new Date('2022-11-27T13:00:41Z'),
-      __typename: 'User',
-      __obtained_at: expect.any(Date)
+      updated_at: new Date('2022-11-27T13:00:41Z')
     });
   });
 });

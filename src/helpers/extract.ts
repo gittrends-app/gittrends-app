@@ -1,7 +1,7 @@
 import cloneDeep from 'lodash/cloneDeep.js';
 import isPlainObject from 'lodash/isPlainObject.js';
 import mapValues from 'lodash/mapValues.js';
-import { User } from '../entities/user.js';
+import { User } from '../entities/schemas/user.js';
 
 /**
  *

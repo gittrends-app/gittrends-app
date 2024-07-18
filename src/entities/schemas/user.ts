@@ -1,8 +1,7 @@
 import { z } from 'zod';
-import { createEntity } from './entity.js';
+import { zodSanitize } from '../../helpers/sanitize.js';
 
-export const userSchema = createEntity(
-  'User',
+export default zodSanitize(
   z.object({
     login: z.string(),
     id: z.number().int(),
@@ -32,5 +31,3 @@ export const userSchema = createEntity(
     collaborators: z.number().int().optional()
   })
 );
-
-export type User = z.infer<typeof userSchema>;

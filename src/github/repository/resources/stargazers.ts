@@ -1,5 +1,5 @@
 import { PartialDeep } from 'type-fest';
-import { Stargazer, stargazerSchema } from '../../../entities/stargazer.js';
+import { schemas, Stargazer } from '../../../entities/entity.js';
 import { IterableResource } from '../../_requests_/iterator.js';
 import { clients } from '../../clients.js';
 import { ResourcesParams } from './index.js';
@@ -100,7 +100,7 @@ export default function (options: ResourcesParams): IterableResource<Stargazer> 
 
         const stars = (repository.stargazers.edges || [])
           .map((edge) => edge && transform(edge))
-          .map((data) => stargazerSchema.parse({ ...data, __repository: repository.databaseId }));
+          .map((data) => schemas.stargazer({ ...data, __repository: repository.databaseId }));
 
         metadata.endCursor = repository.stargazers.pageInfo.endCursor || undefined;
         metadata.hasNextPage = repository.stargazers.pageInfo.hasNextPage || false;

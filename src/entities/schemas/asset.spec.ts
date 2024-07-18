@@ -1,5 +1,5 @@
 import { describe, expect, it } from '@jest/globals';
-import { assetSchema } from './asset.js';
+import assetSchema from './asset.js';
 
 describe('Asset entity', () => {
   const baseFields = {

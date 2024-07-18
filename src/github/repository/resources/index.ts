@@ -1,10 +1,4 @@
-import { timelineEventSchema } from '../../../entities/events.js';
-import { Issue, issueSchema, PullRequest, pullRequestSchema } from '../../../entities/issue.js';
-import { releaseSchema } from '../../../entities/release.js';
-import { RepositoryResource } from '../../../entities/repository.js';
-import { tagSchema } from '../../../entities/tag.js';
-import { userSchema } from '../../../entities/user.js';
-import { watcherSchema } from '../../../entities/watcher.js';
+import { Issue, PullRequest, RepositoryResource, schemas } from '../../../entities/entity.js';
 import { ResourceEndpoints } from '../../_requests_/endpoints.js';
 import { IterableResource, iterator, PageableParams } from '../../_requests_/iterator.js';
 import { request } from '../../_requests_/request.js';
@@ -21,7 +15,7 @@ function pullRequest(params: ResourceEndpoints['GET /repositories/:repo/pulls/:n
   return request(
     {
       url: 'GET /repositories/:repo/pulls/:number',
-      schema: pullRequestSchema,
+      parser: schemas.pull_request,
       metadata: { __repository: params.repo }
     },
     params
@@ -35,9 +29,7 @@ function watchers(options: ResourcesParams) {
   return iterator(
     {
       url: 'GET /repositories/:repo/subscribers',
-      schema: userSchema.transform((v) =>
-        watcherSchema.parse({ user: v, __repository: options.repo })
-      ),
+      parser: schemas.watcher,
       metadata: { __repository: options.repo }
     },
     options
@@ -51,7 +43,7 @@ function tags(options: ResourcesParams) {
   return iterator(
     {
       url: 'GET /repositories/:repo/tags',
-      schema: tagSchema,
+      parser: schemas.tag,
       metadata: { __repository: options.repo }
     },
     options
@@ -65,7 +57,7 @@ function releases(options: ResourcesParams) {
   return iterator(
     {
       url: 'GET /repositories/:repo/releases',
-      schema: releaseSchema,
+      parser: schemas.release,
       metadata: { __repository: options.repo }
     },
     options
@@ -84,7 +76,7 @@ function issues(
       const it = iterator(
         {
           url: 'GET /repositories/:repo/issues',
-          schema: issueSchema,
+          parser: schemas.issue,
           metadata: { __repository: options.repo }
         },
         {
@@ -123,7 +115,7 @@ function timeline({ issue, ...options }: ResourcesParams & { issue: number }) {
   return iterator(
     {
       url: 'GET /repositories/:repo/issues/:number/timeline',
-      schema: timelineEventSchema,
+      parser: schemas.timeline_event,
       metadata: { __repository: options.repo, __issue: issue }
     },
     { ...options, number: issue }

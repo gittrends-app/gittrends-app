@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import { userSchema } from '../user.js';
+import userSchema from './user.js';
 
-export const assetSchema = z.object({
+export default z.object({
   url: z.string().url(),
   browser_download_url: z.string().url(),
   id: z.number().int(),
@@ -16,5 +16,3 @@ export const assetSchema = z.object({
   updated_at: z.coerce.date(),
   uploader: z.union([userSchema, z.number()]).optional()
 });
-
-export type Asset = z.infer<typeof assetSchema>;

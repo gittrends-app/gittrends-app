@@ -1,5 +1,5 @@
 import { describe, expect, it } from '@jest/globals';
-import { releaseSchema } from './release.js';
+import releaseSchema from './release.js';
 
 describe('Release entity', () => {
   const baseFields = {
@@ -20,8 +20,7 @@ describe('Release entity', () => {
     draft: false,
     prerelease: true,
     created_at: '2024-07-02T09:43:58Z',
-    assets: [],
-    __repository: 272836
+    assets: []
   };
 
   it('should validate required fields', () => {
@@ -29,12 +28,6 @@ describe('Release entity', () => {
     for (const key of Object.keys(baseFields)) {
       expect(() => releaseSchema.parse({ ...baseFields, [key]: undefined })).toThrowError();
     }
-  });
-
-  it('should add __typename and __obtained_at to tag', () => {
-    const result = releaseSchema.parse(baseFields);
-    expect(result).toHaveProperty('__typename', 'Release');
-    expect(result).toHaveProperty('__obtained_at', expect.any(Date));
   });
 
   it('should parse results from search', () => {
@@ -126,8 +119,7 @@ describe('Release entity', () => {
           heart: 0,
           rocket: 1,
           eyes: 1
-        },
-        __repository: 272836
+        }
       })
     ).toEqual({
       url: 'https://api.github.com/repos/kubernetes/kubernetes/releases/103386457',
@@ -143,10 +135,7 @@ describe('Release entity', () => {
       published_at: new Date('2023-05-17T21:55:19Z'),
       assets: [expect.objectContaining({ id: 108642925 })],
       body: '\nSee [kubernetes-announce@](https://groups.google.com/forum/#!forum/kubernetes-announce). Additional binary downloads are linked in the [CHANGELOG](https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.26.md).\n\nSee [the CHANGELOG](https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.26.md) for more details.\n\n\n\n',
-      reactions: expect.objectContaining({ total_count: 2 }),
-      __typename: 'Release',
-      __obtained_at: expect.any(Date),
-      __repository: 272836
+      reactions: expect.objectContaining({ total_count: 2 })
     });
   });
 

@@ -1,8 +1,9 @@
 import { describe, expect, it } from '@jest/globals';
-import { watcherSchema } from './watcher.js';
+import stargazerSchema from './stargazer.js';
 
-describe('Watcher entity', () => {
+describe('Stargazer entity', () => {
   const sample = {
+    starred_at: '2014-06-10T17:13:03Z',
     user: {
       login: 'danielbruns',
       id: 1478925,
@@ -21,24 +22,17 @@ describe('Watcher entity', () => {
       received_events_url: 'https://api.github.com/users/danielbruns/received_events',
       type: 'User',
       site_admin: false
-    },
-    __repository: 20580498
+    }
   };
 
   it('should validate required fields', () => {
-    expect(() => watcherSchema.parse(sample)).not.toThrowError();
+    expect(() => stargazerSchema.parse(sample)).not.toThrowError();
     for (const key of Object.keys(sample)) {
-      expect(() => watcherSchema.parse({ ...sample, [key]: undefined })).toThrowError();
+      expect(() => stargazerSchema.parse({ ...sample, [key]: undefined })).toThrowError();
     }
   });
 
-  it('should add __typename and __obtained_at to user', () => {
-    const result = watcherSchema.parse(sample);
-    expect(result).toHaveProperty('__typename', 'Watcher');
-    expect(result).toHaveProperty('__obtained_at', expect.any(Date));
-  });
-
   it('should allow user to be a id', () => {
-    expect(() => watcherSchema.parse({ ...sample, user: 1 })).not.toThrowError();
+    expect(() => stargazerSchema.parse({ ...sample, user: 1 })).not.toThrowError();
   });
 });

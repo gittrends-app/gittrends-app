@@ -1,5 +1,5 @@
 import { describe, expect, it } from '@jest/globals';
-import { repositorySchema } from './repository';
+import repositorySchema from './repository';
 
 describe('Repository entity', () => {
   const baseFields = {
@@ -53,12 +53,6 @@ describe('Repository entity', () => {
   it('should remove empty strings', () => {
     const result = repositorySchema.parse({ ...baseFields, homepage: '' });
     expect(result).not.toHaveProperty('homepage');
-  });
-
-  it('should add __typename and __obtained_at to user', () => {
-    const result = repositorySchema.parse(baseFields);
-    expect(result).toHaveProperty('__typename', 'Repository');
-    expect(result).toHaveProperty('__obtained_at', expect.any(Date));
   });
 
   it('should parse repository from search', () => {
@@ -254,9 +248,7 @@ describe('Repository entity', () => {
       forks: 36168,
       open_issues: 233,
       watchers: 393343,
-      default_branch: 'main',
-      __typename: 'Repository',
-      __obtained_at: expect.any(Date)
+      default_branch: 'main'
     });
   });
 
@@ -439,14 +431,7 @@ describe('Repository entity', () => {
       default_branch: 'main',
       organization: expect.objectContaining({ login: 'twbs', id: 2918581 }),
       network_count: 78548,
-      subscribers_count: 6748,
-      __typename: 'Repository',
-      __obtained_at: expect.any(Date)
+      subscribers_count: 6748
     });
-  });
-
-  it('should allow owner and organization to be a id', () => {
-    expect(() => repositorySchema.parse({ ...baseFields, user: 1 })).not.toThrowError();
-    expect(() => repositorySchema.parse({ ...baseFields, organization: 1 })).not.toThrowError();
   });
 });

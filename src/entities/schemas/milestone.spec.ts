@@ -1,5 +1,5 @@
 import { describe, expect, it } from '@jest/globals';
-import { milestoneSchema } from './milestone.js';
+import milestoneSchema from './milestone.js';
 
 describe('Milestone entity', () => {
   const example = {

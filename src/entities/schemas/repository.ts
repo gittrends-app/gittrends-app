@@ -1,9 +1,8 @@
 import { z } from 'zod';
-import { createEntity } from './entity.js';
-import { userSchema } from './user.js';
+import { zodSanitize } from '../../helpers/sanitize.js';
+import userSchema from './user.js';
 
-export const repositorySchema = createEntity(
-  'Repository',
+export default zodSanitize(
   z.object({
     id: z.number().int(),
     node_id: z.string(),
@@ -82,10 +81,3 @@ export const repositorySchema = createEntity(
       .optional()
   })
 );
-
-export const repoResourceSchema = z.object({
-  __repository: z.union([z.number(), repositorySchema.transform((v) => v.id)])
-});
-
-export type Repository = z.infer<typeof repositorySchema>;
-export type RepositoryResource = z.infer<typeof repoResourceSchema>;

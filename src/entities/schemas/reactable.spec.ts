@@ -1,5 +1,5 @@
 import { describe, expect, it } from '@jest/globals';
-import { reactableSchema } from './reactable.js';
+import reactableSchema from './reactable.js';
 
 describe('Reactable entity', () => {
   const baseFields = {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from '@jest/globals';
-import { issueSchema } from './issue.js';
+import issueSchema from './issue.js';
 
 describe('Issue entity', () => {
   const sample = {
@@ -24,8 +24,7 @@ describe('Issue entity', () => {
     comments: 0,
     created_at: '2011-04-22T13:33:48Z',
     updated_at: '2011-04-22T13:33:48Z',
-    author_association: 'COLLABORATOR',
-    __repository: 1296269
+    author_association: 'COLLABORATOR'
   };
 
   it('should validate required fields', () => {
@@ -198,8 +197,7 @@ describe('Issue entity', () => {
           site_admin: false
         },
         author_association: 'COLLABORATOR',
-        state_reason: 'completed',
-        __repository: 1296269
+        state_reason: 'completed'
       })
     ).toEqual({
       id: 1,
@@ -224,10 +222,7 @@ describe('Issue entity', () => {
       updated_at: new Date('2011-04-22T13:33:48Z'),
       closed_by: expect.objectContaining({ id: 1 }),
       author_association: 'COLLABORATOR',
-      state_reason: 'completed',
-      __typename: 'Issue',
-      __obtained_at: expect.any(Date),
-      __repository: 1296269
+      state_reason: 'completed'
     });
   });
 });

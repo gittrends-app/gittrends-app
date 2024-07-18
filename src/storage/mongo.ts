@@ -1,15 +1,17 @@
 import omit from 'lodash/omit.js';
 import { Collection, Db, WithId } from 'mongodb';
 import objectHash from 'object-hash';
-import { Entity } from '../entities/entity.js';
-import { TimelineEvent } from '../entities/events.js';
-import { Issue, PullRequest } from '../entities/issue.js';
-import { Release } from '../entities/release.js';
-import { Repository } from '../entities/repository.js';
-import { Stargazer } from '../entities/stargazer.js';
-import { Tag } from '../entities/tag.js';
-import { User } from '../entities/user.js';
-import { Watcher } from '../entities/watcher.js';
+import {
+  Entity,
+  Issue,
+  Release,
+  Repository,
+  Stargazer,
+  Tag,
+  TimelineEvent,
+  User,
+  Watcher
+} from '../entities/entity.js';
 import { extract } from '../helpers/extract.js';
 import { Storage } from './index.js';
 
@@ -129,8 +131,6 @@ export default function (db: Db) {
     ),
     tags: withUser(storage<Tag>(db.collection('tags'), (v) => v.node_id)),
     releases: withUser(storage<Release>(db.collection('releases'), (v) => v.node_id)),
-    issues: withUser(
-      withTimeline(storage<Issue | PullRequest>(db.collection('issues'), (v) => v.node_id))
-    )
+    issues: withUser(withTimeline(storage<Issue>(db.collection('issues'), (v) => v.node_id)))
   };
 }

@@ -1,7 +1,7 @@
 import { OctokitResponse } from '@octokit/types';
 import consola from 'consola';
 import stringifyObject from 'stringify-object';
-import { ZodError, ZodType } from 'zod';
+import { ZodError } from 'zod';
 import { clients } from '../clients.js';
 import { IterableEndpoints } from './endpoints.js';
 
@@ -25,7 +25,11 @@ export type IterableResource<T, P extends object = object> = AsyncIterable<{
  *
  */
 export function iterator<R extends keyof IterableEndpoints>(
-  resource: { url: R; schema: ZodType; metadata?: object },
+  resource: {
+    url: R;
+    parser: (...args: any[]) => IterableEndpoints[R]['result'];
+    metadata?: object;
+  },
   params: IterableEndpoints[R]['params']
 ): IterableResource<IterableEndpoints[R]['result']> {
   const { page, per_page: perPage, ...requestParams } = params;
@@ -45,7 +49,7 @@ export function iterator<R extends keyof IterableEndpoints>(
         yield {
           data: response.data.map((data: Record<string, any>) => {
             try {
-              return resource.schema.parse({
+              return resource.parser({
                 ...data,
                 ...resource.metadata
               });
