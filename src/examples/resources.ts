@@ -2,10 +2,18 @@ import { input, select } from '@inquirer/prompts';
 import chalk from 'chalk';
 import consola from 'consola';
 import { MongoClient } from 'mongodb';
+import { Entity } from '../entities/entity.js';
+import { Issue } from '../entities/issue.js';
+import { Release } from '../entities/release.js';
+import { Stargazer } from '../entities/stargazer.js';
+import { Tag } from '../entities/tag.js';
 import { User } from '../entities/user.js';
+import { Watcher } from '../entities/watcher.js';
+import { IterableResource } from '../github/_requests_/iterator.js';
 import { github } from '../github/index.js';
 import get from '../github/repository/get.js';
 import { createMongoStorage } from '../storage/index.js';
+import { withStorage, withStorageIt } from '../storage/withStorage.js';
 
 (async () => {
   const conn = await MongoClient.connect('mongodb://localhost:27017');
@@ -20,7 +28,7 @@ import { createMongoStorage } from '../storage/index.js';
     validate: (value) => /.*\/.*/.test(value) || 'Invalid repository name.'
   });
 
-  const resource = await select({
+  const resource = await select<'issues' | 'releases' | 'stargazers' | 'tags' | 'watchers'>({
     message: 'Select the resource to retrieve:',
     choices: [
       { value: 'issues' },
@@ -34,58 +42,66 @@ import { createMongoStorage } from '../storage/index.js';
   consola.log('');
   consola.info(`Getting repository information...`);
   const [owner, name] = repository.split('/');
-  const repo = await get({ owner: owner, name: name });
+  const repo = await withStorage(get)({ owner: owner, name: name, storage: storage.repos });
   if (!repo) throw new Error('Repository not found!');
 
-  consola.info('Saving repository information...');
-  await storage.repos.save(repo, true);
+  const map = {
+    stargazers: {
+      it: () =>
+        withStorageIt(github.repos.stargazers)({
+          repo: repo.node_id,
+          storage: storage.stargazers
+        }),
+      print: (entity: Stargazer, index) =>
+        consola.log(`${index || '?'}. ${(entity.user as User).login}`)
+    },
+    watchers: {
+      it: () =>
+        withStorageIt(github.repos.watchers)({
+          repo: repo.id,
+          storage: storage.watchers
+        }),
+      print: (entity: Watcher, index) =>
+        consola.log(`${index || '?'}. ${(entity.user as User).login}`)
+    },
+    tags: {
+      it: () =>
+        withStorageIt(github.repos.tags)({
+          repo: repo.id,
+          storage: storage.tags
+        }),
+      print: (entity: Tag, index) => consola.log(`${index || '?'}. ${entity.name}`)
+    },
+    releases: {
+      it: () =>
+        withStorageIt(github.repos.releases)({
+          repo: repo.id,
+          storage: storage.releases
+        }),
+      print: (entity: Release, index) => consola.log(`${index || '?'}. ${entity.name}`)
+    },
+    issues: {
+      it: () =>
+        withStorageIt(github.repos.issues)({
+          repo: repo.id,
+          per_page: 25,
+          storage: storage.issues
+        }),
+      print: (issue: Issue) =>
+        consola.log(
+          `${issue.__typename.toUpperCase()}-${issue.number}. ${issue.title.slice(0, 50)}${issue.title.length ? '...' : ''} (${issue.state} - ${typeof issue.__timeline === 'number' ? issue.__timeline : issue.__timeline?.length} events)`
+        )
+    }
+  } satisfies Record<
+    string,
+    { it: () => IterableResource<Entity>; print: (entity: any, index?: number) => any }
+  >;
 
+  let index = 1;
   consola.info(`Getting ${resource} ...`);
-  switch (resource) {
-    case 'stargazers':
-    case 'watchers': {
-      const iterator = github.repos[resource]({
-        repo: resource === 'stargazers' ? repo.node_id : repo.id
-      });
-
-      let index = 1;
-      for await (const { data, params } of iterator) {
-        consola.log(chalk.bgGreen(`\nPage ${params.page}: ${data.length} ${resource} ...`));
-        await storage[resource].save(data as any, true);
-        for (const { user } of data) consola.log(`${index++}. ${(user as User).login}`);
-      }
-      break;
-    }
-
-    case 'tags':
-    case 'releases': {
-      const iterator = github.repos[resource]({ repo: repo.id });
-
-      let index = 1;
-      for await (const { data, params } of iterator) {
-        consola.log(chalk.bgGreen(`\nPage ${params.page}: ${data.length} ${resource} ...`));
-        await storage[resource].save(data as any, true);
-        for (const { name } of data) consola.log(`${index++}. ${name}`);
-      }
-      break;
-    }
-
-    case 'issues': {
-      const iterator = github.repos[resource]({ repo: repo.id, per_page: 25 });
-
-      for await (const { data, params } of iterator) {
-        consola.log(chalk.bgGreen(`\nPage ${params.page}: ${data.length} ${resource} ...`));
-        await storage[resource].save(data as any, true);
-        for (const issue of data)
-          consola.info(
-            `${issue.__typename.toUpperCase()}-${issue.number}. ${issue.title.slice(0, 50)}${issue.title.length ? '...' : ''} (${issue.state} - ${typeof issue.__timeline === 'number' ? issue.__timeline : issue.__timeline?.length} events)`
-          );
-      }
-      break;
-    }
-
-    default:
-      throw new Error('Invalid resource!');
+  for await (const { data, params } of map[resource].it()) {
+    consola.log(chalk.bgGreen(`\nPage ${params.page}: ${data.length} ${resource} ...`));
+    for (const item of data) map[resource].print(item as any, index++);
   }
 
   consola.log('');
