@@ -2,6 +2,7 @@ import { GetResponseDataTypeFromEndpointMethod } from '@octokit/types';
 import {
   Issue,
   PullRequest,
+  Reaction,
   Release,
   Repository,
   Tag,
@@ -29,6 +30,11 @@ export type IterableEndpoints = {
     response: GetResponseDataTypeFromEndpointMethod<typeof clients.rest.repos.listReleases>;
     result: Release;
     params: ResourcesParams;
+  };
+  'GET /repositories/:repo/releases/:release/reactions': {
+    response: GetResponseDataTypeFromEndpointMethod<typeof clients.rest.reactions.listForRelease>;
+    result: Reaction;
+    params: ResourcesParams & { release: number };
   };
   'GET /repositories/:repo/issues': {
     response: GetResponseDataTypeFromEndpointMethod<typeof clients.rest.issues.list>;

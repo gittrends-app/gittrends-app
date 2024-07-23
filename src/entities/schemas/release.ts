@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { zodSanitize } from '../../helpers/sanitize.js';
 import assetSchema from './asset.js';
 import reactableSchema from './reactable.js';
+import reactionSchema from './reaction.js';
 import userSchema from './user.js';
 
 export default zodSanitize(
@@ -23,6 +24,6 @@ export default zodSanitize(
     body_text: z.string().optional(),
     mentions_count: z.number().int().optional(),
     discussion_url: z.string().url().optional(),
-    reactions: reactableSchema.optional()
+    reactions: z.union([reactableSchema, z.array(reactionSchema), z.array(z.string())]).optional()
   })
 );

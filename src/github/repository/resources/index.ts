@@ -1,4 +1,10 @@
-import { Issue, PullRequest, RepositoryResource, schemas } from '../../../entities/entity.js';
+import {
+  Issue,
+  PullRequest,
+  Reaction,
+  RepositoryResource,
+  schemas
+} from '../../../entities/entity.js';
 import { ResourceEndpoints } from '../../_requests_/endpoints.js';
 import { IterableResource, iterator, PageableParams } from '../../_requests_/iterator.js';
 import { request } from '../../_requests_/request.js';
@@ -53,14 +59,45 @@ function tags(options: ResourcesParams) {
  * Get the releases of a repository by its id
  */
 function releases(options: ResourcesParams) {
-  return iterator(
-    {
-      url: 'GET /repositories/:repo/releases',
-      parser: schemas.release,
-      metadata: { __repository: options.repo }
-    },
-    options
-  );
+  return {
+    [Symbol.asyncIterator]: async function* () {
+      const it = iterator(
+        {
+          url: 'GET /repositories/:repo/releases',
+          parser: schemas.release,
+          metadata: { __repository: options.repo }
+        },
+        options
+      );
+
+      for await (const { data, params } of it) {
+        for (const release of data) {
+          if ((release.reactions as any)?.total_count > 0) {
+            const reactionsIt = iterator(
+              {
+                url: 'GET /repositories/:repo/releases/:release/reactions',
+                parser: schemas.reaction,
+                metadata: {
+                  __repository: release.__repository,
+                  __reactable_name: release.__typename,
+                  __reactable_id: release.node_id
+                }
+              },
+              { ...options, release: release.id }
+            );
+
+            for await (const { data } of reactionsIt) {
+              release.reactions = Array.isArray(release.reactions)
+                ? (release.reactions.concat(data) as Reaction[])
+                : data;
+            }
+          }
+        }
+
+        yield { data, params };
+      }
+    }
+  };
 }
 
 /**

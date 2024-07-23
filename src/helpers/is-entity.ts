@@ -14,5 +14,6 @@ function wrapper<T extends Entity>(schema: (data: Record<string, any>) => T) {
 }
 
 export default {
-  user: wrapper(schemas.user)
+  user: wrapper(schemas.user),
+  reaction: wrapper(schemas.reaction)
 } satisfies Record<string, (data: Record<string, any>) => false | Entity>;

@@ -6,6 +6,7 @@ import {
   Entity,
   Issue,
   PullRequest,
+  Reaction,
   Release,
   Repository,
   Stargazer,
@@ -77,18 +78,23 @@ function storage<T extends Entity>(collection: Collection, key: (obj: T) => stri
  */
 export default function (db: Db) {
   const usersStorage = storage<User>(db.collection('users'), (v) => v.node_id);
+  const reactionsStorage = storage<Reaction>(db.collection('reactions'), (v) => v.node_id);
 
   const timelineStorage = storage<TimelineEvent>(
     db.collection('timeline'),
     (v: any) => v.node_id || v.id || objectHash(omitBy(v, (_, k) => k.startsWith('__')))
   );
 
-  const withUser = <T extends Entity>(storage: Storage<T>): Storage<T> => {
+  const withEntities = <T extends Entity>(storage: Storage<T>): Storage<T> => {
     const saveEntity = storage.save.bind(storage);
 
     storage.save = async function (entities, replace) {
-      const { data, users } = extract(entities);
-      await Promise.all([usersStorage.save(users, false), saveEntity(data, replace)]);
+      const { data, users, reactions } = extract(entities);
+      await Promise.all([
+        users && usersStorage.save(users, false),
+        reactions && reactionsStorage.save(reactions, false),
+        saveEntity(data, replace)
+      ]);
     };
 
     return storage;
@@ -122,22 +128,22 @@ export default function (db: Db) {
 
   return {
     users: usersStorage,
-    repos: withUser(storage<Repository>(db.collection('repos'), (v) => v.node_id)),
-    watchers: withUser(
+    repos: withEntities(storage<Repository>(db.collection('repos'), (v) => v.node_id)),
+    watchers: withEntities(
       storage<Watcher>(
         db.collection('watchers'),
         (v) => `${v.__repository}__${typeof v.user === 'number' ? v.user : v.user.id}`
       )
     ),
-    stargazers: withUser(
+    stargazers: withEntities(
       storage<Stargazer>(
         db.collection('stargazers'),
         (v) => `${v.__repository}__${typeof v.user === 'number' ? v.user : v.user.id}`
       )
     ),
-    tags: withUser(storage<Tag>(db.collection('tags'), (v) => v.node_id)),
-    releases: withUser(storage<Release>(db.collection('releases'), (v) => v.node_id)),
-    issues: withUser(
+    tags: withEntities(storage<Tag>(db.collection('tags'), (v) => v.node_id)),
+    releases: withEntities(storage<Release>(db.collection('releases'), (v) => v.node_id)),
+    issues: withEntities(
       withTimeline(storage<Issue | PullRequest>(db.collection('issues'), (v) => v.node_id))
     )
   };

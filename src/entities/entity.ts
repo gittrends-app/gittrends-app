@@ -2,6 +2,7 @@ import { z, ZodType } from 'zod';
 import events from './schemas/events.js';
 import issue from './schemas/issue.js';
 import pr from './schemas/pull_request.js';
+import reaction from './schemas/reaction.js';
 import release from './schemas/release.js';
 import repository from './schemas/repository.js';
 import stargazer from './schemas/stargazer.js';
@@ -12,6 +13,7 @@ const entitySchema = z.object({
   __typename: z.enum([
     'Issue',
     'PullRequest',
+    'Reaction',
     'Release',
     'Repository',
     'Stargazer',
@@ -52,7 +54,6 @@ const issueSchema = resourceSchema.merge(
     __timeline: z.union([z.array(events), z.number()]).default([])
   })
 );
-const timelineEvent = resourceSchema.merge(z.object({ __issue: z.number().int() }));
 
 export const schemas = {
   user: createSchema('User', user),
@@ -63,7 +64,21 @@ export const schemas = {
   stargazer: createSchema('Stargazer', resourceSchema.and(stargazer)),
   issue: createSchema(['Issue', 'PullRequest'], issueSchema.and(issue)),
   pull_request: createSchema('PullRequest', issueSchema.and(pr)),
-  timeline_event: createSchema('TimelineEvent', timelineEvent.and(events))
+  timeline_event: createSchema(
+    'TimelineEvent',
+    resourceSchema.merge(z.object({ __issue: z.number().int() })).and(events)
+  ),
+  reaction: createSchema(
+    'Reaction',
+    resourceSchema
+      .merge(
+        z.object({
+          __reactable_name: z.string(),
+          __reactable_id: z.union([z.string(), z.number().int()])
+        })
+      )
+      .and(reaction)
+  )
 } satisfies Record<
   string,
   (value: Record<string, any>, repo?: string | number) => z.infer<typeof entitySchema>
@@ -79,3 +94,4 @@ export type Stargazer = ReturnType<typeof schemas.stargazer>;
 export type Issue = ReturnType<typeof schemas.issue>;
 export type PullRequest = ReturnType<typeof schemas.pull_request>;
 export type TimelineEvent = ReturnType<typeof schemas.timeline_event>;
+export type Reaction = ReturnType<typeof schemas.reaction>;

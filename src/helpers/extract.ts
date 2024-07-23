@@ -1,60 +1,51 @@
 import isPlainObject from 'lodash/isPlainObject.js';
 import mapValues from 'lodash/mapValues.js';
-import { User } from '../entities/entity.js';
+import { Reaction, User } from '../entities/entity.js';
 import isEntity from './is-entity.js';
 
 /**
  *  Extracts users from an entity.
  */
-export function extract<T = any>(entity: T): { data: T; users: User[] } {
+export function extract<T = any>(entity: T): { data: T; users?: User[]; reactions?: Reaction[] } {
   let data: any = entity;
   const users: User[] = [];
+  const reactions: Reaction[] = [];
 
   if (isPlainObject(entity)) {
     data = mapValues(entity as object, (value: any) => {
       const res = extract(value);
-      users.push(...res.users);
-
-      if (isPlainObject(res.data)) {
-        const user = isEntity.user(res.data);
-        if (user) {
-          users.push(user);
-          return user.id;
-        }
-      }
-
-      if (Array.isArray(res.data)) {
-        return res.data.map((item) => {
-          const user = isEntity.user(item);
-          if (user) {
-            users.push(user);
-            return user.id;
-          } else {
-            return item;
-          }
-        });
-      }
+      users.push(...(res.users || []));
+      reactions.push(...(res.reactions || []));
 
       return res.data;
     });
+
+    const reaction = isEntity.reaction(data);
+    if (reaction) {
+      reactions.push(reaction);
+      data = reaction.id;
+    }
+
+    const user = isEntity.user(data);
+    if (user) {
+      users.push(user);
+      data = user.id;
+    }
   }
 
   if (Array.isArray(entity)) {
     data = entity.map((item) => {
       const res = extract(item);
-      users.push(...res.users);
-
-      if (isPlainObject(item)) {
-        const user = isEntity.user(item);
-        if (user) {
-          users.push(user);
-          return user.id;
-        }
-      }
+      users.push(...(res.users || []));
+      reactions.push(...(res.reactions || []));
 
       return res.data;
     });
   }
 
-  return { data, users };
+  return {
+    data,
+    users: users.length ? users : undefined,
+    reactions: reactions.length ? reactions : undefined
+  };
 }
