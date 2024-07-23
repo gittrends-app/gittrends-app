@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { zodSanitize } from '../../helpers/sanitize.js';
 import milestoneSchema from './milestone.js';
 import reactableSchema from './reactable.js';
+import reaction from './reaction.js';
 import repositorySchema from './repository.js';
 import userSchema from './user.js';
 
@@ -70,6 +71,6 @@ export default zodSanitize(
       'NONE',
       'OWNER'
     ]),
-    reactions: reactableSchema.optional()
+    reactions: z.union([reactableSchema, z.array(reaction), z.array(z.string())]).optional()
   })
 );

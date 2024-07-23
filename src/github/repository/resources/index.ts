@@ -1,4 +1,5 @@
 import {
+  Entity,
   Issue,
   PullRequest,
   Reaction,
@@ -72,32 +73,75 @@ function releases(options: ResourcesParams) {
 
       for await (const { data, params } of it) {
         for (const release of data) {
-          if ((release.reactions as any)?.total_count > 0) {
-            const reactionsIt = iterator(
-              {
-                url: 'GET /repositories/:repo/releases/:release/reactions',
-                parser: schemas.reaction,
-                metadata: {
-                  __repository: release.__repository,
-                  __reactable_name: release.__typename,
-                  __reactable_id: release.node_id
-                }
-              },
-              { ...options, release: release.id }
-            );
-
-            for await (const { data } of reactionsIt) {
-              release.reactions = Array.isArray(release.reactions)
-                ? (release.reactions.concat(data) as Reaction[])
-                : data;
-            }
-          }
+          release.reactions = await _reactions(release, options);
         }
 
         yield { data, params };
       }
     }
   };
+}
+
+type Reactable = Entity &
+  RepositoryResource & {
+    reactions?: any;
+    node_id: string;
+    id: number;
+  };
+
+/**
+ *
+ */
+async function _reactions<T extends Reactable>(
+  entity: T,
+  options: ResourcesParams
+): Promise<Reaction[]> {
+  const reactions: Reaction[] = [];
+
+  if (entity.reactions?.total_count > 0) {
+    let reactionsIt: IterableResource<Reaction> | undefined;
+
+    switch (entity.__typename) {
+      case 'Release':
+        reactionsIt = iterator(
+          {
+            url: 'GET /repositories/:repo/releases/:release/reactions',
+            parser: schemas.reaction,
+            metadata: {
+              __repository: entity.__repository,
+              __reactable_name: entity.__typename,
+              __reactable_id: entity.node_id
+            }
+          },
+          { ...options, release: entity.id }
+        );
+        break;
+      case 'Issue':
+      case 'PullRequest':
+        reactionsIt = iterator(
+          {
+            url: 'GET /repositories/:repo/issues/:number/reactions',
+            parser: schemas.reaction,
+            metadata: {
+              __repository: entity.__repository,
+              __reactable_name: entity.__typename,
+              __reactable_id: entity.node_id
+            }
+          },
+          { ...options, number: (entity as Issue).number }
+        );
+        break;
+
+      default:
+        throw new Error(`Unhandled reactable type: ${entity.__typename}`);
+    }
+
+    for await (const { data } of reactionsIt) {
+      reactions.push(...data);
+    }
+  }
+
+  return reactions;
 }
 
 /**
@@ -136,6 +180,8 @@ function issues(
             if (Array.isArray(issue.__timeline)) issue.__timeline.push(...events);
             else issue.__timeline = events;
           }
+
+          issue.reactions = await _reactions(issue, options);
         }
 
         yield { data, params };

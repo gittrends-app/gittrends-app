@@ -46,6 +46,11 @@ export type IterableEndpoints = {
       since?: string;
     };
   };
+  'GET /repositories/:repo/issues/:number/reactions': {
+    response: GetResponseDataTypeFromEndpointMethod<typeof clients.rest.reactions.listForIssue>;
+    result: Reaction;
+    params: ResourcesParams & { number: number };
+  };
   'GET /repositories/:repo/issues/:number/timeline': {
     response: GetResponseDataTypeFromEndpointMethod<
       typeof clients.rest.issues.listEventsForTimeline
