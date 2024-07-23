@@ -1,9 +1,11 @@
 import omit from 'lodash/omit.js';
+import omitBy from 'lodash/omitBy.js';
 import { Collection, Db, WithId } from 'mongodb';
 import objectHash from 'object-hash';
 import {
   Entity,
   Issue,
+  PullRequest,
   Release,
   Repository,
   Stargazer,
@@ -75,7 +77,11 @@ function storage<T extends Entity>(collection: Collection, key: (obj: T) => stri
  */
 export default function (db: Db) {
   const usersStorage = storage<User>(db.collection('users'), (v) => v.node_id);
-  const timelineStorage = storage<any>(db.collection('timeline'), (v) => objectHash(v));
+
+  const timelineStorage = storage<TimelineEvent>(
+    db.collection('timeline'),
+    (v: any) => v.node_id || v.id || objectHash(omitBy(v, (_, k) => k.startsWith('__')))
+  );
 
   const withUser = <T extends Entity>(storage: Storage<T>): Storage<T> => {
     const saveEntity = storage.save.bind(storage);
@@ -131,6 +137,8 @@ export default function (db: Db) {
     ),
     tags: withUser(storage<Tag>(db.collection('tags'), (v) => v.node_id)),
     releases: withUser(storage<Release>(db.collection('releases'), (v) => v.node_id)),
-    issues: withUser(withTimeline(storage<Issue>(db.collection('issues'), (v) => v.node_id)))
+    issues: withUser(
+      withTimeline(storage<Issue | PullRequest>(db.collection('issues'), (v) => v.node_id))
+    )
   };
 }

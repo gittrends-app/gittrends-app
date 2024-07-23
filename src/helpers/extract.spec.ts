@@ -1,10 +1,10 @@
 import { describe, expect, it } from '@jest/globals';
 
-import { userSchema } from '../entities/user';
+import { schemas } from '../entities/entity.js';
 import { extract } from './extract.js';
 
 describe('extract', () => {
-  const user = userSchema.parse({
+  const user = schemas.user({
     login: 'danielbruns',
     id: 1478925,
     node_id: 'MDQ6VXNlcjE0Nzg5MjU=',

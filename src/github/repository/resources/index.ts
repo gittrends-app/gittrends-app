@@ -29,8 +29,7 @@ function watchers(options: ResourcesParams) {
   return iterator(
     {
       url: 'GET /repositories/:repo/subscribers',
-      parser: schemas.watcher,
-      metadata: { __repository: options.repo }
+      parser: (data: any) => schemas.watcher({ user: data, __repository: options.repo })
     },
     options
   );

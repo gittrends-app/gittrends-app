@@ -26,12 +26,22 @@ const entitySchema = z.object({
 /**
  * Create a schema for a specific entity type
  */
-function createSchema<T extends string, Z extends ZodType>(name: T, schema: Z) {
+function createSchema<T extends string, Z extends ZodType>(name: T | [T, T], schema: Z) {
   return (value: Record<string, any>) =>
     entitySchema
-      .merge(z.object({ __typename: z.literal(name) }))
+      .merge(
+        z.object({
+          __typename: Array.isArray(name)
+            ? z.union([z.literal(name[0]), z.literal(name[1])])
+            : z.literal(name)
+        })
+      )
       .and(schema)
-      .parse({ __typename: name, __obtained_at: new Date(), ...value });
+      .parse({
+        __typename: Array.isArray(name) ? name[0] : name,
+        __obtained_at: new Date(),
+        ...value
+      });
 }
 
 const resourceSchema = z.object({ __repository: z.number().int() });
@@ -47,13 +57,13 @@ const timelineEvent = resourceSchema.merge(z.object({ __issue: z.number().int() 
 export const schemas = {
   user: createSchema('User', user),
   repo: createSchema('Repository', repository),
-  tag: createSchema('Tag', tag.and(resourceSchema)),
-  release: createSchema('Release', release.and(resourceSchema)),
-  watcher: createSchema('Watcher', user.and(resourceSchema)),
-  stargazer: createSchema('Stargazer', stargazer.and(resourceSchema)),
-  issue: createSchema('Issue', issue.and(issueSchema)),
-  pull_request: createSchema('PullRequest', pr.and(issueSchema)),
-  timeline_event: createSchema('TimelineEvent', events.and(timelineEvent))
+  tag: createSchema('Tag', resourceSchema.and(tag)),
+  release: createSchema('Release', resourceSchema.and(release)),
+  watcher: createSchema('Watcher', resourceSchema.and(z.object({ user }))),
+  stargazer: createSchema('Stargazer', resourceSchema.and(stargazer)),
+  issue: createSchema(['Issue', 'PullRequest'], issueSchema.and(issue)),
+  pull_request: createSchema('PullRequest', issueSchema.and(pr)),
+  timeline_event: createSchema('TimelineEvent', timelineEvent.and(events))
 } satisfies Record<
   string,
   (value: Record<string, any>, repo?: string | number) => z.infer<typeof entitySchema>
