@@ -15,9 +15,10 @@ describe('Entities', () => {
   };
 
   describe('User', () => {
-    it('should add __typename and __obtained_at to the schema', () => {
+    it('should add __id, __typename, and __obtained_at to the schema', () => {
       expect(schemas.user(baseFields)).toEqual({
         ...baseUserSchema.parse(baseFields),
+        __id: baseFields.node_id,
         __typename: 'User',
         __obtained_at: expect.any(Date)
       });

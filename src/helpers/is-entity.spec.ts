@@ -51,7 +51,7 @@ describe('is-entity', () => {
       },
       content: 'heart',
       created_at: '2016-05-20T20:09:31Z',
-      __repository: 123456789,
+      __repository: '123456789',
       __reactable_name: 'Release',
       __reactable_id: 'abcdef123456'
     });

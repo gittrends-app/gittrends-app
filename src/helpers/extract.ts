@@ -23,13 +23,13 @@ export function extract<T = any>(entity: T): { data: T; users?: User[]; reaction
     const reaction = isEntity.reaction(data);
     if (reaction) {
       reactions.push(reaction);
-      data = reaction.id;
+      data = reaction.__id;
     }
 
     const user = isEntity.user(data);
     if (user) {
       users.push(user);
-      data = user.id;
+      data = user.__id;
     }
   }
 

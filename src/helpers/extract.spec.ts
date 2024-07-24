@@ -22,7 +22,7 @@ describe('extract', () => {
           user: user
         })
       ).toEqual({
-        data: { starred_at: '2014-06-10T17:13:03Z', user: user.id },
+        data: { starred_at: '2014-06-10T17:13:03Z', user: user.node_id },
         users: [user]
       });
     });
@@ -34,7 +34,7 @@ describe('extract', () => {
           key: { user: user }
         })
       ).toEqual({
-        data: { starred_at: '2014-06-10T17:13:03Z', key: { user: user.id } },
+        data: { starred_at: '2014-06-10T17:13:03Z', key: { user: user.node_id } },
         users: [user]
       });
     });
@@ -46,7 +46,7 @@ describe('extract', () => {
           key: [user]
         })
       ).toEqual({
-        data: { starred_at: '2014-06-10T17:13:03Z', key: [user.id] },
+        data: { starred_at: '2014-06-10T17:13:03Z', key: [user.node_id] },
         users: [user]
       });
     });
@@ -58,7 +58,7 @@ describe('extract', () => {
           key: [user, user, 2]
         })
       ).toEqual({
-        data: { starred_at: '2014-06-10T17:13:03Z', key: [user.id, user.id, 2] },
+        data: { starred_at: '2014-06-10T17:13:03Z', key: [user.node_id, user.node_id, 2] },
         users: [user, user]
       });
     });
@@ -70,7 +70,7 @@ describe('extract', () => {
           key: [{ user: user }]
         })
       ).toEqual({
-        data: { starred_at: '2014-06-10T17:13:03Z', key: [{ user: user.id }] },
+        data: { starred_at: '2014-06-10T17:13:03Z', key: [{ user: user.node_id }] },
         users: [user]
       });
     });
@@ -84,7 +84,7 @@ describe('extract', () => {
           }
         ])
       ).toEqual({
-        data: [{ starred_at: '2014-06-10T17:13:03Z', user: user.id }],
+        data: [{ starred_at: '2014-06-10T17:13:03Z', user: user.node_id }],
         users: [user]
       });
     });
@@ -116,7 +116,7 @@ describe('extract', () => {
       },
       content: 'heart',
       created_at: '2016-05-20T20:09:31Z',
-      __repository: 123456789,
+      __repository: '123456789',
       __reactable_name: 'Release',
       __reactable_id: 'abcdef123456'
     });
@@ -127,9 +127,9 @@ describe('extract', () => {
           reactions: [reaction]
         })
       ).toEqual({
-        data: { reactions: [reaction.id] },
+        data: { reactions: [reaction.node_id] },
         users: [expect.objectContaining({ login: 'octocat' })],
-        reactions: [{ ...reaction, user: (reaction.user as User).id }]
+        reactions: [{ ...reaction, user: (reaction.user as User).node_id }]
       });
     });
   });

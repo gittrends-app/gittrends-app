@@ -1,5 +1,5 @@
 import { Entity } from '../entities/entity.js';
-import { IterableResource } from '../github/_requests_/iterator.js';
+import { IterableResource } from '../github/_requests_/index.js';
 import { Storage } from './index.js';
 
 type Operation<P extends object, E extends Entity> = (args: P) => Promise<E | undefined>;

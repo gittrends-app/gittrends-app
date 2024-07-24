@@ -33,6 +33,6 @@ describe('Stargazer entity', () => {
   });
 
   it('should allow user to be a id', () => {
-    expect(() => stargazerSchema.parse({ ...sample, user: 1 })).not.toThrowError();
+    expect(() => stargazerSchema.parse({ ...sample, user: '1' })).not.toThrowError();
   });
 });

@@ -1,7 +1,5 @@
 import omit from 'lodash/omit.js';
-import omitBy from 'lodash/omitBy.js';
 import { Collection, Db, WithId } from 'mongodb';
-import objectHash from 'object-hash';
 import {
   Entity,
   Issue,
@@ -21,7 +19,7 @@ import { Storage } from './index.js';
 /**
  *  Implementation of a generic storage.
  */
-function storage<T extends Entity>(collection: Collection, key: (obj: T) => string): Storage<T> {
+function storage<T extends Entity>(collection: Collection): Storage<T> {
   return {
     get: async (query: object) => {
       return collection.findOne<WithId<T>>(query).then((data) => omit(data, '_id') as unknown as T);
@@ -36,14 +34,14 @@ function storage<T extends Entity>(collection: Collection, key: (obj: T) => stri
             ...(replace
               ? {
                   replaceOne: {
-                    filter: { _id: key(item) as any },
+                    filter: { _id: item.__id as any },
                     replacement: item,
                     upsert: true
                   }
                 }
               : {
                   insertOne: {
-                    document: { _id: key(item) as any, ...item }
+                    document: { _id: item.__id as any, ...item }
                   }
                 })
           })),
@@ -56,7 +54,7 @@ function storage<T extends Entity>(collection: Collection, key: (obj: T) => stri
     remove: async (query) => {
       await collection.bulkWrite(
         (Array.isArray(query) ? query : [query]).map((item) => ({
-          deleteOne: { filter: { _id: key(item) as any } }
+          deleteOne: { filter: { _id: item.__id as any } }
         }))
       );
     },
@@ -64,7 +62,7 @@ function storage<T extends Entity>(collection: Collection, key: (obj: T) => stri
       await collection.bulkWrite(
         (Array.isArray(query) ? query : [query]).map((item) => ({
           updateOne: {
-            filter: { _id: key(item) as any },
+            filter: { _id: item.__id as any },
             update: { $set: { __removed_at: new Date() } }
           }
         }))
@@ -77,13 +75,9 @@ function storage<T extends Entity>(collection: Collection, key: (obj: T) => stri
  * Create a MongoDB storage.
  */
 export default function (db: Db) {
-  const usersStorage = storage<User>(db.collection('users'), (v) => v.node_id);
-  const reactionsStorage = storage<Reaction>(db.collection('reactions'), (v) => v.node_id);
-
-  const timelineStorage = storage<TimelineEvent>(
-    db.collection('timeline'),
-    (v: any) => v.node_id || v.id || objectHash(omitBy(v, (_, k) => k.startsWith('__')))
-  );
+  const usersStorage = storage<User>(db.collection('users'));
+  const reactionsStorage = storage<Reaction>(db.collection('reactions'));
+  const timelineStorage = storage<TimelineEvent>(db.collection('timeline'));
 
   const withEntities = <T extends Entity>(storage: Storage<T>): Storage<T> => {
     const saveEntity = storage.save.bind(storage);
@@ -128,23 +122,11 @@ export default function (db: Db) {
 
   return {
     users: usersStorage,
-    repos: withEntities(storage<Repository>(db.collection('repos'), (v) => v.node_id)),
-    watchers: withEntities(
-      storage<Watcher>(
-        db.collection('watchers'),
-        (v) => `${v.__repository}__${typeof v.user === 'number' ? v.user : v.user.id}`
-      )
-    ),
-    stargazers: withEntities(
-      storage<Stargazer>(
-        db.collection('stargazers'),
-        (v) => `${v.__repository}__${typeof v.user === 'number' ? v.user : v.user.id}`
-      )
-    ),
-    tags: withEntities(storage<Tag>(db.collection('tags'), (v) => v.node_id)),
-    releases: withEntities(storage<Release>(db.collection('releases'), (v) => v.node_id)),
-    issues: withEntities(
-      withTimeline(storage<Issue | PullRequest>(db.collection('issues'), (v) => v.node_id))
-    )
+    repos: withEntities(storage<Repository>(db.collection('repos'))),
+    watchers: withEntities(storage<Watcher>(db.collection('watchers'))),
+    stargazers: withEntities(storage<Stargazer>(db.collection('stargazers'))),
+    tags: withEntities(storage<Tag>(db.collection('tags'))),
+    releases: withEntities(storage<Release>(db.collection('releases'))),
+    issues: withEntities(withTimeline(storage<Issue | PullRequest>(db.collection('issues'))))
   };
 }

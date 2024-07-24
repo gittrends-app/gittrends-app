@@ -15,7 +15,8 @@
     "tsx": "tsx -r \"dotenv-flow/config\"",
     "dev": "tsx  -r \"dotenv-flow/config\" src/index.ts",
     "start": "node -r \"dotenv-flow/config\" dist/index.js",
-    "test": "jest --collect-coverage",
+    "test": "jest",
+    "test:coverage": "jest --collect-coverage",
     "verify": "run-s lint build test"
   },
   "dependencies": {

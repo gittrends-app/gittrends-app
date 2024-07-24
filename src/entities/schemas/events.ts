@@ -1,14 +1,14 @@
 import { z } from 'zod';
 import { zodSanitize } from '../../helpers/sanitize.js';
 import reactableSchema from './reactable.js';
-import reaction from './reaction.js';
+import reactionSchema from './reaction.js';
 import userSchema from './user.js';
 
 const baseSchema = z.object({
   id: z.number().int(),
   node_id: z.string(),
   url: z.string().url(),
-  actor: z.union([userSchema, z.number()]).optional(),
+  actor: z.union([userSchema, z.string()]).optional(),
   event: z.literal('?'),
   commit_id: z.string().optional(),
   commit_url: z.string().url().optional(),
@@ -53,7 +53,7 @@ const renamedEventSchema = baseSchema.merge(
 const reviewRequestedEventSchema = baseSchema.merge(
   z.object({
     event: z.literal('review_requested'),
-    review_requester: z.union([userSchema, z.number()]),
+    review_requester: z.union([userSchema, z.string()]),
     requested_team: z
       .object({
         id: z.number().int(),
@@ -62,14 +62,14 @@ const reviewRequestedEventSchema = baseSchema.merge(
         description: z.string().optional()
       })
       .optional(),
-    requested_reviewer: z.union([userSchema, z.number()]).optional()
+    requested_reviewer: z.union([userSchema, z.string()]).optional()
   })
 );
 
 const reviewRequestedRemovedEventSchema = baseSchema.merge(
   z.object({
     event: z.literal('review_request_removed'),
-    review_requester: z.union([userSchema, z.number()]),
+    review_requester: z.union([userSchema, z.string()]),
     requested_team: z
       .object({
         id: z.number().int(),
@@ -78,7 +78,7 @@ const reviewRequestedRemovedEventSchema = baseSchema.merge(
         description: z.string().optional()
       })
       .optional(),
-    requested_reviewer: z.union([userSchema, z.number()]).optional()
+    requested_reviewer: z.union([userSchema, z.string()]).optional()
   })
 );
 
@@ -165,16 +165,16 @@ const convertedNoteToIssueEventSchema = baseSchema.merge(
 const assignedEventSchema = baseSchema.merge(
   z.object({
     event: z.literal('assigned'),
-    assignee: z.union([userSchema, z.number()]),
-    assigner: z.union([userSchema, z.number()]).optional()
+    assignee: z.union([userSchema, z.string()]),
+    assigner: z.union([userSchema, z.string()]).optional()
   })
 );
 
 const unassignedEventSchema = baseSchema.merge(
   z.object({
     event: z.literal('unassigned'),
-    assignee: z.union([userSchema, z.number()]),
-    assigner: z.union([userSchema, z.number()]).optional()
+    assignee: z.union([userSchema, z.string()]),
+    assigner: z.union([userSchema, z.string()]).optional()
   })
 );
 
@@ -199,7 +199,7 @@ const commentedEventSchema = z.object({
   issue_url: z.string().url(),
   id: z.number().int(),
   node_id: z.string(),
-  user: z.union([userSchema, z.number()]),
+  user: z.union([userSchema, z.string()]),
   created_at: z.coerce.date(),
   updated_at: z.coerce.date(),
   author_association: z.enum([
@@ -213,13 +213,13 @@ const commentedEventSchema = z.object({
     'OWNER'
   ]),
   body: z.string().optional(),
-  actor: z.union([userSchema, z.number()]).optional(),
-  reactions: z.union([reactableSchema, z.array(reaction), z.array(z.string())]).optional()
+  actor: z.union([userSchema, z.string()]).optional(),
+  reactions: z.union([reactableSchema, z.array(reactionSchema), z.array(z.string())]).optional()
 });
 
 const timelineCrossReferencesEventSchema = z.object({
   event: z.literal('cross-referenced'),
-  actor: z.union([userSchema, z.number()]),
+  actor: z.union([userSchema, z.string()]),
   created_at: z.coerce.date(),
   updated_at: z.coerce.date(),
   source: z.object({
@@ -276,7 +276,7 @@ const reviewedEventSchema = z.object({
   event: z.literal('reviewed'),
   id: z.number().int(),
   node_id: z.string(),
-  user: z.union([userSchema, z.number()]),
+  user: z.union([userSchema, z.string()]),
   body: z.string().optional(),
   commit_id: z.string().optional(),
   submitted_at: z.coerce.date().optional(),
@@ -297,7 +297,7 @@ const reviewedEventSchema = z.object({
     html: z.object({ href: z.string() }),
     pull_request: z.object({ href: z.string() })
   }),
-  reactions: z.union([reactableSchema, z.array(reaction), z.array(z.string())]).optional()
+  reactions: z.union([reactableSchema, z.array(reactionSchema), z.array(z.string())]).optional()
 });
 // ====== NON STANDARD EVENTS ======
 

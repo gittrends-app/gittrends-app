@@ -1,6 +1,6 @@
 import { MergeExclusive } from 'type-fest';
 import { schemas, User } from '../../entities/entity.js';
-import { request } from '../_requests_/request.js';
+import { request } from '../_requests_/index.js';
 
 /**
  * Get a user by id or login.

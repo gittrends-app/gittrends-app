@@ -1,6 +1,6 @@
 import min from 'lodash/min.js';
 import { Repository, schemas } from '../entities/entity.js';
-import { IterableResource } from './_requests_/iterator.js';
+import { IterableResource } from './_requests_/index.js';
 import { clients } from './clients.js';
 
 type SearchRepositoriesMetadata = {

@@ -3,7 +3,7 @@ import chalk from 'chalk';
 import consola from 'consola';
 import { MongoClient } from 'mongodb';
 import { Entity, Issue, Release, Stargazer, Tag, User, Watcher } from '../entities/entity.js';
-import { IterableResource } from '../github/_requests_/iterator.js';
+import { IterableResource } from '../github/_requests_/index.js';
 import { github } from '../github/index.js';
 import get from '../github/repository/get.js';
 import { createMongoStorage } from '../storage/index.js';
@@ -43,7 +43,7 @@ import { withStorage, withStorageIt } from '../storage/withStorage.js';
     stargazers: {
       it: () =>
         withStorageIt(github.repos.stargazers)({
-          repo: repo.node_id,
+          repo: repo,
           storage: storage.stargazers
         }),
       print: (entity: Stargazer, index) =>
@@ -52,7 +52,7 @@ import { withStorage, withStorageIt } from '../storage/withStorage.js';
     watchers: {
       it: () =>
         withStorageIt(github.repos.watchers)({
-          repo: repo.id,
+          repo: repo,
           storage: storage.watchers
         }),
       print: (entity: Watcher, index) =>
@@ -61,7 +61,7 @@ import { withStorage, withStorageIt } from '../storage/withStorage.js';
     tags: {
       it: () =>
         withStorageIt(github.repos.tags)({
-          repo: repo.id,
+          repo: repo,
           storage: storage.tags
         }),
       print: (entity: Tag, index) => consola.log(`${index || '?'}. ${entity.name}`)
@@ -69,7 +69,7 @@ import { withStorage, withStorageIt } from '../storage/withStorage.js';
     releases: {
       it: () =>
         withStorageIt(github.repos.releases)({
-          repo: repo.id,
+          repo: repo,
           storage: storage.releases
         }),
       print: (entity: Release, index) => consola.log(`${index || '?'}. ${entity.name}`)
@@ -77,7 +77,7 @@ import { withStorage, withStorageIt } from '../storage/withStorage.js';
     issues: {
       it: () =>
         withStorageIt(github.repos.issues)({
-          repo: repo.id,
+          repo: repo,
           per_page: 25,
           storage: storage.issues
         }),

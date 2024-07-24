@@ -16,7 +16,7 @@ export default zodSanitize(
     state_reason: z.enum(['completed', 'reopened', 'not_planned']).optional(),
     title: z.string(),
     body: z.string().optional(),
-    user: userSchema.optional(),
+    user: z.union([userSchema, z.string()]).optional(),
     labels: z.array(
       z.union([
         z.string(),
@@ -33,8 +33,8 @@ export default zodSanitize(
           .transform((v) => v.name)
       ])
     ),
-    assignee: userSchema.optional(),
-    assignees: z.array(userSchema.optional()).optional(),
+    assignee: z.union([userSchema, z.string()]).optional(),
+    assignees: z.union([z.array(userSchema), z.array(z.string())]).optional(),
     milestone: milestoneSchema.transform((m) => m.title).optional(),
     locked: z.boolean(),
     active_lock_reason: z.string().optional(),
@@ -49,7 +49,7 @@ export default zodSanitize(
     created_at: z.coerce.date(),
     updated_at: z.coerce.date(),
     draft: z.boolean().optional(),
-    closed_by: userSchema.optional(),
+    closed_by: z.union([userSchema, z.string()]).optional(),
     body_html: z.string().optional(),
     body_text: z.string().optional(),
     timeline_url: z.string().url().optional(),

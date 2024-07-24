@@ -9,7 +9,7 @@ export default zodSanitize(
     z.object({
       merged_at: z.coerce.date().optional(),
       merge_commit_sha: z.string().optional(),
-      requested_reviewers: z.array(userSchema).optional(),
+      requested_reviewers: z.union([z.array(userSchema), z.array(z.string())]).optional(),
       requested_teams: z
         .array(
           z.object({
@@ -29,7 +29,7 @@ export default zodSanitize(
           .pick({ id: true, name: true, full_name: true })
           .optional(),
         sha: z.string(),
-        user: userSchema.optional()
+        user: z.union([userSchema, z.string()]).optional()
       }),
       base: z.object({
         label: z.string(),
@@ -39,7 +39,7 @@ export default zodSanitize(
           .pick({ id: true, name: true, full_name: true })
           .optional(),
         sha: z.string(),
-        user: userSchema.optional()
+        user: z.union([userSchema, z.string()]).optional()
       }),
       _links: z.object({
         comments: z.object({ href: z.string() }),
@@ -53,7 +53,7 @@ export default zodSanitize(
       }),
       auto_merge: z
         .object({
-          enabled_by: userSchema,
+          enabled_by: z.union([userSchema, z.string()]),
           merge_method: z.enum(['merge', 'squash', 'rebase']),
           commit_title: z.string().optional(),
           commit_message: z.string().optional()
@@ -63,7 +63,7 @@ export default zodSanitize(
       mergeable: z.boolean().optional(),
       rebaseable: z.boolean().optional(),
       mergeable_state: z.string(),
-      merged_by: userSchema.optional(),
+      merged_by: z.union([userSchema, z.string()]).optional(),
       review_comments: z.number().int(),
       maintainer_can_modify: z.boolean(),
       commits: z.number().int(),

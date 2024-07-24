@@ -3,7 +3,7 @@ import consola from 'consola';
 import stringifyObject from 'stringify-object';
 import { ZodError } from 'zod';
 import { clients } from '../clients.js';
-import { IterableEndpoints } from './endpoints.js';
+import { IterableEndpoints, ResourceEndpoints } from './endpoints.js';
 
 export type PageableParams = {
   page?: number | string;
@@ -16,20 +16,43 @@ export type IterableResource<T, P extends object = object> = AsyncIterable<{
   params: PageableParams & P;
 }>;
 
+type ResourceParams<R extends keyof IterableEndpoints> = {
+  url: R;
+  parser: (...args: any[]) => IterableEndpoints[R]['result'];
+  metadata?: object;
+};
+
+/**
+ * Get a resource
+ *
+ */
+export async function request<K extends keyof ResourceEndpoints>(
+  resource: {
+    url: K;
+    parser: (...args: any[]) => ResourceEndpoints[K]['result'];
+    metadata?: object;
+  },
+  params: ResourceEndpoints[K]['params']
+): Promise<ResourceEndpoints[K]['result'] | undefined> {
+  return clients.rest
+    .request<string>(resource.url, { ...params })
+    .then((response: OctokitResponse<ResourceEndpoints[K]['response']>) => {
+      if (response.status !== 200)
+        throw new Error(`Failed to get ${resource.url} - ${response.status}`);
+      return resource.parser({ ...response.data, ...resource.metadata });
+    })
+    .catch((error) => {
+      if (error.response.status === 404) return undefined;
+      else throw error;
+    });
+}
+
 /**
  * Get resources of a repository
  *
- * @param url - The URL of the endpoint.
- * @param schema - The schema to parse the data.
- * @param params - The properties to pass to the function.
- *
  */
 export function iterator<R extends keyof IterableEndpoints>(
-  resource: {
-    url: R;
-    parser: (...args: any[]) => IterableEndpoints[R]['result'];
-    metadata?: object;
-  },
+  resource: ResourceParams<R>,
   params: IterableEndpoints[R]['params']
 ): IterableResource<IterableEndpoints[R]['result']> {
   const { page, per_page: perPage, ...requestParams } = params;

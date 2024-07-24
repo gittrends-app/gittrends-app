@@ -7,26 +7,24 @@ import {
   schemas,
   TimelineEvent
 } from '../../../entities/entity.js';
-import { IterableEndpoints, ResourceEndpoints } from '../../_requests_/endpoints.js';
-import { IterableResource, iterator, PageableParams } from '../../_requests_/iterator.js';
-import { request } from '../../_requests_/request.js';
+import { IterableEndpoints } from '../../_requests_/endpoints.js';
+import { IterableResource, iterator, PageableParams, request } from '../../_requests_/index.js';
 import stargazers from './stargazers.js';
 
-export type ResourcesParams = PageableParams & {
-  repo: number | string;
-};
+type RepoParam = { repo: { id: number; node_id: string } };
+type ResourcesParams = PageableParams & RepoParam;
 
 /**
  * Get a pull request by number.
  */
-function pullRequest(params: ResourceEndpoints['GET /repositories/:repo/pulls/:number']['params']) {
+function pullRequest(params: RepoParam & { number: number }) {
   return request(
     {
       url: 'GET /repositories/:repo/pulls/:number',
       parser: schemas.pull_request,
-      metadata: { __repository: params.repo }
+      metadata: { __repository: params.repo.node_id }
     },
-    params
+    { repo: params.repo.id, number: params.number }
   );
 }
 
@@ -37,9 +35,9 @@ function watchers(options: ResourcesParams) {
   return iterator(
     {
       url: 'GET /repositories/:repo/subscribers',
-      parser: (data: any) => schemas.watcher({ user: data, __repository: options.repo })
+      parser: (data: any) => schemas.watcher({ user: data, __repository: options.repo.node_id })
     },
-    options
+    { ...options, repo: options.repo.id }
   );
 }
 
@@ -51,9 +49,9 @@ function tags(options: ResourcesParams) {
     {
       url: 'GET /repositories/:repo/tags',
       parser: schemas.tag,
-      metadata: { __repository: options.repo }
+      metadata: { __repository: options.repo.node_id }
     },
-    options
+    { ...options, repo: options.repo.id }
   );
 }
 
@@ -67,9 +65,9 @@ function releases(options: ResourcesParams) {
         {
           url: 'GET /repositories/:repo/releases',
           parser: schemas.release,
-          metadata: { __repository: options.repo }
+          metadata: { __repository: options.repo.node_id }
         },
-        options
+        { ...options, repo: options.repo.id }
       );
 
       for await (const { data, params } of it) {
@@ -114,7 +112,7 @@ async function _reactions<T extends Reactable>(
               __reactable_id: entity.node_id
             }
           },
-          { ...options, release: entity.id }
+          { ...options, repo: options.repo.id, release: entity.id }
         );
         break;
       case 'Issue':
@@ -129,7 +127,7 @@ async function _reactions<T extends Reactable>(
               __reactable_id: entity.node_id
             }
           },
-          { ...options, number: (entity as Issue).number }
+          { ...options, repo: options.repo.id, number: (entity as Issue).number }
         );
         break;
       case 'TimelineEvent': {
@@ -151,7 +149,7 @@ async function _reactions<T extends Reactable>(
               __reactable_id: entity.node_id
             }
           },
-          { ...options, id: entity.id }
+          { ...options, repo: options.repo.id, id: entity.id }
         );
         break;
       }
@@ -181,10 +179,11 @@ function issues(
         {
           url: 'GET /repositories/:repo/issues',
           parser: schemas.issue,
-          metadata: { __repository: options.repo }
+          metadata: { __repository: options.repo.node_id }
         },
         {
           ...options,
+          repo: options.repo.id,
           state: 'all',
           sort: 'updated',
           direction: 'asc',
@@ -200,7 +199,7 @@ function issues(
           }
 
           for await (const tl of timeline({ repo: options.repo, issue: issue.number })) {
-            const events = tl.data.map((e) => ({ ...e, __issue: issue.id }));
+            const events = tl.data.map((e) => ({ ...e, __issue: issue.node_id }));
 
             for (const event of events) {
               if ((event as any).reactions) {
@@ -208,8 +207,9 @@ function issues(
               }
             }
 
-            if (Array.isArray(issue.__timeline)) issue.__timeline.push(...events);
-            else issue.__timeline = events;
+            issue.__timeline = Array.isArray(issue.__timeline)
+              ? issue.__timeline.concat(events)
+              : events;
           }
 
           issue.reactions = await _reactions(issue, options);
@@ -229,9 +229,9 @@ function timeline({ issue, ...options }: ResourcesParams & { issue: number }) {
     {
       url: 'GET /repositories/:repo/issues/:number/timeline',
       parser: schemas.timeline_event,
-      metadata: { __repository: options.repo, __issue: issue }
+      metadata: { __repository: options.repo.node_id, __issue: issue }
     },
-    { ...options, number: issue }
+    { ...options, repo: options.repo.id, number: issue }
   );
 }
 

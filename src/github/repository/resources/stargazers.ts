@@ -1,8 +1,7 @@
 import { PartialDeep } from 'type-fest';
 import { schemas, Stargazer } from '../../../entities/entity.js';
-import { IterableResource } from '../../_requests_/iterator.js';
+import { IterableResource, PageableParams } from '../../_requests_/index.js';
 import { clients } from '../../clients.js';
-import { ResourcesParams } from './index.js';
 
 /**
  * Transforms the data from the GitHub API into a Stargazer entity.
@@ -40,7 +39,6 @@ type StargazerEdge = {
 
 type StargazersQuery = {
   repository: {
-    databaseId: number;
     stargazers: {
       pageInfo: {
         endCursor: string;
@@ -54,7 +52,9 @@ type StargazersQuery = {
 /**
  * Retrieves the stargazers of a repository.
  */
-export default function (options: ResourcesParams): IterableResource<Stargazer> {
+export default function (
+  options: PageableParams & { repo: { id: number; node_id: string } }
+): IterableResource<Stargazer> {
   const { repo, page, per_page: perPage } = options;
 
   return {
@@ -70,7 +70,6 @@ export default function (options: ResourcesParams): IterableResource<Stargazer> 
             query stargazers($id: ID!, $perPage: Int, $endCursor: String) {
               repository: node(id: $id) {
                 ... on Repository {
-                  databaseId
                   stargazers (first: $perPage, orderBy:  { field: STARRED_AT, direction: ASC }, after: $endCursor) {
                     pageInfo {
                       endCursor
@@ -93,14 +92,14 @@ export default function (options: ResourcesParams): IterableResource<Stargazer> 
               }
             }
             `,
-          id: repo,
+          id: repo.node_id,
           perPage: perPage || 100,
           endCursor: metadata.endCursor
         });
 
         const stars = (repository.stargazers.edges || [])
           .map((edge) => edge && transform(edge))
-          .map((data) => schemas.stargazer({ ...data, __repository: repository.databaseId }));
+          .map((data) => schemas.stargazer({ ...data, __repository: repo.node_id }));
 
         metadata.endCursor = repository.stargazers.pageInfo.endCursor || undefined;
         metadata.hasNextPage = repository.stargazers.pageInfo.hasNextPage || false;

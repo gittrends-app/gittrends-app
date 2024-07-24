@@ -139,7 +139,7 @@ describe('Release entity', () => {
     });
   });
 
-  it('should allow author to be a number', () => {
-    expect(() => releaseSchema.parse({ ...baseFields, author: 33505452 })).not.toThrowError();
+  it('should allow author to be a string', () => {
+    expect(() => releaseSchema.parse({ ...baseFields, author: 'abc12345' })).not.toThrowError();
   });
 });
