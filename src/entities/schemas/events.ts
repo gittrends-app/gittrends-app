@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { zodSanitize } from '../../helpers/sanitize.js';
 import reactableSchema from './reactable.js';
+import reaction from './reaction.js';
 import userSchema from './user.js';
 
 const baseSchema = z.object({
@@ -213,7 +214,7 @@ const commentedEventSchema = z.object({
   ]),
   body: z.string().optional(),
   actor: z.union([userSchema, z.number()]).optional(),
-  reactions: reactableSchema.optional()
+  reactions: z.union([reactableSchema, z.array(reaction), z.array(z.string())]).optional()
 });
 
 const timelineCrossReferencesEventSchema = z.object({
@@ -295,7 +296,8 @@ const reviewedEventSchema = z.object({
   _links: z.object({
     html: z.object({ href: z.string() }),
     pull_request: z.object({ href: z.string() })
-  })
+  }),
+  reactions: z.union([reactableSchema, z.array(reaction), z.array(z.string())]).optional()
 });
 // ====== NON STANDARD EVENTS ======
 

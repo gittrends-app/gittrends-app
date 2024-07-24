@@ -4,9 +4,10 @@ import {
   PullRequest,
   Reaction,
   RepositoryResource,
-  schemas
+  schemas,
+  TimelineEvent
 } from '../../../entities/entity.js';
-import { ResourceEndpoints } from '../../_requests_/endpoints.js';
+import { IterableEndpoints, ResourceEndpoints } from '../../_requests_/endpoints.js';
 import { IterableResource, iterator, PageableParams } from '../../_requests_/iterator.js';
 import { request } from '../../_requests_/request.js';
 import stargazers from './stargazers.js';
@@ -131,6 +132,29 @@ async function _reactions<T extends Reactable>(
           { ...options, number: (entity as Issue).number }
         );
         break;
+      case 'TimelineEvent': {
+        let url: keyof IterableEndpoints;
+
+        if ((entity as TimelineEvent).event === 'commented')
+          url = 'GET /repositories/:repo/issues/comments/:id/reactions';
+        else if ((entity as TimelineEvent).event === 'reviewed')
+          url = 'GET /repositories/:repo/pulls/comments/:id/reactions';
+        else throw new Error(`Unhandled timeline event: ${(entity as TimelineEvent).event}`);
+
+        reactionsIt = iterator(
+          {
+            url,
+            parser: schemas.reaction,
+            metadata: {
+              __repository: entity.__repository,
+              __reactable_name: entity.__typename,
+              __reactable_id: entity.node_id
+            }
+          },
+          { ...options, id: entity.id }
+        );
+        break;
+      }
 
       default:
         throw new Error(`Unhandled reactable type: ${entity.__typename}`);
@@ -177,6 +201,13 @@ function issues(
 
           for await (const tl of timeline({ repo: options.repo, issue: issue.number })) {
             const events = tl.data.map((e) => ({ ...e, __issue: issue.id }));
+
+            for (const event of events) {
+              if ((event as any).reactions) {
+                (event as Reactable).reactions = await _reactions(event as Reactable, options);
+              }
+            }
+
             if (Array.isArray(issue.__timeline)) issue.__timeline.push(...events);
             else issue.__timeline = events;
           }

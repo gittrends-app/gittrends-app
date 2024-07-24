@@ -51,6 +51,20 @@ export type IterableEndpoints = {
     result: Reaction;
     params: ResourcesParams & { number: number };
   };
+  'GET /repositories/:repo/issues/comments/:id/reactions': {
+    response: GetResponseDataTypeFromEndpointMethod<
+      typeof clients.rest.reactions.listForIssueComment
+    >;
+    result: Reaction;
+    params: ResourcesParams & { id: number };
+  };
+  'GET /repositories/:repo/pulls/comments/:id/reactions': {
+    response: GetResponseDataTypeFromEndpointMethod<
+      typeof clients.rest.reactions.listForPullRequestReviewComment
+    >;
+    result: Reaction;
+    params: ResourcesParams & { id: number };
+  };
   'GET /repositories/:repo/issues/:number/timeline': {
     response: GetResponseDataTypeFromEndpointMethod<
       typeof clients.rest.issues.listEventsForTimeline
