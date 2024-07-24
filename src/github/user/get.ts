@@ -12,9 +12,7 @@ export default async function get(
 ): Promise<User | undefined> {
   const { id, login } = params;
 
-  const [url, args] = id
-    ? [`GET /user/:id` as const, { id: id }]
-    : [`GET /users/:login` as const, { login: login }];
+  const [url, args] = id ? [`GET /user/:id` as const, { id: id }] : [`GET /users/:login` as const, { login: login }];
 
   return request({ url, parser: schemas.user }, args as any);
 }

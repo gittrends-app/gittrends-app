@@ -41,9 +41,7 @@ function createSchema<T extends string, Z extends ZodType>(
     entitySchema
       .merge(
         z.object({
-          _typename: Array.isArray(name)
-            ? z.union([z.literal(name[0]), z.literal(name[1])])
-            : z.literal(name)
+          _typename: Array.isArray(name) ? z.union([z.literal(name[0]), z.literal(name[1])]) : z.literal(name)
         })
       )
       .and(schema)
@@ -94,10 +92,7 @@ export const schemas = {
       `${v._repository}_${v._issue}_${v.node_id || v.id || v.created_at || objectHash(omitBy(v, (_, k) => k.startsWith('_')))}`
   ),
   reaction: createSchema('Reaction', reactableSchema.and(reaction), (v) => v.node_id)
-} satisfies Record<
-  string,
-  (value: Record<string, any>, repo?: string | number) => z.infer<typeof entitySchema>
->;
+} satisfies Record<string, (value: Record<string, any>, repo?: string | number) => z.infer<typeof entitySchema>>;
 
 export type RepositoryResource = z.infer<typeof resourceSchema>;
 

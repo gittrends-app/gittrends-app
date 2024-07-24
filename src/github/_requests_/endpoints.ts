@@ -15,9 +15,7 @@ import { PageableParams } from './index.js';
 
 export type IterableEndpoints = {
   'GET /repositories/:repo/subscribers': {
-    response: GetResponseDataTypeFromEndpointMethod<
-      typeof clients.rest.activity.listWatchersForRepo
-    >;
+    response: GetResponseDataTypeFromEndpointMethod<typeof clients.rest.activity.listWatchersForRepo>;
     result: Watcher;
     params: { repo: number } & PageableParams;
   };
@@ -53,23 +51,17 @@ export type IterableEndpoints = {
     params: { repo: number; number: number } & PageableParams;
   };
   'GET /repositories/:repo/issues/comments/:id/reactions': {
-    response: GetResponseDataTypeFromEndpointMethod<
-      typeof clients.rest.reactions.listForIssueComment
-    >;
+    response: GetResponseDataTypeFromEndpointMethod<typeof clients.rest.reactions.listForIssueComment>;
     result: Reaction;
     params: { repo: number; id: number } & PageableParams;
   };
   'GET /repositories/:repo/pulls/comments/:id/reactions': {
-    response: GetResponseDataTypeFromEndpointMethod<
-      typeof clients.rest.reactions.listForPullRequestReviewComment
-    >;
+    response: GetResponseDataTypeFromEndpointMethod<typeof clients.rest.reactions.listForPullRequestReviewComment>;
     result: Reaction;
     params: { repo: number; id: number } & PageableParams;
   };
   'GET /repositories/:repo/issues/:number/timeline': {
-    response: GetResponseDataTypeFromEndpointMethod<
-      typeof clients.rest.issues.listEventsForTimeline
-    >;
+    response: GetResponseDataTypeFromEndpointMethod<typeof clients.rest.issues.listEventsForTimeline>;
     result: TimelineEvent;
     params: { repo: number; number: number } & PageableParams;
   };

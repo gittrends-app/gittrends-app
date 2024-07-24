@@ -82,18 +82,15 @@ describe('Repository entity', () => {
         site_admin: false
       },
       html_url: 'https://github.com/freeCodeCamp/freeCodeCamp',
-      description:
-        "freeCodeCamp.org's open-source codebase and curriculum. Learn to code for free.",
+      description: "freeCodeCamp.org's open-source codebase and curriculum. Learn to code for free.",
       fork: false,
       url: 'https://api.github.com/repos/freeCodeCamp/freeCodeCamp',
       forks_url: 'https://api.github.com/repos/freeCodeCamp/freeCodeCamp/forks',
       keys_url: 'https://api.github.com/repos/freeCodeCamp/freeCodeCamp/keys{/key_id}',
-      collaborators_url:
-        'https://api.github.com/repos/freeCodeCamp/freeCodeCamp/collaborators{/collaborator}',
+      collaborators_url: 'https://api.github.com/repos/freeCodeCamp/freeCodeCamp/collaborators{/collaborator}',
       teams_url: 'https://api.github.com/repos/freeCodeCamp/freeCodeCamp/teams',
       hooks_url: 'https://api.github.com/repos/freeCodeCamp/freeCodeCamp/hooks',
-      issue_events_url:
-        'https://api.github.com/repos/freeCodeCamp/freeCodeCamp/issues/events{/number}',
+      issue_events_url: 'https://api.github.com/repos/freeCodeCamp/freeCodeCamp/issues/events{/number}',
       events_url: 'https://api.github.com/repos/freeCodeCamp/freeCodeCamp/events',
       assignees_url: 'https://api.github.com/repos/freeCodeCamp/freeCodeCamp/assignees{/user}',
       branches_url: 'https://api.github.com/repos/freeCodeCamp/freeCodeCamp/branches{/branch}',
@@ -111,8 +108,7 @@ describe('Repository entity', () => {
       commits_url: 'https://api.github.com/repos/freeCodeCamp/freeCodeCamp/commits{/sha}',
       git_commits_url: 'https://api.github.com/repos/freeCodeCamp/freeCodeCamp/git/commits{/sha}',
       comments_url: 'https://api.github.com/repos/freeCodeCamp/freeCodeCamp/comments{/number}',
-      issue_comment_url:
-        'https://api.github.com/repos/freeCodeCamp/freeCodeCamp/issues/comments{/number}',
+      issue_comment_url: 'https://api.github.com/repos/freeCodeCamp/freeCodeCamp/issues/comments{/number}',
       contents_url: 'https://api.github.com/repos/freeCodeCamp/freeCodeCamp/contents/{+path}',
       compare_url: 'https://api.github.com/repos/freeCodeCamp/freeCodeCamp/compare/{base}...{head}',
       merges_url: 'https://api.github.com/repos/freeCodeCamp/freeCodeCamp/merges',
@@ -200,8 +196,7 @@ describe('Repository entity', () => {
       full_name: 'freeCodeCamp/freeCodeCamp',
       private: false,
       owner: expect.objectContaining({ login: 'freeCodeCamp', id: 9892522 }),
-      description:
-        "freeCodeCamp.org's open-source codebase and curriculum. Learn to code for free.",
+      description: "freeCodeCamp.org's open-source codebase and curriculum. Learn to code for free.",
       fork: false,
       url: 'https://api.github.com/repos/freeCodeCamp/freeCodeCamp',
       created_at: new Date('2014-12-24T17:49:19Z'),
@@ -315,8 +310,7 @@ describe('Repository entity', () => {
       issues_url: 'https://api.github.com/repos/twbs/bootstrap/issues{/number}',
       pulls_url: 'https://api.github.com/repos/twbs/bootstrap/pulls{/number}',
       milestones_url: 'https://api.github.com/repos/twbs/bootstrap/milestones{/number}',
-      notifications_url:
-        'https://api.github.com/repos/twbs/bootstrap/notifications{?since,all,participating}',
+      notifications_url: 'https://api.github.com/repos/twbs/bootstrap/notifications{?since,all,participating}',
       labels_url: 'https://api.github.com/repos/twbs/bootstrap/labels{/name}',
       releases_url: 'https://api.github.com/repos/twbs/bootstrap/releases{/id}',
       deployments_url: 'https://api.github.com/repos/twbs/bootstrap/deployments',

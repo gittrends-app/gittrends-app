@@ -99,18 +99,13 @@ export default function (db: Db) {
     storage.save = async function (entities, replace) {
       const events = (Array.isArray(entities) ? entities : [entities]).reduce(
         (memo: Array<TimelineEvent>, entity) =>
-          Array.isArray(entity._timeline)
-            ? memo.concat(entity._timeline as Array<TimelineEvent>)
-            : memo,
+          Array.isArray(entity._timeline) ? memo.concat(entity._timeline as Array<TimelineEvent>) : memo,
         []
       );
 
       const data = (Array.isArray(entities) ? entities : [entities]).map((entity) => ({
         ...entity,
-        _timeline:
-          entity._timeline && Array.isArray(entity._timeline)
-            ? entity._timeline.length
-            : entity._timeline
+        _timeline: entity._timeline && Array.isArray(entity._timeline) ? entity._timeline.length : entity._timeline
       }));
 
       await Promise.all([timelineStorage.save(events, false), saveEntity(data, replace)]);

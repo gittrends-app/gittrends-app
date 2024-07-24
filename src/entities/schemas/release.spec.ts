@@ -35,8 +35,7 @@ describe('Release entity', () => {
       releaseSchema.parse({
         url: 'https://api.github.com/repos/kubernetes/kubernetes/releases/103386457',
         assets_url: 'https://api.github.com/repos/kubernetes/kubernetes/releases/103386457/assets',
-        upload_url:
-          'https://uploads.github.com/repos/kubernetes/kubernetes/releases/103386457/assets{?name,label}',
+        upload_url: 'https://uploads.github.com/repos/kubernetes/kubernetes/releases/103386457/assets{?name,label}',
         html_url: 'https://github.com/kubernetes/kubernetes/releases/tag/v1.26.5',
         id: 103386457,
         author: {
@@ -83,8 +82,7 @@ describe('Release entity', () => {
               url: 'https://api.github.com/users/k8s-release-robot',
               html_url: 'https://github.com/k8s-release-robot',
               followers_url: 'https://api.github.com/users/k8s-release-robot/followers',
-              following_url:
-                'https://api.github.com/users/k8s-release-robot/following{/other_user}',
+              following_url: 'https://api.github.com/users/k8s-release-robot/following{/other_user}',
               gists_url: 'https://api.github.com/users/k8s-release-robot/gists{/gist_id}',
               starred_url: 'https://api.github.com/users/k8s-release-robot/starred{/owner}{/repo}',
               subscriptions_url: 'https://api.github.com/users/k8s-release-robot/subscriptions',
@@ -101,8 +99,7 @@ describe('Release entity', () => {
             download_count: 94,
             created_at: '2023-05-17T21:55:23Z',
             updated_at: '2023-05-17T21:55:24Z',
-            browser_download_url:
-              'https://github.com/kubernetes/kubernetes/releases/download/v1.26.5/kubernetes.tar.gz'
+            browser_download_url: 'https://github.com/kubernetes/kubernetes/releases/download/v1.26.5/kubernetes.tar.gz'
           }
         ],
         tarball_url: 'https://api.github.com/repos/kubernetes/kubernetes/tarball/v1.26.5',

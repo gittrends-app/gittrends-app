@@ -91,10 +91,7 @@ type Reactable = Entity &
 /**
  *
  */
-async function _reactions<T extends Reactable>(
-  entity: T,
-  options: ResourcesParams
-): Promise<Reaction[]> {
+async function _reactions<T extends Reactable>(entity: T, options: ResourcesParams): Promise<Reaction[]> {
   const reactions: Reaction[] = [];
 
   if (entity.reactions?.total_count > 0) {
@@ -170,9 +167,7 @@ async function _reactions<T extends Reactable>(
  * Get the issues of a repository by its id
  *
  */
-function issues(
-  options: ResourcesParams & { since?: Date }
-): IterableResource<Issue | PullRequest> {
+function issues(options: ResourcesParams & { since?: Date }): IterableResource<Issue | PullRequest> {
   return {
     [Symbol.asyncIterator]: async function* () {
       const it = iterator(
@@ -207,9 +202,7 @@ function issues(
               }
             }
 
-            issue._timeline = Array.isArray(issue._timeline)
-              ? issue._timeline.concat(events)
-              : events;
+            issue._timeline = Array.isArray(issue._timeline) ? issue._timeline.concat(events) : events;
           }
 
           issue.reactions = await _reactions(issue, options);
@@ -224,10 +217,7 @@ function issues(
 /**
  * Get the timeline of an issue by its id
  */
-function timeline({
-  issue,
-  ...options
-}: ResourcesParams & { issue: { number: number; node_id: string } }) {
+function timeline({ issue, ...options }: ResourcesParams & { issue: { number: number; node_id: string } }) {
   return iterator(
     {
       url: 'GET /repositories/:repo/issues/:number/timeline',

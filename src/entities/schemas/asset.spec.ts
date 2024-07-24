@@ -13,8 +13,7 @@ describe('Asset entity', () => {
     download_count: 94,
     created_at: '2023-05-17T21:55:23Z',
     updated_at: '2023-05-17T21:55:24Z',
-    browser_download_url:
-      'https://github.com/kubernetes/kubernetes/releases/download/v1.26.5/kubernetes.tar.gz'
+    browser_download_url: 'https://github.com/kubernetes/kubernetes/releases/download/v1.26.5/kubernetes.tar.gz'
   };
 
   it('should validate required fields', () => {
@@ -79,8 +78,7 @@ describe('Asset entity', () => {
         download_count: 94,
         created_at: '2023-05-17T21:55:23Z',
         updated_at: '2023-05-17T21:55:24Z',
-        browser_download_url:
-          'https://github.com/kubernetes/kubernetes/releases/download/v1.26.5/kubernetes.tar.gz'
+        browser_download_url: 'https://github.com/kubernetes/kubernetes/releases/download/v1.26.5/kubernetes.tar.gz'
       })
     ).toEqual({
       url: 'https://api.github.com/repos/kubernetes/kubernetes/releases/assets/108642925',
@@ -95,8 +93,7 @@ describe('Asset entity', () => {
       download_count: 94,
       created_at: new Date('2023-05-17T21:55:23Z'),
       updated_at: new Date('2023-05-17T21:55:24Z'),
-      browser_download_url:
-        'https://github.com/kubernetes/kubernetes/releases/download/v1.26.5/kubernetes.tar.gz'
+      browser_download_url: 'https://github.com/kubernetes/kubernetes/releases/download/v1.26.5/kubernetes.tar.gz'
     });
   });
 

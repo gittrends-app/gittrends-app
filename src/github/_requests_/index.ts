@@ -37,8 +37,7 @@ export async function request<K extends keyof ResourceEndpoints>(
   return clients.rest
     .request<string>(resource.url, { ...params })
     .then((response: OctokitResponse<ResourceEndpoints[K]['response']>) => {
-      if (response.status !== 200)
-        throw new Error(`Failed to get ${resource.url} - ${response.status}`);
+      if (response.status !== 200) throw new Error(`Failed to get ${resource.url} - ${response.status}`);
       return resource.parser({ ...response.data, ...resource.metadata });
     })
     .catch((error) => {
@@ -62,12 +61,14 @@ export function iterator<R extends keyof IterableEndpoints>(
       let currentPage = Math.max(Number(page) || 1, 1);
 
       do {
-        const response: OctokitResponse<IterableEndpoints[R]['response']> =
-          await clients.rest.request<string>(resource.url, {
+        const response: OctokitResponse<IterableEndpoints[R]['response']> = await clients.rest.request<string>(
+          resource.url,
+          {
             page: currentPage,
             per_page: perPage || 100,
             ...requestParams
-          });
+          }
+        );
 
         yield {
           data: response.data.map((data: Record<string, any>) => {
@@ -78,10 +79,7 @@ export function iterator<R extends keyof IterableEndpoints>(
               });
             } catch (error: any) {
               if (error instanceof ZodError)
-                consola.error(
-                  `${error.message || error}: `,
-                  stringifyObject(data, { indent: '  ' })
-                );
+                consola.error(`${error.message || error}: `, stringifyObject(data, { indent: '  ' }));
               throw error;
             }
           }),

@@ -5,12 +5,9 @@ const schema = z
     GITHUB_API_BASE_URL: z.string().url().default('https://api.github.com'),
     GITHUB_API_TOKEN: z.string().optional()
   })
-  .refine(
-    (data) => data.GITHUB_API_BASE_URL !== 'https://api.github.com' || data.GITHUB_API_TOKEN,
-    {
-      message: 'GITHUB_API_TOKEN is required if GITHUB_API_BASE_URL is "https://api.github.com"',
-      path: ['GITHUB_API_TOKEN']
-    }
-  );
+  .refine((data) => data.GITHUB_API_BASE_URL !== 'https://api.github.com' || data.GITHUB_API_TOKEN, {
+    message: 'GITHUB_API_TOKEN is required if GITHUB_API_BASE_URL is "https://api.github.com"',
+    path: ['GITHUB_API_TOKEN']
+  });
 
 export default schema.parse(process.env);

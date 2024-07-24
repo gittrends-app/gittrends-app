@@ -23,10 +23,7 @@ type SearchOptions = {
  * @param total - The total number of repositories to return.
  * @param opts - The search parameters.
  */
-function repos(
-  total = 1000,
-  opts?: SearchOptions
-): IterableResource<Repository, SearchRepositoriesMetadata> {
+function repos(total = 1000, opts?: SearchOptions): IterableResource<Repository, SearchRepositoriesMetadata> {
   const { language } = opts || {};
 
   let page = 1;

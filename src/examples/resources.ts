@@ -46,8 +46,7 @@ import { withStorage, withStorageIt } from '../storage/withStorage.js';
           repo: repo,
           storage: storage.stargazers
         }),
-      print: (entity: Stargazer, index) =>
-        consola.log(`${index || '?'}. ${(entity.user as User).login}`)
+      print: (entity: Stargazer, index) => consola.log(`${index || '?'}. ${(entity.user as User).login}`)
     },
     watchers: {
       it: () =>
@@ -55,8 +54,7 @@ import { withStorage, withStorageIt } from '../storage/withStorage.js';
           repo: repo,
           storage: storage.watchers
         }),
-      print: (entity: Watcher, index) =>
-        consola.log(`${index || '?'}. ${(entity.user as User).login}`)
+      print: (entity: Watcher, index) => consola.log(`${index || '?'}. ${(entity.user as User).login}`)
     },
     tags: {
       it: () =>
@@ -86,10 +84,7 @@ import { withStorage, withStorageIt } from '../storage/withStorage.js';
           `${issue._typename.toUpperCase()}-${issue.number}. ${issue.title.slice(0, 50)}${issue.title.length ? '...' : ''} (${issue.state} - ${typeof issue._timeline === 'number' ? issue._timeline : issue._timeline?.length} events)`
         )
     }
-  } satisfies Record<
-    string,
-    { it: () => IterableResource<Entity>; print: (entity: any, index?: number) => any }
-  >;
+  } satisfies Record<string, { it: () => IterableResource<Entity>; print: (entity: any, index?: number) => any }>;
 
   let index = 1;
   consola.info(`Getting ${resource} ...`);

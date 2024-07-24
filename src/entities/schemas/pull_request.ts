@@ -24,20 +24,14 @@ export default zodSanitize(
       head: z.object({
         label: z.string(),
         ref: z.string(),
-        repo: repositorySchema
-          .innerType()
-          .pick({ id: true, name: true, full_name: true })
-          .optional(),
+        repo: repositorySchema.innerType().pick({ id: true, name: true, full_name: true }).optional(),
         sha: z.string(),
         user: z.union([userSchema, z.string()]).optional()
       }),
       base: z.object({
         label: z.string(),
         ref: z.string(),
-        repo: repositorySchema
-          .innerType()
-          .pick({ id: true, name: true, full_name: true })
-          .optional(),
+        repo: repositorySchema.innerType().pick({ id: true, name: true, full_name: true }).optional(),
         sha: z.string(),
         user: z.union([userSchema, z.string()]).optional()
       }),

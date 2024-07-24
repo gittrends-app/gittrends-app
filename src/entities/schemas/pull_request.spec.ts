@@ -14,8 +14,7 @@ describe('PullRequest', () => {
         issue_url: 'https://api.github.com/repos/octocat/Hello-World/issues/1347',
         commits_url: 'https://api.github.com/repos/octocat/Hello-World/pulls/1347/commits',
         review_comments_url: 'https://api.github.com/repos/octocat/Hello-World/pulls/1347/comments',
-        review_comment_url:
-          'https://api.github.com/repos/octocat/Hello-World/pulls/comments{/number}',
+        review_comment_url: 'https://api.github.com/repos/octocat/Hello-World/pulls/comments{/number}',
         comments_url: 'https://api.github.com/repos/octocat/Hello-World/issues/1347/comments',
         statuses_url:
           'https://api.github.com/repos/octocat/Hello-World/statuses/6dcb09b5b57875f334f61aebed695e2e4193db5e',
@@ -256,8 +255,7 @@ describe('PullRequest', () => {
             assignees_url: 'https://api.github.com/repos/octocat/Hello-World/assignees{/user}',
             blobs_url: 'https://api.github.com/repos/octocat/Hello-World/git/blobs{/sha}',
             branches_url: 'https://api.github.com/repos/octocat/Hello-World/branches{/branch}',
-            collaborators_url:
-              'https://api.github.com/repos/octocat/Hello-World/collaborators{/collaborator}',
+            collaborators_url: 'https://api.github.com/repos/octocat/Hello-World/collaborators{/collaborator}',
             comments_url: 'https://api.github.com/repos/octocat/Hello-World/comments{/number}',
             commits_url: 'https://api.github.com/repos/octocat/Hello-World/commits{/sha}',
             compare_url: 'https://api.github.com/repos/octocat/Hello-World/compare/{base}...{head}',
@@ -271,10 +269,8 @@ describe('PullRequest', () => {
             git_refs_url: 'https://api.github.com/repos/octocat/Hello-World/git/refs{/sha}',
             git_tags_url: 'https://api.github.com/repos/octocat/Hello-World/git/tags{/sha}',
             git_url: 'git:github.com/octocat/Hello-World.git',
-            issue_comment_url:
-              'https://api.github.com/repos/octocat/Hello-World/issues/comments{/number}',
-            issue_events_url:
-              'https://api.github.com/repos/octocat/Hello-World/issues/events{/number}',
+            issue_comment_url: 'https://api.github.com/repos/octocat/Hello-World/issues/comments{/number}',
+            issue_events_url: 'https://api.github.com/repos/octocat/Hello-World/issues/events{/number}',
             issues_url: 'https://api.github.com/repos/octocat/Hello-World/issues{/number}',
             keys_url: 'https://api.github.com/repos/octocat/Hello-World/keys{/key_id}',
             labels_url: 'https://api.github.com/repos/octocat/Hello-World/labels{/name}',
@@ -397,8 +393,7 @@ describe('PullRequest', () => {
             assignees_url: 'https://api.github.com/repos/octocat/Hello-World/assignees{/user}',
             blobs_url: 'https://api.github.com/repos/octocat/Hello-World/git/blobs{/sha}',
             branches_url: 'https://api.github.com/repos/octocat/Hello-World/branches{/branch}',
-            collaborators_url:
-              'https://api.github.com/repos/octocat/Hello-World/collaborators{/collaborator}',
+            collaborators_url: 'https://api.github.com/repos/octocat/Hello-World/collaborators{/collaborator}',
             comments_url: 'https://api.github.com/repos/octocat/Hello-World/comments{/number}',
             commits_url: 'https://api.github.com/repos/octocat/Hello-World/commits{/sha}',
             compare_url: 'https://api.github.com/repos/octocat/Hello-World/compare/{base}...{head}',
@@ -412,10 +407,8 @@ describe('PullRequest', () => {
             git_refs_url: 'https://api.github.com/repos/octocat/Hello-World/git/refs{/sha}',
             git_tags_url: 'https://api.github.com/repos/octocat/Hello-World/git/tags{/sha}',
             git_url: 'git:github.com/octocat/Hello-World.git',
-            issue_comment_url:
-              'https://api.github.com/repos/octocat/Hello-World/issues/comments{/number}',
-            issue_events_url:
-              'https://api.github.com/repos/octocat/Hello-World/issues/events{/number}',
+            issue_comment_url: 'https://api.github.com/repos/octocat/Hello-World/issues/comments{/number}',
+            issue_events_url: 'https://api.github.com/repos/octocat/Hello-World/issues/events{/number}',
             issues_url: 'https://api.github.com/repos/octocat/Hello-World/issues{/number}',
             keys_url: 'https://api.github.com/repos/octocat/Hello-World/keys{/key_id}',
             labels_url: 'https://api.github.com/repos/octocat/Hello-World/labels{/name}',
