@@ -2,12 +2,12 @@ import { input, select } from '@inquirer/prompts';
 import chalk from 'chalk';
 import consola from 'consola';
 import { MongoClient } from 'mongodb';
-import { Entity, Issue, Release, Stargazer, Tag, User, Watcher } from '../entities/entity.js';
+import { Entity, Issue, Release, Stargazer, Tag, User, Watcher } from '../entities/entities.js';
 import { IterableResource } from '../github/_requests_/index.js';
-import { github } from '../github/index.js';
+import { github } from '../github/github.js';
 import get from '../github/repository/get.js';
-import { createMongoStorage } from '../storage/index.js';
-import { withStorage, withStorageIt } from '../storage/withStorage.js';
+import { createMongoStorage } from '../storage/mongo.js';
+import { withStorage, withStorageIterable } from '../storage/withStorage.js';
 
 (async () => {
   const conn = await MongoClient.connect('mongodb://localhost:27017');
@@ -42,7 +42,7 @@ import { withStorage, withStorageIt } from '../storage/withStorage.js';
   const map = {
     stargazers: {
       it: () =>
-        withStorageIt(github.repos.stargazers)({
+        withStorageIterable(github.repos.stargazers)({
           repo: repo,
           storage: storage.stargazers
         }),
@@ -50,7 +50,7 @@ import { withStorage, withStorageIt } from '../storage/withStorage.js';
     },
     watchers: {
       it: () =>
-        withStorageIt(github.repos.watchers)({
+        withStorageIterable(github.repos.watchers)({
           repo: repo,
           storage: storage.watchers
         }),
@@ -58,7 +58,7 @@ import { withStorage, withStorageIt } from '../storage/withStorage.js';
     },
     tags: {
       it: () =>
-        withStorageIt(github.repos.tags)({
+        withStorageIterable(github.repos.tags)({
           repo: repo,
           storage: storage.tags
         }),
@@ -66,7 +66,7 @@ import { withStorage, withStorageIt } from '../storage/withStorage.js';
     },
     releases: {
       it: () =>
-        withStorageIt(github.repos.releases)({
+        withStorageIterable(github.repos.releases)({
           repo: repo,
           storage: storage.releases
         }),
@@ -74,7 +74,7 @@ import { withStorage, withStorageIt } from '../storage/withStorage.js';
     },
     issues: {
       it: () =>
-        withStorageIt(github.repos.issues)({
+        withStorageIterable(github.repos.issues)({
           repo: repo,
           per_page: 25,
           storage: storage.issues

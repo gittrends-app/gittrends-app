@@ -1,5 +1,4 @@
-import { Entity } from '../entities/entity.js';
-import createMongoStorage from './mongo.js';
+import { Entity } from '../entities/entities.js';
 
 export type Storage<T extends Entity> = {
   get: (query: Partial<T>) => Promise<T | null>;
@@ -7,5 +6,3 @@ export type Storage<T extends Entity> = {
   remove: (data: T | T[]) => Promise<void>;
   invalidate: (data: T | T[]) => Promise<void>;
 };
-
-export { createMongoStorage };

@@ -1,11 +1,11 @@
 import { describe, expect, it } from '@jest/globals';
 
-import { schemas, User } from '../entities/entity.js';
+import { entities, User } from '../entities/entities.js';
 import { extract } from './extract.js';
 
 describe('extract', () => {
   describe('users', () => {
-    const user = schemas.user({
+    const user = entities.user({
       login: 'danielbruns',
       id: 1478925,
       node_id: 'MDQ6VXNlcjE0Nzg5MjU=',
@@ -91,7 +91,7 @@ describe('extract', () => {
   });
 
   describe('reactions', () => {
-    const reaction = schemas.reaction({
+    const reaction = entities.reaction({
       id: 1,
       node_id: 'MDg6UmVhY3Rpb24x',
       user: {

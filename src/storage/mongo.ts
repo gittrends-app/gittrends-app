@@ -11,9 +11,9 @@ import {
   TimelineEvent,
   User,
   Watcher
-} from '../entities/entity.js';
+} from '../entities/entities.js';
 import { extract } from '../helpers/extract.js';
-import { Storage } from './index.js';
+import { Storage } from './storage.js';
 
 /**
  *  Implementation of a generic storage.
@@ -73,7 +73,7 @@ function storage<T extends Entity>(collection: Collection): Storage<T> {
 /**
  * Create a MongoDB storage.
  */
-export default function (db: Db) {
+export function createMongoStorage(db: Db) {
   const usersStorage = storage<User>(db.collection('users'));
   const reactionsStorage = storage<Reaction>(db.collection('reactions'));
   const timelineStorage = storage<TimelineEvent>(db.collection('timeline'));

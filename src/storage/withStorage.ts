@@ -1,6 +1,6 @@
-import { Entity } from '../entities/entity.js';
+import { Entity } from '../entities/entities.js';
 import { IterableResource } from '../github/_requests_/index.js';
-import { Storage } from './index.js';
+import { Storage } from './storage.js';
 
 type Operation<P extends object, E extends Entity> = (args: P) => Promise<E | undefined>;
 
@@ -26,7 +26,7 @@ export function withStorage<P extends object, E extends Entity>(operation: Opera
 /**
  *
  */
-export function withStorageIt<P extends object, E extends Entity>(
+export function withStorageIterable<P extends object, E extends Entity>(
   operation: IteratableOperation<P, E>
 ): NewIteratableOperation<P, E> {
   return ({ storage, ...args }: P & { storage: Storage<E> }) => ({

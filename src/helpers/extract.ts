@@ -1,6 +1,6 @@
 import isPlainObject from 'lodash/isPlainObject.js';
 import mapValues from 'lodash/mapValues.js';
-import { Reaction, User } from '../entities/entity.js';
+import { Reaction, User } from '../entities/entities.js';
 import isEntity from './is-entity.js';
 
 /**

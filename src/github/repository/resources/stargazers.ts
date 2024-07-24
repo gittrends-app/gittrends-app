@@ -1,5 +1,5 @@
 import { PartialDeep } from 'type-fest';
-import { schemas, Stargazer } from '../../../entities/entity.js';
+import { entities, Stargazer } from '../../../entities/entities.js';
 import { IterableResource, PageableParams } from '../../_requests_/index.js';
 import { clients } from '../../clients.js';
 
@@ -99,7 +99,7 @@ export default function (
 
         const stars = (repository.stargazers.edges || [])
           .map((edge) => edge && transform(edge))
-          .map((data) => schemas.stargazer({ ...data, _repository: repo.node_id }));
+          .map((data) => entities.stargazer({ ...data, _repository: repo.node_id }));
 
         metadata.endCursor = repository.stargazers.pageInfo.endCursor || undefined;
         metadata.hasNextPage = repository.stargazers.pageInfo.hasNextPage || false;

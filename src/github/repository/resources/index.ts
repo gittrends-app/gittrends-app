@@ -1,12 +1,12 @@
 import {
+  entities,
   Entity,
   Issue,
   PullRequest,
   Reaction,
   RepositoryResource,
-  schemas,
   TimelineEvent
-} from '../../../entities/entity.js';
+} from '../../../entities/entities.js';
 import { IterableEndpoints } from '../../_requests_/endpoints.js';
 import { IterableResource, iterator, PageableParams, request } from '../../_requests_/index.js';
 import stargazers from './stargazers.js';
@@ -21,7 +21,7 @@ function pullRequest(params: RepoParam & { number: number }) {
   return request(
     {
       url: 'GET /repositories/:repo/pulls/:number',
-      parser: schemas.pull_request,
+      parser: entities.pull_request,
       metadata: { _repository: params.repo.node_id }
     },
     { repo: params.repo.id, number: params.number }
@@ -35,7 +35,7 @@ function watchers(options: ResourcesParams) {
   return iterator(
     {
       url: 'GET /repositories/:repo/subscribers',
-      parser: (data: any) => schemas.watcher({ user: data, _repository: options.repo.node_id })
+      parser: (data: any) => entities.watcher({ user: data, _repository: options.repo.node_id })
     },
     { ...options, repo: options.repo.id }
   );
@@ -48,7 +48,7 @@ function tags(options: ResourcesParams) {
   return iterator(
     {
       url: 'GET /repositories/:repo/tags',
-      parser: schemas.tag,
+      parser: entities.tag,
       metadata: { _repository: options.repo.node_id }
     },
     { ...options, repo: options.repo.id }
@@ -64,7 +64,7 @@ function releases(options: ResourcesParams) {
       const it = iterator(
         {
           url: 'GET /repositories/:repo/releases',
-          parser: schemas.release,
+          parser: entities.release,
           metadata: { _repository: options.repo.node_id }
         },
         { ...options, repo: options.repo.id }
@@ -102,7 +102,7 @@ async function _reactions<T extends Reactable>(entity: T, options: ResourcesPara
         reactionsIt = iterator(
           {
             url: 'GET /repositories/:repo/releases/:release/reactions',
-            parser: schemas.reaction,
+            parser: entities.reaction,
             metadata: {
               _repository: entity._repository,
               _reactable_name: entity._typename,
@@ -117,7 +117,7 @@ async function _reactions<T extends Reactable>(entity: T, options: ResourcesPara
         reactionsIt = iterator(
           {
             url: 'GET /repositories/:repo/issues/:number/reactions',
-            parser: schemas.reaction,
+            parser: entities.reaction,
             metadata: {
               _repository: entity._repository,
               _reactable_name: entity._typename,
@@ -139,7 +139,7 @@ async function _reactions<T extends Reactable>(entity: T, options: ResourcesPara
         reactionsIt = iterator(
           {
             url,
-            parser: schemas.reaction,
+            parser: entities.reaction,
             metadata: {
               _repository: entity._repository,
               _reactable_name: entity._typename,
@@ -173,7 +173,7 @@ function issues(options: ResourcesParams & { since?: Date }): IterableResource<I
       const it = iterator(
         {
           url: 'GET /repositories/:repo/issues',
-          parser: schemas.issue,
+          parser: entities.issue,
           metadata: { _repository: options.repo.node_id }
         },
         {
@@ -221,7 +221,7 @@ function timeline({ issue, ...options }: ResourcesParams & { issue: { number: nu
   return iterator(
     {
       url: 'GET /repositories/:repo/issues/:number/timeline',
-      parser: schemas.timeline_event,
+      parser: entities.timeline_event,
       metadata: { _repository: options.repo.node_id, _issue: issue.node_id }
     },
     { ...options, repo: options.repo.id, number: issue.number }

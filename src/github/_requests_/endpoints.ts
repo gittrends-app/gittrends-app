@@ -9,7 +9,7 @@ import {
   TimelineEvent,
   User,
   Watcher
-} from '../../entities/entity.js';
+} from '../../entities/entities.js';
 import { clients } from '../clients.js';
 import { PageableParams } from './index.js';
 

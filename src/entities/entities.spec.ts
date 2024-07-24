@@ -1,5 +1,5 @@
 import { describe, it } from '@jest/globals';
-import { schemas } from './entity';
+import { entities } from './entities';
 
 import baseUserSchema from './schemas/user';
 
@@ -16,7 +16,7 @@ describe('Entities', () => {
 
   describe('User', () => {
     it('should add _id, _typename, and _obtained_at to the schema', () => {
-      expect(schemas.user(baseFields)).toEqual({
+      expect(entities.user(baseFields)).toEqual({
         ...baseUserSchema.parse(baseFields),
         _id: baseFields.node_id,
         _typename: 'User',
@@ -25,7 +25,7 @@ describe('Entities', () => {
     });
 
     it('should throw an error if _typename does not match', () => {
-      expect(() => schemas.user({ ...baseFields, _typename: 'Unknown' })).toThrow();
+      expect(() => entities.user({ ...baseFields, _typename: 'Unknown' })).toThrow();
     });
   });
 });

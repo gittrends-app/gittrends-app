@@ -12,27 +12,29 @@ import tag from './schemas/tag.js';
 import user from './schemas/user.js';
 import watcher from './schemas/watcher.js';
 
+export const entityTypes = [
+  'Issue',
+  'PullRequest',
+  'Reaction',
+  'Release',
+  'Repository',
+  'Stargazer',
+  'Tag',
+  'TimelineEvent',
+  'User',
+  'Watcher'
+] as const;
+
 const entitySchema = z.object({
   _id: z.string(),
-  _typename: z.enum([
-    'Issue',
-    'PullRequest',
-    'Reaction',
-    'Release',
-    'Repository',
-    'Stargazer',
-    'Tag',
-    'TimelineEvent',
-    'User',
-    'Watcher'
-  ]),
+  _typename: z.enum(entityTypes),
   _obtained_at: z.date()
 });
 
 /**
  * Create a schema for a specific entity type
  */
-function createSchema<T extends string, Z extends ZodType>(
+function createEntity<T extends string, Z extends ZodType>(
   name: T | [T, T],
   schema: Z,
   key: (v: z.infer<Z>) => string
@@ -68,42 +70,42 @@ const reactableSchema = resourceSchema.merge(
   })
 );
 
-export const schemas = {
-  user: createSchema('User', user, (v) => v.node_id),
-  repo: createSchema('Repository', repository, (v) => v.node_id),
-  tag: createSchema('Tag', resourceSchema.and(tag), (v) => v.node_id),
-  release: createSchema('Release', resourceSchema.and(release), (v) => v.node_id),
-  watcher: createSchema(
+export const entities = {
+  user: createEntity('User', user, (v) => v.node_id),
+  repo: createEntity('Repository', repository, (v) => v.node_id),
+  tag: createEntity('Tag', resourceSchema.and(tag), (v) => v.node_id),
+  release: createEntity('Release', resourceSchema.and(release), (v) => v.node_id),
+  watcher: createEntity(
     'Watcher',
     resourceSchema.and(watcher),
     (v) => `${v._repository}_${typeof v.user === 'string' ? v.user : v.user.node_id}`
   ),
-  stargazer: createSchema(
+  stargazer: createEntity(
     'Stargazer',
     resourceSchema.and(stargazer),
     (v) => `${v._repository}_${typeof v.user === 'string' ? v.user : v.user.node_id}`
   ),
-  issue: createSchema(['Issue', 'PullRequest'], issueSchema.and(issue), (v) => v.node_id),
-  pull_request: createSchema('PullRequest', issueSchema.and(pr), (v) => v.node_id),
-  timeline_event: createSchema(
+  issue: createEntity(['Issue', 'PullRequest'], issueSchema.and(issue), (v) => v.node_id),
+  pull_request: createEntity('PullRequest', issueSchema.and(pr), (v) => v.node_id),
+  timeline_event: createEntity(
     'TimelineEvent',
     resourceSchema.merge(z.object({ _issue: z.string() })).and(events),
     (v: any) =>
       `${v._repository}_${v._issue}_${v.node_id || v.id || v.created_at || objectHash(omitBy(v, (_, k) => k.startsWith('_')))}`
   ),
-  reaction: createSchema('Reaction', reactableSchema.and(reaction), (v) => v.node_id)
+  reaction: createEntity('Reaction', reactableSchema.and(reaction), (v) => v.node_id)
 } satisfies Record<string, (value: Record<string, any>, repo?: string | number) => z.infer<typeof entitySchema>>;
 
+// Types for the entities
 export type RepositoryResource = z.infer<typeof resourceSchema>;
-
 export type Entity = z.infer<typeof entitySchema>;
-export type User = ReturnType<typeof schemas.user>;
-export type Repository = ReturnType<typeof schemas.repo>;
-export type Tag = ReturnType<typeof schemas.tag>;
-export type Release = ReturnType<typeof schemas.release>;
-export type Watcher = ReturnType<typeof schemas.watcher>;
-export type Stargazer = ReturnType<typeof schemas.stargazer>;
-export type Issue = ReturnType<typeof schemas.issue>;
-export type PullRequest = ReturnType<typeof schemas.pull_request>;
-export type TimelineEvent = ReturnType<typeof schemas.timeline_event>;
-export type Reaction = ReturnType<typeof schemas.reaction>;
+export type User = ReturnType<typeof entities.user>;
+export type Repository = ReturnType<typeof entities.repo>;
+export type Tag = ReturnType<typeof entities.tag>;
+export type Release = ReturnType<typeof entities.release>;
+export type Watcher = ReturnType<typeof entities.watcher>;
+export type Stargazer = ReturnType<typeof entities.stargazer>;
+export type Issue = ReturnType<typeof entities.issue>;
+export type PullRequest = ReturnType<typeof entities.pull_request>;
+export type TimelineEvent = ReturnType<typeof entities.timeline_event>;
+export type Reaction = ReturnType<typeof entities.reaction>;

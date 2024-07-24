@@ -1,5 +1,5 @@
 import consola from 'consola';
-import { github } from '../github/index.js';
+import { github } from '../github/github.js';
 
 (async () => {
   consola.info('Searching for repositories...');

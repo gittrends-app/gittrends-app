@@ -1,4 +1,4 @@
-import { Entity, schemas } from '../entities/entity.js';
+import { Entity, entities } from '../entities/entities.js';
 
 /**
  *  Create a wrapper for a schema to catch errors
@@ -14,6 +14,6 @@ function wrapper<T extends Entity>(schema: (data: Record<string, any>) => T) {
 }
 
 export default {
-  user: wrapper(schemas.user),
-  reaction: wrapper(schemas.reaction)
+  user: wrapper(entities.user),
+  reaction: wrapper(entities.reaction)
 } satisfies Record<string, (data: Record<string, any>) => false | Entity>;

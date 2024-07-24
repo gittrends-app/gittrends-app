@@ -1,10 +1,10 @@
 import { describe } from '@jest/globals';
-import { schemas } from '../entities/entity';
+import { entities } from '../entities/entities';
 import isEntity from './is-entity';
 
 describe('is-entity', () => {
   describe('user', () => {
-    const user = schemas.user({
+    const user = entities.user({
       login: 'danielbruns',
       id: 1478925,
       node_id: 'MDQ6VXNlcjE0Nzg5MjU=',
@@ -26,7 +26,7 @@ describe('is-entity', () => {
   });
 
   describe('reaction', () => {
-    const reaction = schemas.reaction({
+    const reaction = entities.reaction({
       id: 1,
       node_id: 'MDg6UmVhY3Rpb24x',
       user: {

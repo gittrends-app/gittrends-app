@@ -1,5 +1,5 @@
 import { MergeExclusive } from 'type-fest';
-import { schemas, User } from '../../entities/entity.js';
+import { entities, User } from '../../entities/entities.js';
 import { request } from '../_requests_/index.js';
 
 /**
@@ -14,5 +14,5 @@ export default async function get(
 
   const [url, args] = id ? [`GET /user/:id` as const, { id: id }] : [`GET /users/:login` as const, { login: login }];
 
-  return request({ url, parser: schemas.user }, args as any);
+  return request({ url, parser: entities.user }, args as any);
 }

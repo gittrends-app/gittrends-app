@@ -1,5 +1,5 @@
 import { MergeExclusive } from 'type-fest';
-import { Repository, schemas } from '../../entities/entity.js';
+import { Repository, entities } from '../../entities/entities.js';
 import { request } from '../_requests_/index.js';
 
 /**
@@ -16,5 +16,5 @@ export default async function get(
     ? ['GET /repositories/:repo' as const, { repo }]
     : ['GET /repos/:owner/:name' as const, { owner, name }];
 
-  return request({ url, parser: schemas.repo }, args as any);
+  return request({ url, parser: entities.repo }, args as any);
 }

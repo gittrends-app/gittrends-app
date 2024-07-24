@@ -1,5 +1,5 @@
 import min from 'lodash/min.js';
-import { Repository, schemas } from '../entities/entity.js';
+import { Repository, entities } from '../entities/entities.js';
 import { IterableResource } from './_requests_/index.js';
 import { clients } from './clients.js';
 
@@ -50,7 +50,7 @@ function repos(total = 1000, opts?: SearchOptions): IterableResource<Repository,
 
         for await (const response of it) {
           const _repos = response.data
-            .map((data) => schemas.repo(data))
+            .map((data) => entities.repo(data))
             .filter((repo) => maxStargazersRepos.every((r) => r.id !== repo.id))
             .slice(0, total - count);
 
