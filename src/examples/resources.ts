@@ -83,7 +83,7 @@ import { withStorage, withStorageIt } from '../storage/withStorage.js';
         }),
       print: (issue: Issue) =>
         consola.log(
-          `${issue.__typename.toUpperCase()}-${issue.number}. ${issue.title.slice(0, 50)}${issue.title.length ? '...' : ''} (${issue.state} - ${typeof issue.__timeline === 'number' ? issue.__timeline : issue.__timeline?.length} events)`
+          `${issue._typename.toUpperCase()}-${issue.number}. ${issue.title.slice(0, 50)}${issue.title.length ? '...' : ''} (${issue.state} - ${typeof issue._timeline === 'number' ? issue._timeline : issue._timeline?.length} events)`
         )
     }
   } satisfies Record<

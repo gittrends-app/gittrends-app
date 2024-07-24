@@ -13,8 +13,8 @@ import user from './schemas/user.js';
 import watcher from './schemas/watcher.js';
 
 const entitySchema = z.object({
-  __id: z.string(),
-  __typename: z.enum([
+  _id: z.string(),
+  _typename: z.enum([
     'Issue',
     'PullRequest',
     'Reaction',
@@ -26,7 +26,7 @@ const entitySchema = z.object({
     'User',
     'Watcher'
   ]),
-  __obtained_at: z.date()
+  _obtained_at: z.date()
 });
 
 /**
@@ -41,32 +41,32 @@ function createSchema<T extends string, Z extends ZodType>(
     entitySchema
       .merge(
         z.object({
-          __typename: Array.isArray(name)
+          _typename: Array.isArray(name)
             ? z.union([z.literal(name[0]), z.literal(name[1])])
             : z.literal(name)
         })
       )
       .and(schema)
       .parse({
-        __id: key(value),
-        __typename: Array.isArray(name) ? name[0] : name,
-        __obtained_at: new Date(),
+        _id: key(value),
+        _typename: Array.isArray(name) ? name[0] : name,
+        _obtained_at: new Date(),
         ...value
       });
 }
 
-const resourceSchema = z.object({ __repository: z.string() });
+const resourceSchema = z.object({ _repository: z.string() });
 
 const issueSchema = resourceSchema.merge(
   z.object({
-    __timeline: z.array(z.union([events, z.string()])).default([])
+    _timeline: z.array(z.union([events, z.string()])).default([])
   })
 );
 
 const reactableSchema = resourceSchema.merge(
   z.object({
-    __reactable_name: z.string(),
-    __reactable_id: z.union([z.string(), z.string()])
+    _reactable_name: z.string(),
+    _reactable_id: z.union([z.string(), z.string()])
   })
 );
 
@@ -78,20 +78,20 @@ export const schemas = {
   watcher: createSchema(
     'Watcher',
     resourceSchema.and(watcher),
-    (v) => `${v.__repository}__${typeof v.user === 'string' ? v.user : v.user.node_id}`
+    (v) => `${v._repository}_${typeof v.user === 'string' ? v.user : v.user.node_id}`
   ),
   stargazer: createSchema(
     'Stargazer',
     resourceSchema.and(stargazer),
-    (v) => `${v.__repository}__${typeof v.user === 'string' ? v.user : v.user.node_id}`
+    (v) => `${v._repository}_${typeof v.user === 'string' ? v.user : v.user.node_id}`
   ),
   issue: createSchema(['Issue', 'PullRequest'], issueSchema.and(issue), (v) => v.node_id),
   pull_request: createSchema('PullRequest', issueSchema.and(pr), (v) => v.node_id),
   timeline_event: createSchema(
     'TimelineEvent',
-    resourceSchema.merge(z.object({ __issue: z.string() })).and(events),
+    resourceSchema.merge(z.object({ _issue: z.string() })).and(events),
     (v: any) =>
-      `${v.__repository}__${v.__issue}__${v.node_id || v.id || v.created_at || objectHash(omitBy(v, (_, k) => k.startsWith('__')))}`
+      `${v._repository}_${v._issue}_${v.node_id || v.id || v.created_at || objectHash(omitBy(v, (_, k) => k.startsWith('_')))}`
   ),
   reaction: createSchema('Reaction', reactableSchema.and(reaction), (v) => v.node_id)
 } satisfies Record<

@@ -15,17 +15,17 @@ describe('Entities', () => {
   };
 
   describe('User', () => {
-    it('should add __id, __typename, and __obtained_at to the schema', () => {
+    it('should add _id, _typename, and _obtained_at to the schema', () => {
       expect(schemas.user(baseFields)).toEqual({
         ...baseUserSchema.parse(baseFields),
-        __id: baseFields.node_id,
-        __typename: 'User',
-        __obtained_at: expect.any(Date)
+        _id: baseFields.node_id,
+        _typename: 'User',
+        _obtained_at: expect.any(Date)
       });
     });
 
-    it('should throw an error if __typename does not match', () => {
-      expect(() => schemas.user({ ...baseFields, __typename: 'Unknown' })).toThrow();
+    it('should throw an error if _typename does not match', () => {
+      expect(() => schemas.user({ ...baseFields, _typename: 'Unknown' })).toThrow();
     });
   });
 });

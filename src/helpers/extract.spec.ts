@@ -116,9 +116,9 @@ describe('extract', () => {
       },
       content: 'heart',
       created_at: '2016-05-20T20:09:31Z',
-      __repository: '123456789',
-      __reactable_name: 'Release',
-      __reactable_id: 'abcdef123456'
+      _repository: '123456789',
+      _reactable_name: 'Release',
+      _reactable_id: 'abcdef123456'
     });
 
     it('should extract data and reactions from objects', () => {

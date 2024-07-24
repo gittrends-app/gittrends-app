@@ -16,7 +16,7 @@ describe('is-entity', () => {
 
     it('should validate user', () => {
       expect(isEntity.user(user)).toBeTruthy();
-      expect(isEntity.user(user)).toHaveProperty('__typename', 'User');
+      expect(isEntity.user(user)).toHaveProperty('_typename', 'User');
     });
 
     it('should not validate invalid user', () => {
@@ -51,14 +51,14 @@ describe('is-entity', () => {
       },
       content: 'heart',
       created_at: '2016-05-20T20:09:31Z',
-      __repository: '123456789',
-      __reactable_name: 'Release',
-      __reactable_id: 'abcdef123456'
+      _repository: '123456789',
+      _reactable_name: 'Release',
+      _reactable_id: 'abcdef123456'
     });
 
     it('should validate reaction', () => {
       expect(isEntity.reaction(reaction)).toBeTruthy();
-      expect(isEntity.reaction(reaction)).toHaveProperty('__typename', 'Reaction');
+      expect(isEntity.reaction(reaction)).toHaveProperty('_typename', 'Reaction');
     });
 
     it('should not validate invalid reaction', () => {

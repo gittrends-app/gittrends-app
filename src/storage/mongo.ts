@@ -1,5 +1,4 @@
-import omit from 'lodash/omit.js';
-import { Collection, Db, WithId } from 'mongodb';
+import { Collection, Db } from 'mongodb';
 import {
   Entity,
   Issue,
@@ -22,7 +21,7 @@ import { Storage } from './index.js';
 function storage<T extends Entity>(collection: Collection): Storage<T> {
   return {
     get: async (query: object) => {
-      return collection.findOne<WithId<T>>(query).then((data) => omit(data, '_id') as unknown as T);
+      return collection.findOne<T>(query);
     },
     save: async (data, replace) => {
       const items = Array.isArray(data) ? data : [data];
@@ -30,18 +29,18 @@ function storage<T extends Entity>(collection: Collection): Storage<T> {
 
       await collection
         .bulkWrite(
-          items.map((item) => ({
+          items.map(({ _id, ...item }) => ({
             ...(replace
               ? {
                   replaceOne: {
-                    filter: { _id: item.__id as any },
+                    filter: { _id: _id as any },
                     replacement: item,
                     upsert: true
                   }
                 }
               : {
                   insertOne: {
-                    document: { _id: item.__id as any, ...item }
+                    document: { _id: _id as any, ...item }
                   }
                 })
           })),
@@ -54,7 +53,7 @@ function storage<T extends Entity>(collection: Collection): Storage<T> {
     remove: async (query) => {
       await collection.bulkWrite(
         (Array.isArray(query) ? query : [query]).map((item) => ({
-          deleteOne: { filter: { _id: item.__id as any } }
+          deleteOne: { filter: { _id: item._id as any } }
         }))
       );
     },
@@ -62,8 +61,8 @@ function storage<T extends Entity>(collection: Collection): Storage<T> {
       await collection.bulkWrite(
         (Array.isArray(query) ? query : [query]).map((item) => ({
           updateOne: {
-            filter: { _id: item.__id as any },
-            update: { $set: { __removed_at: new Date() } }
+            filter: { _id: item._id as any },
+            update: { $set: { _removed_at: new Date() } }
           }
         }))
       );
@@ -100,18 +99,18 @@ export default function (db: Db) {
     storage.save = async function (entities, replace) {
       const events = (Array.isArray(entities) ? entities : [entities]).reduce(
         (memo: Array<TimelineEvent>, entity) =>
-          Array.isArray(entity.__timeline)
-            ? memo.concat(entity.__timeline as Array<TimelineEvent>)
+          Array.isArray(entity._timeline)
+            ? memo.concat(entity._timeline as Array<TimelineEvent>)
             : memo,
         []
       );
 
       const data = (Array.isArray(entities) ? entities : [entities]).map((entity) => ({
         ...entity,
-        __timeline:
-          entity.__timeline && Array.isArray(entity.__timeline)
-            ? entity.__timeline.length
-            : entity.__timeline
+        _timeline:
+          entity._timeline && Array.isArray(entity._timeline)
+            ? entity._timeline.length
+            : entity._timeline
       }));
 
       await Promise.all([timelineStorage.save(events, false), saveEntity(data, replace)]);

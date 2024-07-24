@@ -22,7 +22,7 @@ function pullRequest(params: RepoParam & { number: number }) {
     {
       url: 'GET /repositories/:repo/pulls/:number',
       parser: schemas.pull_request,
-      metadata: { __repository: params.repo.node_id }
+      metadata: { _repository: params.repo.node_id }
     },
     { repo: params.repo.id, number: params.number }
   );
@@ -35,7 +35,7 @@ function watchers(options: ResourcesParams) {
   return iterator(
     {
       url: 'GET /repositories/:repo/subscribers',
-      parser: (data: any) => schemas.watcher({ user: data, __repository: options.repo.node_id })
+      parser: (data: any) => schemas.watcher({ user: data, _repository: options.repo.node_id })
     },
     { ...options, repo: options.repo.id }
   );
@@ -49,7 +49,7 @@ function tags(options: ResourcesParams) {
     {
       url: 'GET /repositories/:repo/tags',
       parser: schemas.tag,
-      metadata: { __repository: options.repo.node_id }
+      metadata: { _repository: options.repo.node_id }
     },
     { ...options, repo: options.repo.id }
   );
@@ -65,7 +65,7 @@ function releases(options: ResourcesParams) {
         {
           url: 'GET /repositories/:repo/releases',
           parser: schemas.release,
-          metadata: { __repository: options.repo.node_id }
+          metadata: { _repository: options.repo.node_id }
         },
         { ...options, repo: options.repo.id }
       );
@@ -100,16 +100,16 @@ async function _reactions<T extends Reactable>(
   if (entity.reactions?.total_count > 0) {
     let reactionsIt: IterableResource<Reaction> | undefined;
 
-    switch (entity.__typename) {
+    switch (entity._typename) {
       case 'Release':
         reactionsIt = iterator(
           {
             url: 'GET /repositories/:repo/releases/:release/reactions',
             parser: schemas.reaction,
             metadata: {
-              __repository: entity.__repository,
-              __reactable_name: entity.__typename,
-              __reactable_id: entity.node_id
+              _repository: entity._repository,
+              _reactable_name: entity._typename,
+              _reactable_id: entity.node_id
             }
           },
           { ...options, repo: options.repo.id, release: entity.id }
@@ -122,9 +122,9 @@ async function _reactions<T extends Reactable>(
             url: 'GET /repositories/:repo/issues/:number/reactions',
             parser: schemas.reaction,
             metadata: {
-              __repository: entity.__repository,
-              __reactable_name: entity.__typename,
-              __reactable_id: entity.node_id
+              _repository: entity._repository,
+              _reactable_name: entity._typename,
+              _reactable_id: entity.node_id
             }
           },
           { ...options, repo: options.repo.id, number: (entity as Issue).number }
@@ -144,9 +144,9 @@ async function _reactions<T extends Reactable>(
             url,
             parser: schemas.reaction,
             metadata: {
-              __repository: entity.__repository,
-              __reactable_name: entity.__typename,
-              __reactable_id: entity.node_id
+              _repository: entity._repository,
+              _reactable_name: entity._typename,
+              _reactable_id: entity.node_id
             }
           },
           { ...options, repo: options.repo.id, id: entity.id }
@@ -155,7 +155,7 @@ async function _reactions<T extends Reactable>(
       }
 
       default:
-        throw new Error(`Unhandled reactable type: ${entity.__typename}`);
+        throw new Error(`Unhandled reactable type: ${entity._typename}`);
     }
 
     for await (const { data } of reactionsIt) {
@@ -179,7 +179,7 @@ function issues(
         {
           url: 'GET /repositories/:repo/issues',
           parser: schemas.issue,
-          metadata: { __repository: options.repo.node_id }
+          metadata: { _repository: options.repo.node_id }
         },
         {
           ...options,
@@ -198,8 +198,8 @@ function issues(
             Object.assign(issue, pr);
           }
 
-          for await (const tl of timeline({ repo: options.repo, issue: issue.number })) {
-            const events = tl.data.map((e) => ({ ...e, __issue: issue.node_id }));
+          for await (const tl of timeline({ repo: options.repo, issue: issue })) {
+            const events = tl.data.map((e) => ({ ...e, _issue: issue.node_id }));
 
             for (const event of events) {
               if ((event as any).reactions) {
@@ -207,8 +207,8 @@ function issues(
               }
             }
 
-            issue.__timeline = Array.isArray(issue.__timeline)
-              ? issue.__timeline.concat(events)
+            issue._timeline = Array.isArray(issue._timeline)
+              ? issue._timeline.concat(events)
               : events;
           }
 
@@ -224,14 +224,17 @@ function issues(
 /**
  * Get the timeline of an issue by its id
  */
-function timeline({ issue, ...options }: ResourcesParams & { issue: number }) {
+function timeline({
+  issue,
+  ...options
+}: ResourcesParams & { issue: { number: number; node_id: string } }) {
   return iterator(
     {
       url: 'GET /repositories/:repo/issues/:number/timeline',
       parser: schemas.timeline_event,
-      metadata: { __repository: options.repo.node_id, __issue: issue }
+      metadata: { _repository: options.repo.node_id, _issue: issue.node_id }
     },
-    { ...options, repo: options.repo.id, number: issue }
+    { ...options, repo: options.repo.id, number: issue.number }
   );
 }
 

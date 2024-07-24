@@ -99,7 +99,7 @@ export default function (
 
         const stars = (repository.stargazers.edges || [])
           .map((edge) => edge && transform(edge))
-          .map((data) => schemas.stargazer({ ...data, __repository: repo.node_id }));
+          .map((data) => schemas.stargazer({ ...data, _repository: repo.node_id }));
 
         metadata.endCursor = repository.stargazers.pageInfo.endCursor || undefined;
         metadata.hasNextPage = repository.stargazers.pageInfo.hasNextPage || false;
