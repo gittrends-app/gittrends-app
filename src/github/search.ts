@@ -1,5 +1,5 @@
 import min from 'lodash/min.js';
-import { Repository, entities } from '../entities/entities.js';
+import { Repository } from '../entities/Entity.js';
 import { IterableResource } from './_requests_/index.js';
 import { clients } from './clients.js';
 
@@ -19,7 +19,6 @@ type SearchOptions = {
 
 /**
  * Search for repositories on GitHub.
- *
  * @param total - The total number of repositories to return.
  * @param opts - The search parameters.
  */
@@ -50,13 +49,13 @@ function repos(total = 1000, opts?: SearchOptions): IterableResource<Repository,
 
         for await (const response of it) {
           const _repos = response.data
-            .map((data) => entities.repo(data))
+            .map((data) => new Repository(data))
             .filter((repo) => maxStargazersRepos.every((r) => r.id !== repo.id))
             .slice(0, total - count);
 
           count += _repos.length;
-          maxStargazers = min(_repos.map((repo) => repo.stargazers_count)) || Infinity;
-          maxStargazersRepos = _repos.filter((repo) => repo.stargazers_count === maxStargazers);
+          maxStargazers = min(_repos.map((repo) => repo.data.stargazers_count)) || Infinity;
+          maxStargazersRepos = _repos.filter((repo) => repo.data.stargazers_count === maxStargazers);
 
           yield {
             data: _repos,

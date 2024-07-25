@@ -1,4 +1,4 @@
-import { Entity } from '../entities/entities.js';
+import { Entity } from '../entities/Entity.js';
 
 export type Storage<T extends Entity> = {
   get: (query: Partial<T>) => Promise<T | null>;

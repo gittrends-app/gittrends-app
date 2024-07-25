@@ -1,11 +1,13 @@
 import { describe, expect, it } from '@jest/globals';
 
-import { entities, User } from '../entities/entities.js';
+import { z } from 'zod';
+import { Entity } from '../entities/Entity.js';
+import userSchema from '../entities/schemas/user.js';
 import { extract } from './extract.js';
 
 describe('extract', () => {
   describe('users', () => {
-    const user = entities.user({
+    const user = {
       login: 'danielbruns',
       id: 1478925,
       node_id: 'MDQ6VXNlcjE0Nzg5MjU=',
@@ -13,7 +15,7 @@ describe('extract', () => {
       url: 'https://api.github.com/users/danielbruns',
       type: 'User',
       site_admin: false
-    });
+    };
 
     it('should extract data and users from objects', () => {
       expect(
@@ -23,7 +25,24 @@ describe('extract', () => {
         })
       ).toEqual({
         data: { starred_at: '2014-06-10T17:13:03Z', user: user.node_id },
-        users: [user]
+        users: [expect.objectContaining({ data: user })]
+      });
+    });
+
+    it('should extract data and users from entities', () => {
+      const schema = z.object({ user: userSchema });
+      // eslint-disable-next-line require-jsdoc
+      class EntityImpl extends Entity<typeof schema> {
+        static schema = schema;
+        get id(): string {
+          return this.data.user.node_id;
+        }
+      }
+
+      const entity = new EntityImpl({ user: user });
+      expect(extract(entity)).toEqual({
+        data: expect.objectContaining({ data: { user: user.node_id } }),
+        users: [expect.objectContaining({ data: user })]
       });
     });
 
@@ -35,7 +54,7 @@ describe('extract', () => {
         })
       ).toEqual({
         data: { starred_at: '2014-06-10T17:13:03Z', key: { user: user.node_id } },
-        users: [user]
+        users: [expect.objectContaining({ data: user })]
       });
     });
 
@@ -47,7 +66,7 @@ describe('extract', () => {
         })
       ).toEqual({
         data: { starred_at: '2014-06-10T17:13:03Z', key: [user.node_id] },
-        users: [user]
+        users: [expect.objectContaining({ data: user })]
       });
     });
 
@@ -59,7 +78,7 @@ describe('extract', () => {
         })
       ).toEqual({
         data: { starred_at: '2014-06-10T17:13:03Z', key: [user.node_id, user.node_id, 2] },
-        users: [user, user]
+        users: [expect.objectContaining({ data: user }), expect.objectContaining({ data: user })]
       });
     });
 
@@ -71,7 +90,7 @@ describe('extract', () => {
         })
       ).toEqual({
         data: { starred_at: '2014-06-10T17:13:03Z', key: [{ user: user.node_id }] },
-        users: [user]
+        users: [expect.objectContaining({ data: user })]
       });
     });
 
@@ -85,51 +104,7 @@ describe('extract', () => {
         ])
       ).toEqual({
         data: [{ starred_at: '2014-06-10T17:13:03Z', user: user.node_id }],
-        users: [user]
-      });
-    });
-  });
-
-  describe('reactions', () => {
-    const reaction = entities.reaction({
-      id: 1,
-      node_id: 'MDg6UmVhY3Rpb24x',
-      user: {
-        login: 'octocat',
-        id: 1,
-        node_id: 'MDQ6VXNlcjE=',
-        avatar_url: 'https://github.com/images/error/octocat_happy.gif',
-        gravatar_id: '',
-        url: 'https://api.github.com/users/octocat',
-        html_url: 'https://github.com/octocat',
-        followers_url: 'https://api.github.com/users/octocat/followers',
-        following_url: 'https://api.github.com/users/octocat/following{/other_user}',
-        gists_url: 'https://api.github.com/users/octocat/gists{/gist_id}',
-        starred_url: 'https://api.github.com/users/octocat/starred{/owner}{/repo}',
-        subscriptions_url: 'https://api.github.com/users/octocat/subscriptions',
-        organizations_url: 'https://api.github.com/users/octocat/orgs',
-        repos_url: 'https://api.github.com/users/octocat/repos',
-        events_url: 'https://api.github.com/users/octocat/events{/privacy}',
-        received_events_url: 'https://api.github.com/users/octocat/received_events',
-        type: 'User',
-        site_admin: false
-      },
-      content: 'heart',
-      created_at: '2016-05-20T20:09:31Z',
-      _repository: '123456789',
-      _reactable_name: 'Release',
-      _reactable_id: 'abcdef123456'
-    });
-
-    it('should extract data and reactions from objects', () => {
-      expect(
-        extract({
-          reactions: [reaction]
-        })
-      ).toEqual({
-        data: { reactions: [reaction.node_id] },
-        users: [expect.objectContaining({ login: 'octocat' })],
-        reactions: [{ ...reaction, user: (reaction.user as User).node_id }]
+        users: [expect.objectContaining({ data: user })]
       });
     });
   });

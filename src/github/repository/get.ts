@@ -1,10 +1,9 @@
 import { MergeExclusive } from 'type-fest';
-import { Repository, entities } from '../../entities/entities.js';
+import { Repository } from '../../entities/Entity.js';
 import { request } from '../_requests_/index.js';
 
 /**
  * Get a repository by owner and name.
- *
  * @param params - The repository parameters.
  */
 export default async function get(
@@ -16,5 +15,5 @@ export default async function get(
     ? ['GET /repositories/:repo' as const, { repo }]
     : ['GET /repos/:owner/:name' as const, { owner, name }];
 
-  return request({ url, parser: entities.repo }, args as any);
+  return request({ url, Entity: Repository }, args as any);
 }

@@ -1,12 +1,14 @@
 import {
-  entities,
-  Entity,
   Issue,
   PullRequest,
+  Reactable,
   Reaction,
+  Release,
   RepositoryResource,
-  TimelineEvent
-} from '../../../entities/entities.js';
+  Tag,
+  TimelineEvent,
+  Watcher
+} from '../../../entities/Entity.js';
 import { IterableEndpoints } from '../../_requests_/endpoints.js';
 import { IterableResource, iterator, PageableParams, request } from '../../_requests_/index.js';
 import stargazers from './stargazers.js';
@@ -21,8 +23,8 @@ function pullRequest(params: RepoParam & { number: number }) {
   return request(
     {
       url: 'GET /repositories/:repo/pulls/:number',
-      parser: entities.pull_request,
-      metadata: { _repository: params.repo.node_id }
+      Entity: PullRequest,
+      metadata: { repository: params.repo.node_id }
     },
     { repo: params.repo.id, number: params.number }
   );
@@ -35,7 +37,8 @@ function watchers(options: ResourcesParams) {
   return iterator(
     {
       url: 'GET /repositories/:repo/subscribers',
-      parser: (data: any) => entities.watcher({ user: data, _repository: options.repo.node_id })
+      Entity: Watcher,
+      metadata: { repository: options.repo.node_id }
     },
     { ...options, repo: options.repo.id }
   );
@@ -48,8 +51,8 @@ function tags(options: ResourcesParams) {
   return iterator(
     {
       url: 'GET /repositories/:repo/tags',
-      parser: entities.tag,
-      metadata: { _repository: options.repo.node_id }
+      Entity: Tag,
+      metadata: { repository: options.repo.node_id }
     },
     { ...options, repo: options.repo.id }
   );
@@ -64,8 +67,8 @@ function releases(options: ResourcesParams) {
       const it = iterator(
         {
           url: 'GET /repositories/:repo/releases',
-          parser: entities.release,
-          metadata: { _repository: options.repo.node_id }
+          Entity: Release,
+          metadata: { repository: options.repo.node_id }
         },
         { ...options, repo: options.repo.id }
       );
@@ -81,35 +84,28 @@ function releases(options: ResourcesParams) {
   };
 }
 
-type Reactable = Entity &
-  RepositoryResource & {
-    reactions?: any;
-    node_id: string;
-    id: number;
-  };
-
 /**
  *
  */
 async function _reactions<T extends Reactable>(entity: T, options: ResourcesParams): Promise<Reaction[]> {
   const reactions: Reaction[] = [];
 
-  if (entity.reactions?.total_count > 0) {
+  if (entity.hasReactions()) {
     let reactionsIt: IterableResource<Reaction> | undefined;
 
-    switch (entity._typename) {
+    switch (entity.constructor.name) {
       case 'Release':
         reactionsIt = iterator(
           {
             url: 'GET /repositories/:repo/releases/:release/reactions',
-            parser: entities.reaction,
+            Entity: Reaction,
             metadata: {
-              _repository: entity._repository,
-              _reactable_name: entity._typename,
-              _reactable_id: entity.node_id
+              repository: entity.repository,
+              reactable_name: entity.constructor.name,
+              reactable_id: entity.id
             }
           },
-          { ...options, repo: options.repo.id, release: entity.id }
+          { ...options, repo: options.repo.id, release: entity.data.id }
         );
         break;
       case 'Issue':
@@ -117,42 +113,42 @@ async function _reactions<T extends Reactable>(entity: T, options: ResourcesPara
         reactionsIt = iterator(
           {
             url: 'GET /repositories/:repo/issues/:number/reactions',
-            parser: entities.reaction,
+            Entity: Reaction,
             metadata: {
-              _repository: entity._repository,
-              _reactable_name: entity._typename,
-              _reactable_id: entity.node_id
+              repository: entity.repository,
+              reactable_name: entity.constructor.name,
+              reactable_id: entity.id
             }
           },
-          { ...options, repo: options.repo.id, number: (entity as Issue).number }
+          { ...options, repo: options.repo.id, number: (entity.data as Issue['data']).number }
         );
         break;
       case 'TimelineEvent': {
         let url: keyof IterableEndpoints;
 
-        if ((entity as TimelineEvent).event === 'commented')
+        if ((entity.data as TimelineEvent['data']).event === 'commented')
           url = 'GET /repositories/:repo/issues/comments/:id/reactions';
-        else if ((entity as TimelineEvent).event === 'reviewed')
+        else if ((entity.data as TimelineEvent['data']).event === 'reviewed')
           url = 'GET /repositories/:repo/pulls/comments/:id/reactions';
-        else throw new Error(`Unhandled timeline event: ${(entity as TimelineEvent).event}`);
+        else throw new Error(`Unhandled timeline event: ${(entity.data as TimelineEvent['data']).event}`);
 
         reactionsIt = iterator(
           {
             url,
-            parser: entities.reaction,
+            Entity: Reaction,
             metadata: {
-              _repository: entity._repository,
-              _reactable_name: entity._typename,
-              _reactable_id: entity.node_id
+              repository: entity.repository,
+              reactable_name: entity.constructor.name,
+              reactable_id: entity.id
             }
           },
-          { ...options, repo: options.repo.id, id: entity.id }
+          { ...options, repo: options.repo.id, id: (entity.data as any).id }
         );
         break;
       }
 
       default:
-        throw new Error(`Unhandled reactable type: ${entity._typename}`);
+        throw new Error(`Unhandled reactable type: ${entity.constructor.name}`);
     }
 
     for await (const { data } of reactionsIt) {
@@ -173,8 +169,8 @@ function issues(options: ResourcesParams & { since?: Date }): IterableResource<I
       const it = iterator(
         {
           url: 'GET /repositories/:repo/issues',
-          parser: entities.issue,
-          metadata: { _repository: options.repo.node_id }
+          Entity: Issue,
+          metadata: { repository: options.repo.node_id }
         },
         {
           ...options,
@@ -188,21 +184,17 @@ function issues(options: ResourcesParams & { since?: Date }): IterableResource<I
 
       for await (const { data, params } of it) {
         for (const issue of data) {
-          if (issue.pull_request) {
-            const pr = await pullRequest({ repo: options.repo, number: issue.number });
+          if (issue.data.pull_request) {
+            const pr = await pullRequest({ repo: options.repo, number: issue.data.number });
             Object.assign(issue, pr);
           }
 
-          for await (const tl of timeline({ repo: options.repo, issue: issue })) {
-            const events = tl.data.map((e) => ({ ...e, _issue: issue.node_id }));
-
-            for (const event of events) {
-              if ((event as any).reactions) {
-                (event as Reactable).reactions = await _reactions(event as Reactable, options);
-              }
+          for await (const tl of timeline({ repo: options.repo, issue: issue.data })) {
+            for (const event of tl.data) {
+              event.reactions = await _reactions(event as Reactable, options);
             }
 
-            issue._timeline = Array.isArray(issue._timeline) ? issue._timeline.concat(events) : events;
+            issue.events = tl.data;
           }
 
           issue.reactions = await _reactions(issue, options);
@@ -221,8 +213,8 @@ function timeline({ issue, ...options }: ResourcesParams & { issue: { number: nu
   return iterator(
     {
       url: 'GET /repositories/:repo/issues/:number/timeline',
-      parser: entities.timeline_event,
-      metadata: { _repository: options.repo.node_id, _issue: issue.node_id }
+      Entity: TimelineEvent,
+      metadata: { repository: options.repo.node_id, issue: issue.node_id }
     },
     { ...options, repo: options.repo.id, number: issue.number }
   );

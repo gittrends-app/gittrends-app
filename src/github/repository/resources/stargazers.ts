@@ -1,15 +1,12 @@
 import { PartialDeep } from 'type-fest';
-import { entities, Stargazer } from '../../../entities/entities.js';
+import { Stargazer } from '../../../entities/Entity.js';
 import { IterableResource, PageableParams } from '../../_requests_/index.js';
 import { clients } from '../../clients.js';
 
 /**
  * Transforms the data from the GitHub API into a Stargazer entity.
- *
- * @param data - The data from the GitHub API.
- * @returns The transformed data.
  */
-function transform(edge: StargazerEdge): PartialDeep<Stargazer> {
+function transform(edge: StargazerEdge): PartialDeep<Stargazer['data']> {
   return {
     starred_at: edge.starredAt as any,
     user: {
@@ -99,7 +96,7 @@ export default function (
 
         const stars = (repository.stargazers.edges || [])
           .map((edge) => edge && transform(edge))
-          .map((data) => entities.stargazer({ ...data, _repository: repo.node_id }));
+          .map((data) => new Stargazer(data, { repository: repo.node_id }));
 
         metadata.endCursor = repository.stargazers.pageInfo.endCursor || undefined;
         metadata.hasNextPage = repository.stargazers.pageInfo.hasNextPage || false;

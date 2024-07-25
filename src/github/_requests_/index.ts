@@ -1,6 +1,7 @@
 import { OctokitResponse } from '@octokit/types';
 import consola from 'consola';
 import stringifyObject from 'stringify-object';
+import { Constructor } from 'type-fest';
 import { ZodError } from 'zod';
 import { clients } from '../clients.js';
 import { IterableEndpoints, ResourceEndpoints } from './endpoints.js';
@@ -16,12 +17,6 @@ export type IterableResource<T, P extends object = object> = AsyncIterable<{
   params: PageableParams & P;
 }>;
 
-type ResourceParams<R extends keyof IterableEndpoints> = {
-  url: R;
-  parser: (...args: any[]) => IterableEndpoints[R]['result'];
-  metadata?: object;
-};
-
 /**
  * Get a resource
  *
@@ -29,7 +24,7 @@ type ResourceParams<R extends keyof IterableEndpoints> = {
 export async function request<K extends keyof ResourceEndpoints>(
   resource: {
     url: K;
-    parser: (...args: any[]) => ResourceEndpoints[K]['result'];
+    Entity: Constructor<ResourceEndpoints[K]['result']>;
     metadata?: object;
   },
   params: ResourceEndpoints[K]['params']
@@ -38,7 +33,7 @@ export async function request<K extends keyof ResourceEndpoints>(
     .request<string>(resource.url, { ...params })
     .then((response: OctokitResponse<ResourceEndpoints[K]['response']>) => {
       if (response.status !== 200) throw new Error(`Failed to get ${resource.url} - ${response.status}`);
-      return resource.parser({ ...response.data, ...resource.metadata });
+      return new resource.Entity(response.data, resource.metadata);
     })
     .catch((error) => {
       if (error.response.status === 404) return undefined;
@@ -51,7 +46,11 @@ export async function request<K extends keyof ResourceEndpoints>(
  *
  */
 export function iterator<R extends keyof IterableEndpoints>(
-  resource: ResourceParams<R>,
+  resource: {
+    url: R;
+    Entity: Constructor<IterableEndpoints[R]['result']>;
+    metadata?: ConstructorParameters<Constructor<IterableEndpoints[R]['result']>>[1];
+  },
   params: IterableEndpoints[R]['params']
 ): IterableResource<IterableEndpoints[R]['result']> {
   const { page, per_page: perPage, ...requestParams } = params;
@@ -73,10 +72,7 @@ export function iterator<R extends keyof IterableEndpoints>(
         yield {
           data: response.data.map((data: Record<string, any>) => {
             try {
-              return resource.parser({
-                ...data,
-                ...resource.metadata
-              });
+              return new resource.Entity(data, resource.metadata);
             } catch (error: any) {
               if (error instanceof ZodError)
                 consola.error(`${error.message || error}: `, stringifyObject(data, { indent: '  ' }));

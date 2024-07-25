@@ -1,35 +1,27 @@
+import cloneDeep from 'lodash/cloneDeep.js';
+import forIn from 'lodash/forIn.js';
 import isPlainObject from 'lodash/isPlainObject.js';
-import mapValues from 'lodash/mapValues.js';
-import { Reaction, User } from '../entities/entities.js';
-import isEntity from './is-entity.js';
+import { Entity, User } from '../entities/Entity.js';
 
 /**
  *  Extracts users from an entity.
  */
-export function extract<T = any>(entity: T): { data: T; users?: User[]; reactions?: Reaction[] } {
-  let data: any = entity;
+export function extract<T = any>(entity: T): { data: T; users?: User[] } {
+  let data: any = cloneDeep(entity);
   const users: User[] = [];
-  const reactions: Reaction[] = [];
 
-  if (isPlainObject(entity)) {
-    data = mapValues(entity as object, (value: any) => {
+  if (isPlainObject(entity) || entity instanceof Entity) {
+    forIn(entity as object, (value: any, key: string) => {
       const res = extract(value);
       users.push(...(res.users || []));
-      reactions.push(...(res.reactions || []));
 
-      return res.data;
+      data[key] = res.data;
     });
 
-    const reaction = isEntity.reaction(data);
-    if (reaction) {
-      reactions.push(reaction);
-      data = reaction._id;
-    }
-
-    const user = isEntity.user(data);
-    if (user) {
+    if (User.validate(data)) {
+      const user = new User(data);
       users.push(user);
-      data = user._id;
+      data = user.id;
     }
   }
 
@@ -37,7 +29,6 @@ export function extract<T = any>(entity: T): { data: T; users?: User[]; reaction
     data = entity.map((item) => {
       const res = extract(item);
       users.push(...(res.users || []));
-      reactions.push(...(res.reactions || []));
 
       return res.data;
     });
@@ -45,7 +36,6 @@ export function extract<T = any>(entity: T): { data: T; users?: User[]; reaction
 
   return {
     data,
-    users: users.length ? users : undefined,
-    reactions: reactions.length ? reactions : undefined
+    users: users.length ? users : undefined
   };
 }

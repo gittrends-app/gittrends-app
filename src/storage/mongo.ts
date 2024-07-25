@@ -11,7 +11,7 @@ import {
   TimelineEvent,
   User,
   Watcher
-} from '../entities/entities.js';
+} from '../entities/Entity.js';
 import { extract } from '../helpers/extract.js';
 import { Storage } from './storage.js';
 
@@ -29,18 +29,18 @@ function storage<T extends Entity>(collection: Collection): Storage<T> {
 
       await collection
         .bulkWrite(
-          items.map(({ _id, ...item }) => ({
+          items.map((item) => ({
             ...(replace
               ? {
                   replaceOne: {
-                    filter: { _id: _id as any },
-                    replacement: item,
+                    filter: { _id: item.id as any },
+                    replacement: item.data,
                     upsert: true
                   }
                 }
               : {
                   insertOne: {
-                    document: { _id: _id as any, ...item }
+                    document: { _id: item.id as any, ...item.data }
                   }
                 })
           })),
@@ -53,7 +53,7 @@ function storage<T extends Entity>(collection: Collection): Storage<T> {
     remove: async (query) => {
       await collection.bulkWrite(
         (Array.isArray(query) ? query : [query]).map((item) => ({
-          deleteOne: { filter: { _id: item._id as any } }
+          deleteOne: { filter: { _id: item.id as any } }
         }))
       );
     },
@@ -61,7 +61,7 @@ function storage<T extends Entity>(collection: Collection): Storage<T> {
       await collection.bulkWrite(
         (Array.isArray(query) ? query : [query]).map((item) => ({
           updateOne: {
-            filter: { _id: item._id as any },
+            filter: { _id: item.id as any },
             update: { $set: { _removed_at: new Date() } }
           }
         }))
@@ -82,7 +82,14 @@ export function createMongoStorage(db: Db) {
     const saveEntity = storage.save.bind(storage);
 
     storage.save = async function (entities, replace) {
-      const { data, users, reactions } = extract(entities);
+      const { data, users } = extract(entities);
+
+      const reactions = (Array.isArray(data) ? data : [data]).reduce(
+        (memo: Reaction[], entity) =>
+          (entity as any).reactions ? memo.concat((entity as any).reactions as Reaction[]) : memo,
+        []
+      );
+
       await Promise.all([
         users && usersStorage.save(users, false),
         reactions && reactionsStorage.save(reactions, false),
@@ -98,17 +105,11 @@ export function createMongoStorage(db: Db) {
 
     storage.save = async function (entities, replace) {
       const events = (Array.isArray(entities) ? entities : [entities]).reduce(
-        (memo: Array<TimelineEvent>, entity) =>
-          Array.isArray(entity._timeline) ? memo.concat(entity._timeline as Array<TimelineEvent>) : memo,
+        (memo: Array<TimelineEvent>, entity) => memo.concat(entity.events),
         []
       );
 
-      const data = (Array.isArray(entities) ? entities : [entities]).map((entity) => ({
-        ...entity,
-        _timeline: entity._timeline && Array.isArray(entity._timeline) ? entity._timeline.length : entity._timeline
-      }));
-
-      await Promise.all([timelineStorage.save(events, false), saveEntity(data, replace)]);
+      await Promise.all([timelineStorage.save(events, false), saveEntity(entities, replace)]);
     };
 
     return storage;

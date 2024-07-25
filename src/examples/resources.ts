@@ -2,7 +2,7 @@ import { input, select } from '@inquirer/prompts';
 import chalk from 'chalk';
 import consola from 'consola';
 import { MongoClient } from 'mongodb';
-import { Entity, Issue, Release, Stargazer, Tag, User, Watcher } from '../entities/entities.js';
+import { Entity, Issue, Release, Stargazer, Tag, User, Watcher } from '../entities/Entity.js';
 import { IterableResource } from '../github/_requests_/index.js';
 import { github } from '../github/github.js';
 import get from '../github/repository/get.js';
@@ -43,45 +43,45 @@ import { withStorage, withStorageIterable } from '../storage/withStorage.js';
     stargazers: {
       it: () =>
         withStorageIterable(github.repos.stargazers)({
-          repo: repo,
+          repo: repo.data,
           storage: storage.stargazers
         }),
-      print: (entity: Stargazer, index) => consola.log(`${index || '?'}. ${(entity.user as User).login}`)
+      print: (entity: Stargazer, index) => consola.log(`${index || '?'}. ${(entity.data.user as User['data']).login}`)
     },
     watchers: {
       it: () =>
         withStorageIterable(github.repos.watchers)({
-          repo: repo,
+          repo: repo.data,
           storage: storage.watchers
         }),
-      print: (entity: Watcher, index) => consola.log(`${index || '?'}. ${(entity.user as User).login}`)
+      print: (entity: Watcher, index) => consola.log(`${index || '?'}. ${(entity.data.user as User['data']).login}`)
     },
     tags: {
       it: () =>
         withStorageIterable(github.repos.tags)({
-          repo: repo,
+          repo: repo.data,
           storage: storage.tags
         }),
-      print: (entity: Tag, index) => consola.log(`${index || '?'}. ${entity.name}`)
+      print: (entity: Tag, index) => consola.log(`${index || '?'}. ${entity.data.name}`)
     },
     releases: {
       it: () =>
         withStorageIterable(github.repos.releases)({
-          repo: repo,
+          repo: repo.data,
           storage: storage.releases
         }),
-      print: (entity: Release, index) => consola.log(`${index || '?'}. ${entity.name}`)
+      print: (entity: Release, index) => consola.log(`${index || '?'}. ${entity.data.name}`)
     },
     issues: {
       it: () =>
         withStorageIterable(github.repos.issues)({
-          repo: repo,
+          repo: repo.data,
           per_page: 25,
           storage: storage.issues
         }),
       print: (issue: Issue) =>
         consola.log(
-          `${issue._typename.toUpperCase()}-${issue.number}. ${issue.title.slice(0, 50)}${issue.title.length ? '...' : ''} (${issue.state} - ${typeof issue._timeline === 'number' ? issue._timeline : issue._timeline?.length} events)`
+          `${issue.constructor.name.toUpperCase()}-${issue.data.number}. ${issue.data.title.slice(0, 50)}${issue.data.title.length ? '...' : ''} (${issue.data.state} - ${typeof issue.events.length} events)`
         )
     }
   } satisfies Record<string, { it: () => IterableResource<Entity>; print: (entity: any, index?: number) => any }>;

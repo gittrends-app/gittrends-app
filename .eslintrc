@@ -1,16 +1,31 @@
 {
   "root": true,
   "parser": "@typescript-eslint/parser",
-  "plugins": ["@typescript-eslint"],
+  "plugins": ["@typescript-eslint", "jsdoc"],
   "extends": [
     "eslint:recommended",
     "plugin:@typescript-eslint/eslint-recommended",
     "plugin:@typescript-eslint/recommended",
     "google",
-    "plugin:prettier/recommended"
+    "plugin:prettier/recommended",
+    "plugin:jsdoc/recommended-typescript"
   ],
   "rules": {
     "valid-jsdoc": "off",
+    "require-jsdoc": [
+      "warn",
+      {
+        "require": {
+          "FunctionDeclaration": false,
+          "MethodDefinition": false,
+          "ClassDeclaration": true,
+          "ArrowFunctionExpression": false,
+          "FunctionExpression": false
+        }
+      }
+    ],
+    "jsdoc/require-returns": "off",
+    "jsdoc/require-param": "off",
     "no-console": 2,
     "@typescript-eslint/no-explicit-any": 0
   }
