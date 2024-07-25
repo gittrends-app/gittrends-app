@@ -1,5 +1,6 @@
 import snakeCase from 'lodash/snakeCase.js';
 import { Db } from 'mongodb';
+import pluralize from 'pluralize';
 import { Class } from 'type-fest';
 import { Entity, Issue, Reaction, TimelineEvent, User } from '../../entities/Entity.js';
 import { extract } from '../../helpers/extract.js';
@@ -16,7 +17,7 @@ export class MongoStorage implements Storage {
   }
 
   create<T extends Entity>(Entity: Class<T>): EntityStorage<T> {
-    const collection = this.db.collection(snakeCase(Entity.name));
+    const collection = this.db.collection(pluralize(snakeCase(Entity.name)));
 
     return {
       save: async (entities, replace) => {
