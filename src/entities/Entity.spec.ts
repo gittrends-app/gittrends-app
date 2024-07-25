@@ -59,6 +59,10 @@ describe('Entities', () => {
       get id() {
         return this.data.id;
       }
+
+      override toJSON() {
+        return { ...super.toJSON(), _repository: this.repository };
+      }
     }
 
     it('should identify entities with reactions', () => {

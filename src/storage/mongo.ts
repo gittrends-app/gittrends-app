@@ -1,4 +1,5 @@
 import { Collection, Db } from 'mongodb';
+import { Class } from 'type-fest';
 import {
   Entity,
   Issue,
@@ -18,10 +19,10 @@ import { Storage } from './storage.js';
 /**
  *  Implementation of a generic storage.
  */
-function storage<T extends Entity>(collection: Collection): Storage<T> {
+function storage<T extends Entity>(collection: Collection, Class: Class<T>): Storage<T> {
   return {
     get: async (query: object) => {
-      return collection.findOne<T>(query);
+      return (Class as unknown as typeof Entity).fromJSON(collection.findOne(query)) as T;
     },
     save: async (data, replace) => {
       const items = Array.isArray(data) ? data : [data];
@@ -34,13 +35,13 @@ function storage<T extends Entity>(collection: Collection): Storage<T> {
               ? {
                   replaceOne: {
                     filter: { _id: item.id as any },
-                    replacement: item.data,
+                    replacement: item.toJSON(),
                     upsert: true
                   }
                 }
               : {
                   insertOne: {
-                    document: { _id: item.id as any, ...item.data }
+                    document: { _id: item.id as any, ...item.toJSON() }
                   }
                 })
           })),
@@ -74,9 +75,9 @@ function storage<T extends Entity>(collection: Collection): Storage<T> {
  * Create a MongoDB storage.
  */
 export function createMongoStorage(db: Db) {
-  const usersStorage = storage<User>(db.collection('users'));
-  const reactionsStorage = storage<Reaction>(db.collection('reactions'));
-  const timelineStorage = storage<TimelineEvent>(db.collection('timeline'));
+  const usersStorage = storage(db.collection('users'), User);
+  const reactionsStorage = storage(db.collection('reactions'), Reaction);
+  const timelineStorage = storage(db.collection('timeline'), TimelineEvent);
 
   const withEntities = <T extends Entity>(storage: Storage<T>): Storage<T> => {
     const saveEntity = storage.save.bind(storage);
@@ -117,11 +118,11 @@ export function createMongoStorage(db: Db) {
 
   return {
     users: usersStorage,
-    repos: withEntities(storage<Repository>(db.collection('repos'))),
-    watchers: withEntities(storage<Watcher>(db.collection('watchers'))),
-    stargazers: withEntities(storage<Stargazer>(db.collection('stargazers'))),
-    tags: withEntities(storage<Tag>(db.collection('tags'))),
-    releases: withEntities(storage<Release>(db.collection('releases'))),
-    issues: withEntities(withTimeline(storage<Issue | PullRequest>(db.collection('issues'))))
+    repos: withEntities(storage(db.collection('repos'), Repository)),
+    watchers: withEntities(storage(db.collection('watchers'), Watcher)),
+    stargazers: withEntities(storage(db.collection('stargazers'), Stargazer)),
+    tags: withEntities(storage(db.collection('tags'), Tag)),
+    releases: withEntities(storage(db.collection('releases'), Release)),
+    issues: withEntities(withTimeline(storage<Issue | PullRequest>(db.collection('issues'), Issue)))
   };
 }

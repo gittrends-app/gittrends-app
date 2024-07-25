@@ -35,6 +35,14 @@ export abstract class Entity<T extends z.ZodType = AnyZodObject> {
   public static validate(data: Record<string, any>): boolean {
     return this.schema.safeParse(data).success;
   }
+
+  public toJSON(): Record<string, any> {
+    return { ...this.data, _id: this.id, _obtained_at: this.obtained_at };
+  }
+
+  public static fromJSON(data: Record<string, any>) {
+    return Object.assign(this.from(data), { obtained_at: new Date(data._obtained_at) });
+  }
 }
 
 /**
@@ -69,6 +77,14 @@ export abstract class RepositoryResource<T extends z.ZodType = AnyZodObject> ext
     if (!z.object({ repository: z.string() }).safeParse(props).success) throw new Error('Invalid props');
     super(data);
     this.repository = props.repository;
+  }
+
+  override toJSON() {
+    return { ...super.toJSON(), _repository: this.repository };
+  }
+
+  static override fromJSON(data: Record<string, any>): Entity {
+    return Object.assign(super.fromJSON(data), { repository: data._repository });
   }
 }
 
@@ -174,6 +190,17 @@ export class Reaction extends RepositoryResource<typeof reaction> {
   get id() {
     return this.data.node_id;
   }
+
+  override toJSON() {
+    return { ...super.toJSON(), _reactable_name: this.reactable_name, _reactable_id: this.reactable_id };
+  }
+
+  static override fromJSON(data: Record<string, any>): Entity {
+    return Object.assign(super.fromJSON(data), {
+      reactable_name: data._reactable_name,
+      reactable_id: data._reactable_id
+    });
+  }
 }
 
 /**
@@ -194,6 +221,14 @@ export class TimelineEvent extends RepositoryResource<typeof events> implements 
   }
 
   get id() {
-    return `${this.repository}_${this.issue}_${(this.data as any).node_id || (this.data as any).id || (this.data as any).created_at || objectHash(this.data)}`;
+    return `${this.repository}_${this.issue}_${(this.data as any).node_id || (this.data as any).id || (this.data as any).created_at?.toISOString() || objectHash(this.data)}`;
+  }
+
+  override toJSON() {
+    return { ...super.toJSON(), _issue: this.issue };
+  }
+
+  static override fromJSON(data: Record<string, any>): Entity {
+    return Object.assign(super.fromJSON(data), { issue: data._issue });
   }
 }
