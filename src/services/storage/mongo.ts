@@ -1,7 +1,7 @@
 import snakeCase from 'lodash/snakeCase.js';
 import { Db } from 'mongodb';
 import { Class } from 'type-fest';
-import { Entity, Reaction, User } from '../../entities/Entity.js';
+import { Entity, Issue, Reaction, TimelineEvent, User } from '../../entities/Entity.js';
 import { extract } from '../../helpers/extract.js';
 import { EntityStorage, Storage } from './storage.js';
 
@@ -26,7 +26,7 @@ export class MongoStorage implements Storage {
         if (Entity.name !== User.name) {
           const { data, users } = extract(items);
           items = data;
-          await this.create(User).save(users || []);
+          await this.create(User).save(users || [], false);
         }
 
         const reactions = items.reduce(
@@ -36,7 +36,16 @@ export class MongoStorage implements Storage {
         );
 
         if (reactions.length) {
-          await this.create(Reaction).save(reactions, false);
+          await this.create(Reaction).save(reactions, true);
+        }
+
+        const events = items.reduce(
+          (memo: TimelineEvent[], entity) => (entity instanceof Issue ? memo.concat(entity._events) : memo),
+          []
+        );
+
+        if (events.length) {
+          await this.create(TimelineEvent).save(events, true);
         }
 
         await collection

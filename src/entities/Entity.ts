@@ -170,8 +170,7 @@ export interface Issue extends z.infer<typeof issue> {}
 export class Issue extends RepositoryResource implements Reactable {
   protected static override _schema = issue;
 
-  events: TimelineEvent[] = [];
-
+  _events: TimelineEvent[] = [];
   _reactions: Reaction[] = [];
 
   get _hasReactions() {

@@ -47,26 +47,26 @@ import { StorageService } from '../services/storage/service.js';
 
   const map = {
     tags: {
-      it: () => client.resource('tags', { repo: repo }),
+      it: () => client.resource(Tag, { repo: repo }),
       print: (entity: Tag, index) => consola.log(`${index || '?'}. ${entity.name}`)
     },
     releases: {
-      it: () => client.resource('releases', { repo: repo }),
+      it: () => client.resource(Release, { repo: repo }),
       print: (entity: Release, index) => consola.log(`${index || '?'}. ${entity.name}`)
     },
     stargazers: {
-      it: () => client.resource('stargazers', { repo: repo }),
+      it: () => client.resource(Stargazer, { repo: repo }),
       print: (entity: Stargazer, index) => consola.log(`${index || '?'}. ${(entity.user as User).login}`)
     },
     watchers: {
-      it: () => client.resource('watchers', { repo: repo }),
+      it: () => client.resource(Watcher, { repo: repo }),
       print: (entity: Watcher, index) => consola.log(`${index || '?'}. ${(entity.user as User).login}`)
     },
     issues: {
-      it: () => client.resource('issues', { repo: repo, per_page: 25 }),
+      it: () => client.resource(Issue, { repo: repo, per_page: 25 }),
       print: (issue: Issue) =>
         consola.log(
-          `${issue.constructor.name.toUpperCase()}-${issue.number}. ${issue.title.slice(0, 50)}${issue.title.length ? '...' : ''} (${issue.state} - ${typeof issue.events.length} events)`
+          `${issue.constructor.name.toUpperCase()}-${issue.number}. ${issue.title.slice(0, 50)}${issue.title.length ? '...' : ''} (${issue.state} - ${typeof issue._events.length} events)`
         )
     }
   } satisfies Record<

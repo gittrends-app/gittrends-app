@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import min from 'lodash/min.js';
+import { Class } from 'type-fest';
 import {
   Issue,
   PullRequest,
@@ -96,22 +97,20 @@ export class GithubService implements Service {
     return request({ client: this.client, url, Entity: Repository }, args as any).then((repo) => repo || null);
   }
 
-  resource(
-    resource: 'issues',
-    opts: ResourceParams & { since?: Date }
-  ): IterableEntity<Issue | PullRequest, { since?: Date }>;
-  resource(resource: 'releases', opts: ResourceParams): IterableEntity<Release>;
-  resource(resource: 'stargazers', opts: ResourceParams): IterableEntity<Stargazer>;
-  resource(resource: 'tags', opts: ResourceParams): IterableEntity<Tag>;
-  resource(resource: 'watchers', opts: ResourceParams): IterableEntity<Watcher>;
-  resource(resource: string, opts: ResourceParams): IterableEntity<RepositoryResource> {
-    switch (resource) {
-      case 'stargazers':
-      case 'watchers':
-      case 'tags':
-      case 'releases':
-      case 'issues':
-        return resources[resource](this.client, opts);
+  resource(Entity: Class<Issue>, opts: ResourceParams & { since?: Date }): IterableEntity<Issue, { since?: Date }>;
+  resource(Entity: Class<RepositoryResource>, opts: ResourceParams): IterableEntity<RepositoryResource> {
+    switch (Entity.name) {
+      case Stargazer.name:
+        return resources.stargazers(this.client, opts);
+      case Watcher.name:
+        return resources.watchers(this.client, opts);
+      case Tag.name:
+        return resources.tags(this.client, opts);
+      case Release.name:
+        return resources.releases(this.client, opts);
+      case Issue.name:
+      case PullRequest.name:
+        return resources.issues(this.client, opts);
       default:
         throw new Error('Method not implemented.');
     }

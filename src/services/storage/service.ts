@@ -1,14 +1,5 @@
-import {
-  Issue,
-  PullRequest,
-  Release,
-  Repository,
-  RepositoryResource,
-  Stargazer,
-  Tag,
-  User,
-  Watcher
-} from '../../entities/Entity.js';
+import { Class } from 'type-fest';
+import { Issue, Repository, RepositoryResource, User } from '../../entities/Entity.js';
 import { IterableEntity, ResourceParams, SearchOptions, Service } from '../service.js';
 import { Storage } from './storage.js';
 
@@ -43,22 +34,15 @@ export class StorageService implements Service {
     return repo;
   }
 
-  resource(
-    resource: 'issues',
-    opts: ResourceParams & { since?: Date }
-  ): IterableEntity<Issue | PullRequest, { since?: Date }>;
-  resource(resource: 'releases', opts: ResourceParams): IterableEntity<Release>;
-  resource(resource: 'stargazers', opts: ResourceParams): IterableEntity<Stargazer>;
-  resource(resource: 'tags', opts: ResourceParams): IterableEntity<Tag>;
-  resource(resource: 'watchers', opts: ResourceParams): IterableEntity<Watcher>;
-  resource(resource: any, opts: ResourceParams): IterableEntity<RepositoryResource> {
+  resource(Entity: Class<Issue>, opts: ResourceParams & { since?: Date }): IterableEntity<Issue, { since?: Date }>;
+  resource(Entity: Class<RepositoryResource>, opts: ResourceParams): IterableEntity<RepositoryResource> {
     const storage = this.storage;
-    const it = this.service.resource(resource, opts);
+    const it = this.service.resource(Entity, opts);
 
     return {
       [Symbol.asyncIterator]: async function* () {
         for await (const res of it) {
-          if (res.data.length) await storage.create(res.data[0].constructor as any).save(res.data);
+          if (res.data.length) await storage.create(Entity).save(res.data);
           yield res;
         }
       }

@@ -66,21 +66,22 @@ export default function (
       );
 
       for await (const { data, params } of it) {
-        for (const issue of data) {
-          if (issue.pull_request) {
-            const pr = await pullRequest(client, { repo: options.repo, number: issue.number });
-            Object.assign(issue, pr);
+        for (let index = 0; index < data.length; index++) {
+          if (data[index].pull_request) {
+            data[index] = await pullRequest(client, { repo: options.repo, number: data[index].number }).then(
+              (pr) => pr || Promise.reject(new Error('Pull request not found!'))
+            );
           }
 
-          for await (const tl of timeline(client, { repo: options.repo, issue: issue })) {
+          for await (const tl of timeline(client, { repo: options.repo, issue: data[index] })) {
             for (const event of tl.data) {
               event._reactions = await reactions(client, event, options);
             }
 
-            issue.events = tl.data;
+            data[index]._events = tl.data;
           }
 
-          issue._reactions = await reactions(client, issue, options);
+          data[index]._reactions = await reactions(client, data[index], options);
         }
 
         yield { data, params: { ...params, since: options.since } };

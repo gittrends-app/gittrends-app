@@ -1,4 +1,5 @@
-import { Entity, Issue, PullRequest, Release, Repository, Stargazer, Tag, User, Watcher } from '../entities/Entity.js';
+import { Class } from 'type-fest';
+import { Entity, Issue, Repository, RepositoryResource, User } from '../entities/Entity.js';
 
 export type PageableParams = {
   page?: number | string;
@@ -30,12 +31,6 @@ export interface Service {
   user(loginOrId: string | number): Promise<User | null>;
   repository(ownerOrId: string | number, name?: string): Promise<Repository | null>;
 
-  resource(
-    resource: 'issues',
-    opts: ResourceParams & { since?: Date }
-  ): IterableEntity<Issue | PullRequest, { since?: Date }>;
-  resource(resource: 'releases', opts: ResourceParams): IterableEntity<Release>;
-  resource(resource: 'stargazers', opts: ResourceParams): IterableEntity<Stargazer>;
-  resource(resource: 'tags', opts: ResourceParams): IterableEntity<Tag>;
-  resource(resource: 'watchers', opts: ResourceParams): IterableEntity<Watcher>;
+  resource(Entity: Class<Issue>, opts: ResourceParams & { since?: Date }): IterableEntity<Issue, { since?: Date }>;
+  resource<E extends RepositoryResource>(Entity: Class<E>, opts: ResourceParams): IterableEntity<E>;
 }
