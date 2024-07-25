@@ -1,7 +1,8 @@
-import { input, select } from '@inquirer/prompts';
+import { checkbox, input } from '@inquirer/prompts';
 import chalk from 'chalk';
 import consola from 'consola';
 import { MongoClient } from 'mongodb';
+import { ArrayValues } from 'type-fest';
 import { Entity, Issue, Release, Stargazer, Tag, User, Watcher } from '../entities/Entity.js';
 import env from '../env.js';
 import { GithubClient } from '../services/github/client.js';
@@ -22,15 +23,16 @@ import { StorageService } from '../services/storage/service.js';
     validate: (value) => /.*\/.*/.test(value) || 'Invalid repository name.'
   });
 
-  const resource = await select<'issues' | 'tags' | 'releases' | 'stargazers' | 'watchers'>({
-    message: 'Select the resource to retrieve:',
+  const resources = await checkbox<'issues' | 'tags' | 'releases' | 'stargazers' | 'watchers'>({
+    message: 'Select the resources to retrieve:',
     choices: [
       { value: 'issues' },
       { value: 'releases' },
       { value: 'stargazers' },
       { value: 'tags' },
       { value: 'watchers' }
-    ]
+    ],
+    required: true
   });
 
   consola.info('Initializing the Github service...');
@@ -70,15 +72,17 @@ import { StorageService } from '../services/storage/service.js';
         )
     }
   } satisfies Record<
-    typeof resource,
+    ArrayValues<typeof resources>,
     { it: () => IterableEntity<Entity>; print: (entity: any, index?: number) => any }
   >;
 
-  let index = 1;
-  consola.info(`Getting ${resource} ...`);
-  for await (const { data, params } of map[resource].it()) {
-    consola.log(chalk.bgGreen(`\nPage ${params.page}: ${data.length} ${resource} ...`));
-    for (const item of data) map[resource].print(item as any, index++);
+  for (const resource of resources) {
+    let index = 1;
+    consola.info(`Getting ${resource} ...`);
+    for await (const { data, params } of map[resource].it()) {
+      consola.log(chalk.bgGreen(`\nPage ${params.page}: ${data.length} ${resource} ...`));
+      for (const item of data) map[resource].print(item as any, index++);
+    }
   }
 
   consola.log('');
