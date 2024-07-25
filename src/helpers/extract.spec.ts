@@ -31,6 +31,18 @@ describe('extract', () => {
       });
     });
 
+    it('should extract data and users from root objects', () => {
+      expect(extract(user)).toEqual({
+        data: user.node_id,
+        users: [expect.objectContaining(user)]
+      });
+
+      expect(extract([user])).toEqual({
+        data: [user.node_id],
+        users: [expect.objectContaining(user)]
+      });
+    });
+
     it('should extract data and users from entities', () => {
       const schema = z.object({ user: z.union([userSchema, z.string()]) });
       interface EntityImpl extends z.infer<typeof schema> {}

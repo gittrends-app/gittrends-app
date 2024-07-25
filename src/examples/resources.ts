@@ -1,13 +1,18 @@
 import { input, select } from '@inquirer/prompts';
 import chalk from 'chalk';
 import consola from 'consola';
+import { MongoClient } from 'mongodb';
 import { Entity, Issue, Release, Stargazer, Tag, User, Watcher } from '../entities/Entity.js';
 import env from '../env.js';
 import { GithubClient } from '../services/github/client.js';
 import { GithubService } from '../services/github/service.js';
 import { IterableEntity, Service } from '../services/service.js';
+import { MongoStorage } from '../services/storage/mongo.js';
+import { StorageService } from '../services/storage/service.js';
 
 (async () => {
+  const conn = await MongoClient.connect('mongodb://localhost:27017');
+
   consola.log('================  Resource Example  ================');
 
   const repository = await input({
@@ -29,8 +34,9 @@ import { IterableEntity, Service } from '../services/service.js';
   });
 
   consola.info('Initializing the Github service...');
-  const client: Service = new GithubService(
-    new GithubClient(env.GITHUB_API_BASE_URL, { apiToken: env.GITHUB_API_TOKEN })
+  const client: Service = new StorageService(
+    new GithubService(new GithubClient(env.GITHUB_API_BASE_URL, { apiToken: env.GITHUB_API_TOKEN })),
+    new MongoStorage(conn.db('github'))
   );
 
   consola.log('');
@@ -77,6 +83,8 @@ import { IterableEntity, Service } from '../services/service.js';
 
   consola.log('');
   consola.success('Done!');
+
+  return conn.close();
 })().catch((err) => {
   consola.error(err);
   process.exit(1);
