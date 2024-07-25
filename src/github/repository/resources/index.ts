@@ -75,7 +75,7 @@ function releases(options: ResourcesParams) {
 
       for await (const { data, params } of it) {
         for (const release of data) {
-          release.reactions = await _reactions(release, options);
+          release._reactions = await _reactions(release, options);
         }
 
         yield { data, params };
@@ -87,59 +87,60 @@ function releases(options: ResourcesParams) {
 /**
  *
  */
-async function _reactions<T extends Reactable>(entity: T, options: ResourcesParams): Promise<Reaction[]> {
+async function _reactions<T extends Reactable & RepositoryResource>(
+  entity: T,
+  options: ResourcesParams
+): Promise<Reaction[]> {
   const reactions: Reaction[] = [];
 
-  if (entity.hasReactions()) {
+  if (entity._hasReactions) {
     let reactionsIt: IterableResource<Reaction> | undefined;
 
-    switch (entity.constructor.name) {
-      case 'Release':
+    switch (true) {
+      case entity instanceof Release:
         reactionsIt = iterator(
           {
             url: 'GET /repositories/:repo/releases/:release/reactions',
             Entity: Reaction,
             metadata: {
-              repository: entity.repository,
+              repository: entity._repository,
               reactable_name: entity.constructor.name,
-              reactable_id: entity.id
+              reactable_id: entity._id
             }
           },
-          { ...options, repo: options.repo.id, release: entity.data.id }
+          { ...options, repo: options.repo.id, release: entity.id }
         );
         break;
-      case 'Issue':
-      case 'PullRequest':
+      case entity instanceof Issue:
+      case entity instanceof PullRequest:
         reactionsIt = iterator(
           {
             url: 'GET /repositories/:repo/issues/:number/reactions',
             Entity: Reaction,
             metadata: {
-              repository: entity.repository,
+              repository: entity._repository,
               reactable_name: entity.constructor.name,
-              reactable_id: entity.id
+              reactable_id: entity._id
             }
           },
-          { ...options, repo: options.repo.id, number: (entity.data as Issue['data']).number }
+          { ...options, repo: options.repo.id, number: entity.number }
         );
         break;
-      case 'TimelineEvent': {
+      case entity instanceof TimelineEvent: {
         let url: keyof IterableEndpoints;
 
-        if ((entity.data as TimelineEvent['data']).event === 'commented')
-          url = 'GET /repositories/:repo/issues/comments/:id/reactions';
-        else if ((entity.data as TimelineEvent['data']).event === 'reviewed')
-          url = 'GET /repositories/:repo/pulls/comments/:id/reactions';
-        else throw new Error(`Unhandled timeline event: ${(entity.data as TimelineEvent['data']).event}`);
+        if (entity.event === 'commented') url = 'GET /repositories/:repo/issues/comments/:id/reactions';
+        else if (entity.event === 'reviewed') url = 'GET /repositories/:repo/pulls/comments/:id/reactions';
+        else throw new Error(`Unhandled timeline event: ${entity.event}`);
 
         reactionsIt = iterator(
           {
             url,
             Entity: Reaction,
             metadata: {
-              repository: entity.repository,
+              repository: entity._repository,
               reactable_name: entity.constructor.name,
-              reactable_id: entity.id
+              reactable_id: entity._id
             }
           },
           { ...options, repo: options.repo.id, id: (entity.data as any).id }
@@ -184,20 +185,20 @@ function issues(options: ResourcesParams & { since?: Date }): IterableResource<I
 
       for await (const { data, params } of it) {
         for (const issue of data) {
-          if (issue.data.pull_request) {
-            const pr = await pullRequest({ repo: options.repo, number: issue.data.number });
+          if (issue.pull_request) {
+            const pr = await pullRequest({ repo: options.repo, number: issue.number });
             Object.assign(issue, pr);
           }
 
-          for await (const tl of timeline({ repo: options.repo, issue: issue.data })) {
+          for await (const tl of timeline({ repo: options.repo, issue: issue })) {
             for (const event of tl.data) {
-              event.reactions = await _reactions(event as Reactable, options);
+              event._reactions = await _reactions(event, options);
             }
 
             issue.events = tl.data;
           }
 
-          issue.reactions = await _reactions(issue, options);
+          issue._reactions = await _reactions(issue, options);
         }
 
         yield { data, params };

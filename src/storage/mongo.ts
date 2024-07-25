@@ -1,5 +1,5 @@
 import { Collection, Db } from 'mongodb';
-import { Class } from 'type-fest';
+import { Constructor } from 'type-fest';
 import {
   Entity,
   Issue,
@@ -19,10 +19,10 @@ import { Storage } from './storage.js';
 /**
  *  Implementation of a generic storage.
  */
-function storage<T extends Entity>(collection: Collection, Class: Class<T>): Storage<T> {
+function storage<T extends Entity>(collection: Collection, Class: Constructor<T>): Storage<T> {
   return {
     get: async (query: object) => {
-      return (Class as unknown as typeof Entity).fromJSON(collection.findOne(query)) as T;
+      return new Class(collection.findOne(query));
     },
     save: async (data, replace) => {
       const items = Array.isArray(data) ? data : [data];
@@ -34,14 +34,14 @@ function storage<T extends Entity>(collection: Collection, Class: Class<T>): Sto
             ...(replace
               ? {
                   replaceOne: {
-                    filter: { _id: item.id as any },
+                    filter: { _id: item._id as any },
                     replacement: item.toJSON(),
                     upsert: true
                   }
                 }
               : {
                   insertOne: {
-                    document: { _id: item.id as any, ...item.toJSON() }
+                    document: { _id: item._id as any, ...item.toJSON() }
                   }
                 })
           })),
@@ -54,7 +54,7 @@ function storage<T extends Entity>(collection: Collection, Class: Class<T>): Sto
     remove: async (query) => {
       await collection.bulkWrite(
         (Array.isArray(query) ? query : [query]).map((item) => ({
-          deleteOne: { filter: { _id: item.id as any } }
+          deleteOne: { filter: { _id: item._id as any } }
         }))
       );
     },
@@ -62,7 +62,7 @@ function storage<T extends Entity>(collection: Collection, Class: Class<T>): Sto
       await collection.bulkWrite(
         (Array.isArray(query) ? query : [query]).map((item) => ({
           updateOne: {
-            filter: { _id: item.id as any },
+            filter: { _id: item._id as any },
             update: { $set: { _removed_at: new Date() } }
           }
         }))
@@ -87,7 +87,7 @@ export function createMongoStorage(db: Db) {
 
       const reactions = (Array.isArray(data) ? data : [data]).reduce(
         (memo: Reaction[], entity) =>
-          (entity as any).reactions ? memo.concat((entity as any).reactions as Reaction[]) : memo,
+          (entity as any)._reactions ? memo.concat((entity as any)._reactions as Reaction[]) : memo,
         []
       );
 

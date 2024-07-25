@@ -1,3 +1,5 @@
+/* eslint-disable require-jsdoc */
+/* eslint-disable @typescript-eslint/no-unsafe-declaration-merging */
 import { describe, expect, it } from '@jest/globals';
 
 import { z } from 'zod';
@@ -25,24 +27,23 @@ describe('extract', () => {
         })
       ).toEqual({
         data: { starred_at: '2014-06-10T17:13:03Z', user: user.node_id },
-        users: [expect.objectContaining({ data: user })]
+        users: [expect.objectContaining(user)]
       });
     });
 
     it('should extract data and users from entities', () => {
-      const schema = z.object({ user: userSchema });
-      // eslint-disable-next-line require-jsdoc
-      class EntityImpl extends Entity<typeof schema> {
-        static schema = schema;
-        get id(): string {
-          return this.data.user.node_id;
+      const schema = z.object({ user: z.union([userSchema, z.string()]) });
+      interface EntityImpl extends z.infer<typeof schema> {}
+      class EntityImpl extends Entity {
+        protected static override _schema = schema;
+        get _id(): string {
+          return 'any';
         }
       }
 
-      const entity = new EntityImpl({ user: user });
-      expect(extract(entity)).toEqual({
-        data: expect.objectContaining({ data: { user: user.node_id } }),
-        users: [expect.objectContaining({ data: user })]
+      expect(extract(new EntityImpl({ user: user }))).toEqual({
+        data: expect.objectContaining({ user: user.node_id }),
+        users: [expect.objectContaining(user)]
       });
     });
 
@@ -54,7 +55,7 @@ describe('extract', () => {
         })
       ).toEqual({
         data: { starred_at: '2014-06-10T17:13:03Z', key: { user: user.node_id } },
-        users: [expect.objectContaining({ data: user })]
+        users: [expect.objectContaining(user)]
       });
     });
 
@@ -66,7 +67,7 @@ describe('extract', () => {
         })
       ).toEqual({
         data: { starred_at: '2014-06-10T17:13:03Z', key: [user.node_id] },
-        users: [expect.objectContaining({ data: user })]
+        users: [expect.objectContaining(user)]
       });
     });
 
@@ -78,7 +79,7 @@ describe('extract', () => {
         })
       ).toEqual({
         data: { starred_at: '2014-06-10T17:13:03Z', key: [user.node_id, user.node_id, 2] },
-        users: [expect.objectContaining({ data: user }), expect.objectContaining({ data: user })]
+        users: [expect.objectContaining(user), expect.objectContaining(user)]
       });
     });
 
@@ -90,7 +91,7 @@ describe('extract', () => {
         })
       ).toEqual({
         data: { starred_at: '2014-06-10T17:13:03Z', key: [{ user: user.node_id }] },
-        users: [expect.objectContaining({ data: user })]
+        users: [expect.objectContaining(user)]
       });
     });
 
@@ -104,7 +105,7 @@ describe('extract', () => {
         ])
       ).toEqual({
         data: [{ starred_at: '2014-06-10T17:13:03Z', user: user.node_id }],
-        users: [expect.objectContaining({ data: user })]
+        users: [expect.objectContaining(user)]
       });
     });
   });

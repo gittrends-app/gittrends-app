@@ -1,6 +1,9 @@
-import objectHash from 'object-hash';
+/* eslint-disable @typescript-eslint/no-unsafe-declaration-merging */
+/* eslint-disable require-jsdoc */
+import cloneDeepWith from 'lodash/cloneDeepWith.js';
+import omitBy from 'lodash/omitBy.js';
 import { Constructor } from 'type-fest';
-import { AnyZodObject, z } from 'zod';
+import { z } from 'zod';
 import events from './schemas/events.js';
 import issue from './schemas/issue.js';
 import pr from './schemas/pull_request.js';
@@ -15,220 +18,243 @@ import watcher from './schemas/watcher.js';
 /**
  * Base class for all entities.
  */
-export abstract class Entity<T extends z.ZodType = AnyZodObject> {
-  protected static schema: z.ZodType;
+export abstract class Entity {
+  protected static _schema: z.ZodType;
+  protected static _entitySchema: z.SomeZodObject;
 
-  abstract get id(): string;
-  readonly obtained_at!: Date;
-
-  readonly data!: z.infer<T>;
+  abstract get _id(): string;
+  readonly _obtained_at!: Date;
 
   constructor(data: Record<string, any>) {
-    this.data = (this.constructor as typeof Entity).schema.parse(data);
-    this.obtained_at = new Date();
+    Object.assign(
+      this,
+      (this.constructor as typeof Entity)._schema
+        .and(z.object({ _obtained_at: z.coerce.date().optional() }))
+        .and((this.constructor as typeof Entity)._entitySchema || z.object({}))
+        .parse(data)
+    );
+    if (!this._obtained_at) this._obtained_at = new Date();
   }
 
-  public static from(data: Record<string, any>) {
-    return new (this.prototype.constructor as Constructor<typeof this.prototype>)(data);
+  public static from<T extends Entity>(data: Record<string, any>) {
+    return new (this.prototype.constructor as Constructor<T>)(data);
   }
 
   public static validate(data: Record<string, any>): boolean {
-    return this.schema.safeParse(data).success;
+    return this._schema.safeParse(data).success;
   }
 
   public toJSON(): Record<string, any> {
-    return { ...this.data, _id: this.id, _obtained_at: this.obtained_at };
-  }
-
-  public static fromJSON(data: Record<string, any>) {
-    return Object.assign(this.from(data), { obtained_at: new Date(data._obtained_at) });
+    return {
+      ...cloneDeepWith(
+        omitBy(this, (_, key) => key.startsWith('_')),
+        (value) => (value instanceof Entity ? value.toJSON() : undefined)
+      ),
+      ...z
+        .object({ _id: z.string(), _obtained_at: z.coerce.date() })
+        .merge((this.constructor as typeof Entity)._entitySchema || z.object({}))
+        .parse(this)
+    };
   }
 }
 
 /**
  * Represents a user entity.
  */
-export class User extends Entity<typeof user> {
-  protected static schema = user;
+export interface User extends z.infer<typeof user> {}
+export class User extends Entity {
+  protected static override _schema = user;
 
-  get id() {
-    return this.data.node_id;
+  get _id() {
+    return this.node_id;
   }
 }
 
 /**
  * Represents a repository entity.
  */
-export class Repository extends Entity<typeof repository> {
-  protected static schema = repository;
+export interface Repository extends z.infer<typeof repository> {}
+export class Repository extends Entity {
+  protected static override _schema = repository;
 
-  get id() {
-    return this.data.node_id;
+  get _id() {
+    return this.node_id;
   }
 }
 
 /**
  * Represents an abstract repository resource.
  */
-export abstract class RepositoryResource<T extends z.ZodType = AnyZodObject> extends Entity<T> {
-  readonly repository: string;
+export abstract class RepositoryResource extends Entity {
+  protected static override _entitySchema = z.object({ _repository: z.string() }).partial();
+
+  readonly _repository: string;
 
   constructor(data: Record<string, any>, props: { repository: string }) {
-    if (!z.object({ repository: z.string() }).safeParse(props).success) throw new Error('Invalid props');
     super(data);
-    this.repository = props.repository;
+    this._repository = props.repository;
   }
 
   override toJSON() {
-    return { ...super.toJSON(), _repository: this.repository };
-  }
-
-  static override fromJSON(data: Record<string, any>): Entity {
-    return Object.assign(super.fromJSON(data), { repository: data._repository });
+    return { ...super.toJSON(), _repository: this._repository };
   }
 }
 
 /**
  * Represents a reactable entity.
  */
-export interface Reactable extends RepositoryResource {
-  hasReactions: () => boolean;
-  reactions: Reaction[];
+export interface Reactable {
+  _hasReactions: boolean;
+  _reactions: Reaction[];
 }
 
 /**
  * Represents a tag entity.
  */
-export class Tag extends RepositoryResource<typeof tag> {
-  protected static schema = tag;
+export interface Tag extends z.infer<typeof tag> {}
+export class Tag extends RepositoryResource {
+  protected static override _schema = tag;
 
-  get id() {
-    return this.data.node_id;
+  get _id() {
+    return this.node_id;
   }
 }
 
 /**
  * Represents a release entity.
  */
-export class Release extends RepositoryResource<typeof release> implements Reactable {
-  protected static schema = release;
+export interface Release extends z.infer<typeof release> {}
+export class Release extends RepositoryResource implements Reactable {
+  protected static override _schema = release;
 
-  reactions: Reaction[] = [];
-  hasReactions: () => boolean = () => (this.data.reactions?.total_count || 0) > 0;
+  _reactions: Reaction[] = [];
 
-  get id() {
-    return this.data.node_id;
+  get _hasReactions() {
+    return (this.reactions?.total_count || 0) > 0;
+  }
+
+  get _id() {
+    return this.node_id;
   }
 }
 
 /**
  * Represents a watcher entity.
  */
-export class Watcher extends RepositoryResource<typeof watcher> {
-  protected static schema = watcher;
+export interface Watcher extends z.infer<typeof watcher> {}
+export class Watcher extends RepositoryResource {
+  protected static override _schema = watcher;
 
-  get id() {
-    return `${this.repository}_${typeof this.data.user === 'string' ? this.data.user : this.data.user.node_id}`;
+  get _id() {
+    return `${this._repository}_${typeof this.user === 'string' ? this.user : this.user.node_id}`;
   }
 }
 
 /**
  * Represents a stargazer entity.
  */
-export class Stargazer extends RepositoryResource<typeof stargazer> {
-  protected static schema = stargazer;
+export interface Stargazer extends z.infer<typeof stargazer> {}
+export class Stargazer extends RepositoryResource {
+  protected static override _schema = stargazer;
 
-  get id() {
-    return `${this.repository}_${typeof this.data.user === 'string' ? this.data.user : this.data.user.node_id}`;
+  get _id() {
+    return `${this._repository}_${typeof this.user === 'string' ? this.user : this.user.node_id}`;
   }
 }
 
 /**
  * Represents an issue entity.
  */
-export class Issue<I extends typeof issue = typeof issue> extends RepositoryResource<I> implements Reactable {
-  protected static schema = issue;
+
+export interface Issue extends z.infer<typeof issue> {}
+export class Issue extends RepositoryResource implements Reactable {
+  protected static override _schema = issue;
 
   events: TimelineEvent[] = [];
 
-  hasReactions: () => boolean = () => (this.data.reactions?.total_count || 0) > 0;
-  reactions: Reaction[] = [];
+  _reactions: Reaction[] = [];
 
-  get id() {
-    return this.data.node_id;
+  get _hasReactions() {
+    return (this.reactions?.total_count || 0) > 0;
+  }
+
+  get _id() {
+    return this.node_id;
   }
 }
 
 /**
  * Represents a pull request entity.
  */
-export class PullRequest extends Issue<typeof pr> {
-  protected static schema = pr;
+export interface PullRequest extends z.infer<typeof pr> {}
+export class PullRequest extends Issue {
+  protected static override _schema = pr;
 
-  get id() {
-    return this.data.node_id;
+  get _id() {
+    return this.node_id;
   }
 }
 
 /**
  * Represents a reaction entity.
  */
-export class Reaction extends RepositoryResource<typeof reaction> {
-  protected static schema = reaction;
+export interface Reaction extends z.infer<typeof reaction> {}
+export class Reaction extends RepositoryResource {
+  protected static override _schema = reaction;
+  protected static override _entitySchema = RepositoryResource._entitySchema.merge(
+    z.object({ _reactable_name: z.string(), _reactable_id: z.string() }).partial()
+  );
 
-  readonly reactable_name!: string;
-  readonly reactable_id!: string;
+  readonly _reactable_name!: string;
+  readonly _reactable_id!: string;
 
   constructor(data: Record<string, any>, props: { repository: string; reactable_name: string; reactable_id: string }) {
-    if (!z.object({ reactable_name: z.string(), reactable_id: z.string() }).safeParse(props).success)
-      throw new Error('Invalid props');
     super(data, props);
-    this.reactable_name = props.reactable_name;
-    this.reactable_id = props.reactable_id;
+    this._reactable_name = props.reactable_name;
+    this._reactable_id = props.reactable_id;
   }
 
-  get id() {
-    return this.data.node_id;
+  get _id() {
+    return this.node_id;
   }
 
   override toJSON() {
-    return { ...super.toJSON(), _reactable_name: this.reactable_name, _reactable_id: this.reactable_id };
-  }
-
-  static override fromJSON(data: Record<string, any>): Entity {
-    return Object.assign(super.fromJSON(data), {
-      reactable_name: data._reactable_name,
-      reactable_id: data._reactable_id
-    });
+    return { ...super.toJSON(), _reactable_name: this._reactable_name, _reactable_id: this._reactable_id };
   }
 }
 
 /**
  * Represents a timeline event entity.
  */
-export class TimelineEvent extends RepositoryResource<typeof events> implements Reactable {
-  protected static schema = events;
+export type TimelineEventSchema = z.infer<typeof events>;
+export interface TimelineEvent extends Record<string, unknown> {}
+export class TimelineEvent extends RepositoryResource implements Reactable {
+  protected static override _schema = events;
+  protected static override _entitySchema = RepositoryResource._entitySchema.merge(
+    z.object({ _issue: z.string() }).partial()
+  );
 
-  readonly issue!: string;
+  readonly _issue!: string;
+  readonly event!: z.infer<typeof events>['event'];
 
-  hasReactions: () => boolean = () => ((this.data as any).reactions?.total_count || 0) > 0;
-  reactions: Reaction[] = [];
+  _reactions: Reaction[] = [];
+
+  get _hasReactions() {
+    return ((this.event as any).reactions?.total_count || 0) > 0;
+  }
 
   constructor(data: Record<string, any>, props: { repository: string; issue: string }) {
     if (!z.object({ issue: z.string() }).safeParse(props).success) throw new Error('Invalid props');
     super(data, props);
-    this.issue = props.issue;
+    this._issue = props.issue;
   }
 
-  get id() {
-    return `${this.repository}_${this.issue}_${(this.data as any).node_id || (this.data as any).id || (this.data as any).created_at?.toISOString() || objectHash(this.data)}`;
+  get _id() {
+    const { id, node_id: nodeId, created_at: createdAt } = this;
+    return `${this._repository}_${this._issue}_${nodeId || id || (createdAt as Date | undefined)?.toISOString()}`;
   }
 
   override toJSON() {
-    return { ...super.toJSON(), _issue: this.issue };
-  }
-
-  static override fromJSON(data: Record<string, any>): Entity {
-    return Object.assign(super.fromJSON(data), { issue: data._issue });
+    return { ...super.toJSON(), _issue: this._issue };
   }
 }

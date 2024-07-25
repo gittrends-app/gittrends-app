@@ -8,6 +8,7 @@ import { Entity, User } from '../entities/Entity.js';
  */
 export function extract<T = any>(entity: T): { data: T; users?: User[] } {
   let data: any = cloneDeep(entity);
+
   const users: User[] = [];
 
   if (isPlainObject(entity) || entity instanceof Entity) {
@@ -21,7 +22,7 @@ export function extract<T = any>(entity: T): { data: T; users?: User[] } {
     if (User.validate(data)) {
       const user = new User(data);
       users.push(user);
-      data = user.id;
+      data = user._id;
     }
   }
 

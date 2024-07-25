@@ -6,7 +6,7 @@ import { clients } from '../../clients.js';
 /**
  * Transforms the data from the GitHub API into a Stargazer entity.
  */
-function transform(edge: StargazerEdge): PartialDeep<Stargazer['data']> {
+function transform(edge: StargazerEdge): PartialDeep<Stargazer> {
   return {
     starred_at: edge.starredAt as any,
     user: {

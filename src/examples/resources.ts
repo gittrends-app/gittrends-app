@@ -43,45 +43,45 @@ import { withStorage, withStorageIterable } from '../storage/withStorage.js';
     stargazers: {
       it: () =>
         withStorageIterable(github.repos.stargazers)({
-          repo: repo.data,
+          repo: repo,
           storage: storage.stargazers
         }),
-      print: (entity: Stargazer, index) => consola.log(`${index || '?'}. ${(entity.data.user as User['data']).login}`)
+      print: (entity: Stargazer, index) => consola.log(`${index || '?'}. ${(entity.user as User).login}`)
     },
     watchers: {
       it: () =>
         withStorageIterable(github.repos.watchers)({
-          repo: repo.data,
+          repo: repo,
           storage: storage.watchers
         }),
-      print: (entity: Watcher, index) => consola.log(`${index || '?'}. ${(entity.data.user as User['data']).login}`)
+      print: (entity: Watcher, index) => consola.log(`${index || '?'}. ${(entity.user as User).login}`)
     },
     tags: {
       it: () =>
         withStorageIterable(github.repos.tags)({
-          repo: repo.data,
+          repo: repo,
           storage: storage.tags
         }),
-      print: (entity: Tag, index) => consola.log(`${index || '?'}. ${entity.data.name}`)
+      print: (entity: Tag, index) => consola.log(`${index || '?'}. ${entity.name}`)
     },
     releases: {
       it: () =>
         withStorageIterable(github.repos.releases)({
-          repo: repo.data,
+          repo: repo,
           storage: storage.releases
         }),
-      print: (entity: Release, index) => consola.log(`${index || '?'}. ${entity.data.name}`)
+      print: (entity: Release, index) => consola.log(`${index || '?'}. ${entity.name}`)
     },
     issues: {
       it: () =>
         withStorageIterable(github.repos.issues)({
-          repo: repo.data,
+          repo: repo,
           per_page: 25,
           storage: storage.issues
         }),
       print: (issue: Issue) =>
         consola.log(
-          `${issue.constructor.name.toUpperCase()}-${issue.data.number}. ${issue.data.title.slice(0, 50)}${issue.data.title.length ? '...' : ''} (${issue.data.state} - ${typeof issue.events.length} events)`
+          `${issue.constructor.name.toUpperCase()}-${issue.number}. ${issue.title.slice(0, 50)}${issue.title.length ? '...' : ''} (${issue.state} - ${typeof issue.events.length} events)`
         )
     }
   } satisfies Record<string, { it: () => IterableResource<Entity>; print: (entity: any, index?: number) => any }>;

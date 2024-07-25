@@ -6,17 +6,18 @@ import reactable from './schemas/reactable';
 
 describe('Entities', () => {
   describe('Entity', () => {
-    const schema = z.object({ id: z.string() });
+    class EntityImpl extends Entity {
+      protected static override _schema = z.object({ id: z.string() });
+      protected static override _entitySchema = z.object({ _node_id: z.string().optional() });
 
-    class EntityImpl extends Entity<typeof schema> {
-      protected static schema = schema;
+      readonly _node_id!: string;
 
       constructor(data: Record<string, any>) {
         super(data);
       }
 
-      get id() {
-        return this.data.id;
+      get _id() {
+        return (this as any).id;
       }
     }
 
@@ -33,35 +34,44 @@ describe('Entities', () => {
 
     it('should add _id and _obtained_at to the schema', () => {
       let user = new EntityImpl({ id: '1' });
-      expect(user).toHaveProperty('id', '1');
-      expect(user).toHaveProperty('obtained_at', expect.any(Date));
+      expect(user).toHaveProperty('_id', '1');
+      expect(user).toHaveProperty('_obtained_at', expect.any(Date));
 
       user = EntityImpl.from({ id: '1' });
+      expect(user).toHaveProperty('_id', '1');
+      expect(user).toHaveProperty('_obtained_at', expect.any(Date));
+    });
+
+    it('should add schema properties to the entity', () => {
+      expect(() => new EntityImpl({ id: '1', _node_id: 2 })).toThrowError(ZodError);
+
+      const user = new EntityImpl({ id: '1', _node_id: '2' });
       expect(user).toHaveProperty('id', '1');
-      expect(user).toHaveProperty('obtained_at', expect.any(Date));
+      expect(user).toHaveProperty('_node_id', '2');
+    });
+
+    it('should serialize the entity', () => {
+      const user = new EntityImpl({ id: '1' });
+      expect(user.toJSON()).toEqual({ id: '1', _id: '1', _obtained_at: user._obtained_at });
     });
   });
 
   describe('Reactable', () => {
-    const schema = z.object({ id: z.string(), reactions: reactable });
+    class EntityImpl extends Entity implements Reactable {
+      protected static override _schema = z.object({ id: z.string(), reactions: reactable });
 
-    class EntityImpl extends Entity<typeof schema> implements Reactable {
-      protected static schema = schema;
+      _reactions: Reaction[] = [];
 
-      hasReactions: () => boolean = () => this.data.reactions.total_count > 0;
-      reactions: Reaction[] = [];
-      repository: string = 'test';
+      get _hasReactions() {
+        return (this as any).reactions.total_count > 0;
+      }
 
       constructor(data: Record<string, any>) {
         super(data);
       }
 
-      get id() {
-        return this.data.id;
-      }
-
-      override toJSON() {
-        return { ...super.toJSON(), _repository: this.repository };
+      get _id() {
+        return (this as any).id;
       }
     }
 
@@ -81,7 +91,7 @@ describe('Entities', () => {
             rocket: 1,
             eyes: 1
           }
-        }).hasReactions()
+        })._hasReactions
       ).toBe(true);
     });
   });
