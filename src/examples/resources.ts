@@ -1,18 +1,13 @@
 import { input, select } from '@inquirer/prompts';
 import chalk from 'chalk';
 import consola from 'consola';
-import { MongoClient } from 'mongodb';
 import { Entity, Issue, Release, Stargazer, Tag, User, Watcher } from '../entities/Entity.js';
-import { IterableResource } from '../github/_requests_/index.js';
-import { github } from '../github/github.js';
-import get from '../github/repository/get.js';
-import { createMongoStorage } from '../storage/mongo.js';
-import { withStorage, withStorageIterable } from '../storage/withStorage.js';
+import env from '../env.js';
+import { GithubClient } from '../services/github/client.js';
+import { GithubService } from '../services/github/service.js';
+import { IterableEntity, Service } from '../services/service.js';
 
 (async () => {
-  const conn = await MongoClient.connect('mongodb://localhost:27017');
-  const storage = createMongoStorage(conn.db('github'));
-
   consola.log('================  Resource Example  ================');
 
   const repository = await input({
@@ -22,7 +17,7 @@ import { withStorage, withStorageIterable } from '../storage/withStorage.js';
     validate: (value) => /.*\/.*/.test(value) || 'Invalid repository name.'
   });
 
-  const resource = await select<'issues' | 'releases' | 'stargazers' | 'tags' | 'watchers'>({
+  const resource = await select<'issues' | 'tags' | 'releases' | 'stargazers' | 'watchers'>({
     message: 'Select the resource to retrieve:',
     choices: [
       { value: 'issues' },
@@ -33,58 +28,45 @@ import { withStorage, withStorageIterable } from '../storage/withStorage.js';
     ]
   });
 
+  consola.info('Initializing the Github service...');
+  const client: Service = new GithubService(
+    new GithubClient(env.GITHUB_API_BASE_URL, { apiToken: env.GITHUB_API_TOKEN })
+  );
+
   consola.log('');
   consola.info(`Getting repository information...`);
   const [owner, name] = repository.split('/');
-  const repo = await withStorage(get)({ owner: owner, name: name, storage: storage.repos });
+  const repo = await client.repository(owner, name);
   if (!repo) throw new Error('Repository not found!');
 
   const map = {
-    stargazers: {
-      it: () =>
-        withStorageIterable(github.repos.stargazers)({
-          repo: repo,
-          storage: storage.stargazers
-        }),
-      print: (entity: Stargazer, index) => consola.log(`${index || '?'}. ${(entity.user as User).login}`)
-    },
-    watchers: {
-      it: () =>
-        withStorageIterable(github.repos.watchers)({
-          repo: repo,
-          storage: storage.watchers
-        }),
-      print: (entity: Watcher, index) => consola.log(`${index || '?'}. ${(entity.user as User).login}`)
-    },
     tags: {
-      it: () =>
-        withStorageIterable(github.repos.tags)({
-          repo: repo,
-          storage: storage.tags
-        }),
+      it: () => client.resource('tags', { repo: repo }),
       print: (entity: Tag, index) => consola.log(`${index || '?'}. ${entity.name}`)
     },
     releases: {
-      it: () =>
-        withStorageIterable(github.repos.releases)({
-          repo: repo,
-          storage: storage.releases
-        }),
+      it: () => client.resource('releases', { repo: repo }),
       print: (entity: Release, index) => consola.log(`${index || '?'}. ${entity.name}`)
     },
+    stargazers: {
+      it: () => client.resource('stargazers', { repo: repo }),
+      print: (entity: Stargazer, index) => consola.log(`${index || '?'}. ${(entity.user as User).login}`)
+    },
+    watchers: {
+      it: () => client.resource('watchers', { repo: repo }),
+      print: (entity: Watcher, index) => consola.log(`${index || '?'}. ${(entity.user as User).login}`)
+    },
     issues: {
-      it: () =>
-        withStorageIterable(github.repos.issues)({
-          repo: repo,
-          per_page: 25,
-          storage: storage.issues
-        }),
+      it: () => client.resource('issues', { repo: repo, per_page: 25 }),
       print: (issue: Issue) =>
         consola.log(
           `${issue.constructor.name.toUpperCase()}-${issue.number}. ${issue.title.slice(0, 50)}${issue.title.length ? '...' : ''} (${issue.state} - ${typeof issue.events.length} events)`
         )
     }
-  } satisfies Record<string, { it: () => IterableResource<Entity>; print: (entity: any, index?: number) => any }>;
+  } satisfies Record<
+    typeof resource,
+    { it: () => IterableEntity<Entity>; print: (entity: any, index?: number) => any }
+  >;
 
   let index = 1;
   consola.info(`Getting ${resource} ...`);
@@ -95,7 +77,6 @@ import { withStorage, withStorageIterable } from '../storage/withStorage.js';
 
   consola.log('');
   consola.success('Done!');
-  return conn.close();
 })().catch((err) => {
   consola.error(err);
   process.exit(1);

@@ -1,16 +1,16 @@
 import { Entity } from '../entities/Entity.js';
-import { IterableResource } from '../github/_requests_/index.js';
+import { IterableEntity } from '../services/service.js';
 import { Storage } from './storage.js';
 
 type Operation<P extends object, E extends Entity> = (args: P) => Promise<E | undefined>;
 
 type NewOperation<P extends object, E extends Entity> = (args: P & { storage: Storage<E> }) => Promise<E | undefined>;
 
-type IteratableOperation<P extends object, E extends Entity> = (args: P) => IterableResource<E>;
+type IteratableOperation<P extends object, E extends Entity> = (args: P) => IterableEntity<E>;
 
 type NewIteratableOperation<P extends object, E extends Entity> = (
   args: P & { storage: Storage<E> }
-) => IterableResource<E>;
+) => IterableEntity<E>;
 
 /**
  *

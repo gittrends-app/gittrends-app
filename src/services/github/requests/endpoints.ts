@@ -1,4 +1,4 @@
-import { GetResponseDataTypeFromEndpointMethod } from '@octokit/types';
+import { RestEndpointMethodTypes } from '@octokit/rest';
 import {
   Issue,
   PullRequest,
@@ -9,33 +9,32 @@ import {
   TimelineEvent,
   User,
   Watcher
-} from '../../entities/Entity.js';
-import { clients } from '../clients.js';
-import { PageableParams } from './index.js';
+} from '../../../entities/Entity.js';
+import { PageableParams } from '../../service.js';
 
 export type IterableEndpoints = {
   'GET /repositories/:repo/subscribers': {
-    response: GetResponseDataTypeFromEndpointMethod<typeof clients.rest.activity.listWatchersForRepo>;
+    response: RestEndpointMethodTypes['activity']['listWatchersForRepo']['response'];
     result: Watcher;
     params: { repo: number } & PageableParams;
   };
   'GET /repositories/:repo/tags': {
-    response: GetResponseDataTypeFromEndpointMethod<typeof clients.rest.repos.listTags>;
+    response: RestEndpointMethodTypes['repos']['listTags']['response'];
     result: Tag;
     params: { repo: number } & PageableParams;
   };
   'GET /repositories/:repo/releases': {
-    response: GetResponseDataTypeFromEndpointMethod<typeof clients.rest.repos.listReleases>;
+    response: RestEndpointMethodTypes['repos']['listReleases']['response'];
     result: Release;
     params: { repo: number } & PageableParams;
   };
   'GET /repositories/:repo/releases/:release/reactions': {
-    response: GetResponseDataTypeFromEndpointMethod<typeof clients.rest.reactions.listForRelease>;
+    response: RestEndpointMethodTypes['reactions']['listForRelease']['response'];
     result: Reaction;
     params: { repo: number; release: number } & PageableParams;
   };
   'GET /repositories/:repo/issues': {
-    response: GetResponseDataTypeFromEndpointMethod<typeof clients.rest.issues.list>;
+    response: RestEndpointMethodTypes['issues']['list']['response'];
     result: Issue;
     params: {
       repo: number;
@@ -46,22 +45,22 @@ export type IterableEndpoints = {
     } & PageableParams;
   };
   'GET /repositories/:repo/issues/:number/reactions': {
-    response: GetResponseDataTypeFromEndpointMethod<typeof clients.rest.reactions.listForIssue>;
+    response: RestEndpointMethodTypes['reactions']['listForIssue']['response'];
     result: Reaction;
     params: { repo: number; number: number } & PageableParams;
   };
   'GET /repositories/:repo/issues/comments/:id/reactions': {
-    response: GetResponseDataTypeFromEndpointMethod<typeof clients.rest.reactions.listForIssueComment>;
+    response: RestEndpointMethodTypes['reactions']['listForIssueComment']['response'];
     result: Reaction;
     params: { repo: number; id: number } & PageableParams;
   };
   'GET /repositories/:repo/pulls/comments/:id/reactions': {
-    response: GetResponseDataTypeFromEndpointMethod<typeof clients.rest.reactions.listForPullRequestReviewComment>;
+    response: RestEndpointMethodTypes['reactions']['listForPullRequestReviewComment']['response'];
     result: Reaction;
     params: { repo: number; id: number } & PageableParams;
   };
   'GET /repositories/:repo/issues/:number/timeline': {
-    response: GetResponseDataTypeFromEndpointMethod<typeof clients.rest.issues.listEventsForTimeline>;
+    response: RestEndpointMethodTypes['issues']['listEventsForTimeline']['response'];
     result: TimelineEvent;
     params: { repo: number; number: number } & PageableParams;
   };
@@ -69,27 +68,27 @@ export type IterableEndpoints = {
 
 export type ResourceEndpoints = {
   'GET /repositories/:repo/pulls/:number': {
-    response: GetResponseDataTypeFromEndpointMethod<typeof clients.rest.pulls.get>;
+    response: RestEndpointMethodTypes['pulls']['get']['response'];
     result: PullRequest;
     params: { repo: number; number: number } & PageableParams;
   };
   'GET /repos/:owner/:name': {
-    response: GetResponseDataTypeFromEndpointMethod<typeof clients.rest.repos.get>;
+    response: RestEndpointMethodTypes['repos']['get']['response'];
     result: Repository;
     params: { owner: string; name: string };
   };
   'GET /repositories/:repo': {
-    response: GetResponseDataTypeFromEndpointMethod<typeof clients.rest.repos.get>;
+    response: RestEndpointMethodTypes['repos']['get']['response'];
     result: Repository;
     params: { repo: number };
   };
   'GET /user/:id': {
-    response: GetResponseDataTypeFromEndpointMethod<typeof clients.rest.users.getByUsername>;
+    response: RestEndpointMethodTypes['users']['getByUsername']['response'];
     result: User;
     params: { id: number };
   };
   'GET /users/:login': {
-    response: GetResponseDataTypeFromEndpointMethod<typeof clients.rest.users.getByUsername>;
+    response: RestEndpointMethodTypes['users']['getByUsername']['response'];
     result: User;
     params: { login: string };
   };

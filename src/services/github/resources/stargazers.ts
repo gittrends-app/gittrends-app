@@ -1,7 +1,7 @@
 import { PartialDeep } from 'type-fest';
 import { Stargazer } from '../../../entities/Entity.js';
-import { IterableResource, PageableParams } from '../../_requests_/index.js';
-import { clients } from '../../clients.js';
+import { IterableEntity, PageableParams } from '../../service.js';
+import { GithubClient } from '../client.js';
 
 /**
  * Transforms the data from the GitHub API into a Stargazer entity.
@@ -50,8 +50,9 @@ type StargazersQuery = {
  * Retrieves the stargazers of a repository.
  */
 export default function (
+  client: GithubClient,
   options: PageableParams & { repo: { id: number; node_id: string } }
-): IterableResource<Stargazer> {
+): IterableEntity<Stargazer> {
   const { repo, page, per_page: perPage } = options;
 
   return {
@@ -62,7 +63,7 @@ export default function (
       };
 
       do {
-        const { repository } = await clients.graphql<StargazersQuery>({
+        const { repository } = await client.graphql<StargazersQuery>({
           query: `
             query stargazers($id: ID!, $perPage: Int, $endCursor: String) {
               repository: node(id: $id) {
