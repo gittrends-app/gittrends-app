@@ -15,7 +15,8 @@
     "tsx": "tsx -r \"dotenv-flow/config\"",
     "dev": "tsx  -r \"dotenv-flow/config\" src/index.ts",
     "start": "node -r \"dotenv-flow/config\" dist/index.js",
-    "test": "jest",
+    "jest": "jest --runInBand",
+    "test": "jest --runInBand",
     "test:coverage": "jest --collect-coverage",
     "verify": "run-s lint build test",
     "prettier": "prettier --write src"

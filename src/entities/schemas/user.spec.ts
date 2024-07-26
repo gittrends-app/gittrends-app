@@ -6,8 +6,6 @@ describe('User entity', () => {
     login: 'freeCodeCamp',
     id: 9892522,
     node_id: 'MDEyOk9yZ2FuaXphdGlvbjk4OTI1MjI=',
-    avatar_url: 'https://avatars.githubusercontent.com/u/9892522?v=4',
-    url: 'https://api.github.com/users/freeCodeCamp',
     type: 'User',
     site_admin: false
   };
@@ -73,8 +71,6 @@ describe('User entity', () => {
       login: 'sindresorhus',
       id: 170270,
       node_id: 'MDQ6VXNlcjE3MDI3MA==',
-      avatar_url: 'https://avatars.githubusercontent.com/u/170270?v=4',
-      url: 'https://api.github.com/users/sindresorhus',
       type: 'User',
       site_admin: false
     });
@@ -119,8 +115,6 @@ describe('User entity', () => {
       login: 'twbs',
       id: 2918581,
       node_id: 'MDEyOk9yZ2FuaXphdGlvbjI5MTg1ODE=',
-      avatar_url: 'https://avatars.githubusercontent.com/u/2918581?v=4',
-      url: 'https://api.github.com/users/twbs',
       type: 'Organization',
       site_admin: false,
       name: 'Bootstrap',

@@ -13,8 +13,6 @@ describe('extract', () => {
       login: 'danielbruns',
       id: 1478925,
       node_id: 'MDQ6VXNlcjE0Nzg5MjU=',
-      avatar_url: 'https://avatars.githubusercontent.com/u/1478925?v=4',
-      url: 'https://api.github.com/users/danielbruns',
       type: 'User',
       site_admin: false
     };

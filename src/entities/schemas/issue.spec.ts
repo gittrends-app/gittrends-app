@@ -5,21 +5,9 @@ describe('Issue entity', () => {
   const sample = {
     id: 1,
     node_id: 'MDU6SXNzdWUx',
-    url: 'https://api.github.com/repos/octocat/Hello-World/issues/1347',
     number: 1347,
     state: 'open',
     title: 'Found a bug',
-    labels: [
-      {
-        id: 208045946,
-        node_id: 'MDU6TGFiZWwyMDgwNDU5NDY=',
-        url: 'https://api.github.com/repos/octocat/Hello-World/labels/bug',
-        name: 'bug',
-        description: "Something isn't working",
-        color: 'f29513',
-        default: true
-      }
-    ],
     locked: true,
     comments: 0,
     created_at: '2011-04-22T13:33:48Z',
@@ -202,7 +190,6 @@ describe('Issue entity', () => {
     ).toEqual({
       id: 1,
       node_id: 'MDU6SXNzdWUx',
-      url: 'https://api.github.com/repos/octocat/Hello-World/issues/1347',
       number: 1347,
       state: 'open',
       title: 'Found a bug',
@@ -215,9 +202,7 @@ describe('Issue entity', () => {
       locked: true,
       active_lock_reason: 'too heated',
       comments: 0,
-      pull_request: {
-        url: 'https://api.github.com/repos/octocat/Hello-World/pulls/1347'
-      },
+      pull_request: true,
       created_at: new Date('2011-04-22T13:33:48Z'),
       updated_at: new Date('2011-04-22T13:33:48Z'),
       closed_by: expect.objectContaining({ id: 1 }),

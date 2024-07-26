@@ -6,11 +6,9 @@ import userSchema from './user.js';
 const baseSchema = z.object({
   id: z.number().int(),
   node_id: z.string(),
-  url: z.string().url(),
   actor: z.union([userSchema, z.string()]).optional(),
   event: z.literal('?'),
   commit_id: z.string().optional(),
-  commit_url: z.string().url().optional(),
   created_at: z.coerce.date()
 });
 
@@ -106,9 +104,7 @@ const addedToProjectEventSchema = baseSchema.merge(
     project_card: z
       .object({
         id: z.number().int(),
-        url: z.string().url(),
         project_id: z.number().int(),
-        project_url: z.string().url(),
         column_name: z.string()
       })
       .optional()
@@ -121,9 +117,7 @@ const movedColumnInProjectEventSchema = baseSchema.merge(
     project_card: z
       .object({
         id: z.number().int(),
-        url: z.string().url(),
         project_id: z.number().int(),
-        project_url: z.string().url(),
         column_name: z.string(),
         previous_column_name: z.string().optional()
       })
@@ -137,9 +131,7 @@ const removedFromProjectEventSchema = baseSchema.merge(
     project_card: z
       .object({
         id: z.number().int(),
-        url: z.string().url(),
         project_id: z.number().int(),
-        project_url: z.string().url(),
         column_name: z.string()
       })
       .optional()
@@ -152,9 +144,7 @@ const convertedNoteToIssueEventSchema = baseSchema.merge(
     project_card: z
       .object({
         id: z.number().int(),
-        url: z.string().url(),
         project_id: z.number().int(),
-        project_url: z.string().url(),
         column_name: z.string()
       })
       .optional()
@@ -193,9 +183,6 @@ const unlockedEventSchema = baseSchema.merge(
 // ====== NON STANDARD EVENTS ======
 const commentedEventSchema = z.object({
   event: z.literal('commented'),
-  url: z.string().url(),
-  html_url: z.string().url(),
-  issue_url: z.string().url(),
   id: z.number().int(),
   node_id: z.string(),
   user: z.union([userSchema, z.string()]),
@@ -239,8 +226,6 @@ const commitedEventSchema = z.object({
   event: z.literal('committed'),
   sha: z.string(),
   node_id: z.string(),
-  url: z.string().url(),
-  html_url: z.string().url(),
   author: z.object({
     date: z.coerce.date(),
     email: z.string(),
@@ -252,17 +237,16 @@ const commitedEventSchema = z.object({
     name: z.string()
   }),
   tree: z.object({
-    sha: z.string(),
-    url: z.string().url()
+    sha: z.string()
   }),
   message: z.string(),
-  parents: z.array(
-    z.object({
-      sha: z.string(),
-      url: z.string().url(),
-      html_url: z.string().url()
-    })
-  ),
+  parents: z
+    .array(
+      z.object({
+        sha: z.string()
+      })
+    )
+    .optional(),
   verification: z.object({
     verified: z.boolean(),
     reason: z.string(),
@@ -280,8 +264,6 @@ const reviewedEventSchema = z.object({
   commit_id: z.string().optional(),
   submitted_at: z.coerce.date().optional(),
   state: z.string(),
-  html_url: z.string().url(),
-  pull_request_url: z.string().url(),
   author_association: z.enum([
     'COLLABORATOR',
     'CONTRIBUTOR',
@@ -292,10 +274,6 @@ const reviewedEventSchema = z.object({
     'NONE',
     'OWNER'
   ]),
-  _links: z.object({
-    html: z.object({ href: z.string() }),
-    pull_request: z.object({ href: z.string() })
-  }),
   reactions: reactableSchema.optional()
 });
 // ====== NON STANDARD EVENTS ======

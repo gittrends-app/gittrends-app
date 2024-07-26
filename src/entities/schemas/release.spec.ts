@@ -3,7 +3,6 @@ import releaseSchema from './release.js';
 
 describe('Release entity', () => {
   const baseFields = {
-    url: 'https://api.github.com/repos/kubernetes/kubernetes/releases/163589377',
     id: 163589377,
     author: {
       login: 'k8s-release-robot',
@@ -19,8 +18,7 @@ describe('Release entity', () => {
     target_commitish: 'master',
     draft: false,
     prerelease: true,
-    created_at: '2024-07-02T09:43:58Z',
-    assets: []
+    created_at: '2024-07-02T09:43:58Z'
   };
 
   it('should validate required fields', () => {
@@ -119,7 +117,6 @@ describe('Release entity', () => {
         }
       })
     ).toEqual({
-      url: 'https://api.github.com/repos/kubernetes/kubernetes/releases/103386457',
       id: 103386457,
       author: expect.objectContaining({ id: 33505452 }),
       node_id: 'RE_kwDOAToIks4GKY1Z',

@@ -3,7 +3,6 @@ import milestoneSchema from './milestone.js';
 
 describe('Milestone entity', () => {
   const example = {
-    url: 'https://api.github.com/repos/octocat/Hello-World/milestones/1',
     id: 1002604,
     node_id: 'MDk6TWlsZXN0b25lMTAwMjYwNA==',
     number: 1,
@@ -61,7 +60,6 @@ describe('Milestone entity', () => {
         due_on: '2012-10-09T23:39:01Z'
       })
     ).toEqual({
-      url: 'https://api.github.com/repos/octocat/Hello-World/milestones/1',
       id: 1002604,
       node_id: 'MDk6TWlsZXN0b25lMTAwMjYwNA==',
       number: 1,
@@ -117,7 +115,6 @@ describe('Milestone entity', () => {
         due_on: '2012-10-09T23:39:01Z'
       })
     ).toEqual({
-      url: 'https://api.github.com/repos/octocat/Hello-World/milestones/1',
       id: 1002604,
       node_id: 'MDk6TWlsZXN0b25lMTAwMjYwNA==',
       number: 1,

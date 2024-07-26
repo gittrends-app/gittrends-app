@@ -2,7 +2,6 @@ import { z } from 'zod';
 import userSchema from './user.js';
 
 export default z.object({
-  url: z.string().url(),
   browser_download_url: z.string().url(),
   id: z.number().int(),
   node_id: z.string(),

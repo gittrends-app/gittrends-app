@@ -3,7 +3,6 @@ import assetSchema from './asset.js';
 
 describe('Asset entity', () => {
   const baseFields = {
-    url: 'https://api.github.com/repos/kubernetes/kubernetes/releases/assets/108642925',
     id: 108642925,
     node_id: 'RA_kwDOAToIks4GecJt',
     name: 'kubernetes.tar.gz',
@@ -81,7 +80,6 @@ describe('Asset entity', () => {
         browser_download_url: 'https://github.com/kubernetes/kubernetes/releases/download/v1.26.5/kubernetes.tar.gz'
       })
     ).toEqual({
-      url: 'https://api.github.com/repos/kubernetes/kubernetes/releases/assets/108642925',
       id: 108642925,
       node_id: 'RA_kwDOAToIks4GecJt',
       name: 'kubernetes.tar.gz',

@@ -1,5 +1,5 @@
 import { describe, expect, it } from '@jest/globals';
-import reactableSchema from './reactable.js';
+import schema from './reactable.js';
 
 describe('Reactable entity', () => {
   const baseFields = {
@@ -14,15 +14,16 @@ describe('Reactable entity', () => {
     eyes: 3
   };
 
-  it('should validate required fields', () => {
-    expect(() => reactableSchema.parse(baseFields)).not.toThrowError();
-    for (const key of Object.keys(baseFields)) {
-      expect(() => reactableSchema.parse({ ...baseFields, [key]: undefined })).toThrowError();
-    }
+  it('should remove unknown fields', () => {
+    expect(schema.parse({ ...baseFields, description: null })).not.toHaveProperty('description');
   });
 
-  it('should remove unknown fields', () => {
-    const result = reactableSchema.parse({ ...baseFields, description: null });
-    expect(result).not.toHaveProperty('description');
+  it('should remove fields with value 0', () => {
+    expect(schema.parse({ ...baseFields, '+1': 0 })).not.toHaveProperty('+1');
+    expect(schema.parse({ ...baseFields, '-1': 0 })).not.toHaveProperty('-1');
+  });
+
+  it('should keep total_count', () => {
+    expect(schema.parse({})).toEqual({ total_count: 0 });
   });
 });

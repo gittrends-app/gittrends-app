@@ -6,7 +6,6 @@ import userSchema from './user.js';
 
 export default zodSanitize(
   z.object({
-    url: z.string().url(),
     id: z.number().int(),
     node_id: z.string(),
     tag_name: z.string(),
@@ -18,11 +17,8 @@ export default zodSanitize(
     created_at: z.coerce.date(),
     published_at: z.coerce.date().optional(),
     author: z.union([userSchema, z.string()]),
-    assets: z.array(assetSchema),
-    body_html: z.string().optional(),
-    body_text: z.string().optional(),
+    assets: z.array(assetSchema).optional(),
     mentions_count: z.number().int().optional(),
-    discussion_url: z.string().url().optional(),
     reactions: reactableSchema.optional()
   })
 );

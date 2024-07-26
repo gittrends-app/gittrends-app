@@ -13,8 +13,6 @@ function transform(edge: StargazerEdge): PartialDeep<Stargazer> {
       id: edge.node.databaseId?.valueOf(),
       login: edge.node.login,
       node_id: edge.node.id,
-      avatar_url: edge.node.avatarUrl,
-      url: edge.node.url,
       site_admin: edge.node.isSiteAdmin,
       type: edge.node.__typename
     }
@@ -27,8 +25,6 @@ type StargazerEdge = {
     id: string;
     login: string;
     databaseId: number;
-    avatarUrl: string;
-    url: string;
     __typename: string;
     isSiteAdmin: boolean;
   };
@@ -79,8 +75,6 @@ export default function (
                         id
                         login
                         databaseId
-                        avatarUrl
-                        url
                         __typename
                         isSiteAdmin
                       }

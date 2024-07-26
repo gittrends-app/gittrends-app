@@ -4,7 +4,6 @@ import userSchema from './user.js';
 
 export default zodSanitize(
   z.object({
-    url: z.string().url(),
     id: z.number().int(),
     node_id: z.string(),
     number: z.number().int(),

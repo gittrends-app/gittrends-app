@@ -24,26 +24,16 @@ export default zodSanitize(
       head: z.object({
         label: z.string(),
         ref: z.string(),
-        repo: repositorySchema.innerType().pick({ id: true, name: true, full_name: true }).optional(),
+        repo: repositorySchema.innerType().pick({ id: true, node_id: true, full_name: true }).optional(),
         sha: z.string(),
         user: z.union([userSchema, z.string()]).optional()
       }),
       base: z.object({
         label: z.string(),
         ref: z.string(),
-        repo: repositorySchema.innerType().pick({ id: true, name: true, full_name: true }).optional(),
+        repo: repositorySchema.innerType().pick({ id: true, node_id: true, full_name: true }).optional(),
         sha: z.string(),
         user: z.union([userSchema, z.string()]).optional()
-      }),
-      _links: z.object({
-        comments: z.object({ href: z.string() }),
-        commits: z.object({ href: z.string() }),
-        statuses: z.object({ href: z.string() }),
-        html: z.object({ href: z.string() }),
-        issue: z.object({ href: z.string() }),
-        review_comments: z.object({ href: z.string() }),
-        review_comment: z.object({ href: z.string() }),
-        self: z.object({ href: z.string() })
       }),
       auto_merge: z
         .object({

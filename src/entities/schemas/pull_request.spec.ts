@@ -534,7 +534,6 @@ describe('PullRequest', () => {
         changed_files: 5
       })
     ).toEqual({
-      url: 'https://api.github.com/repos/octocat/Hello-World/pulls/1347',
       id: 1,
       node_id: 'MDExOlB1bGxSZXF1ZXN0MQ==',
       number: 1347,
@@ -576,32 +575,6 @@ describe('PullRequest', () => {
         sha: '6dcb09b5b57875f334f61aebed695e2e4193db5e',
         user: expect.objectContaining({ id: 1 }),
         repo: expect.objectContaining({ id: 1296269 })
-      },
-      _links: {
-        self: {
-          href: 'https://api.github.com/repos/octocat/Hello-World/pulls/1347'
-        },
-        html: {
-          href: 'https://github.com/octocat/Hello-World/pull/1347'
-        },
-        issue: {
-          href: 'https://api.github.com/repos/octocat/Hello-World/issues/1347'
-        },
-        comments: {
-          href: 'https://api.github.com/repos/octocat/Hello-World/issues/1347/comments'
-        },
-        review_comments: {
-          href: 'https://api.github.com/repos/octocat/Hello-World/pulls/1347/comments'
-        },
-        review_comment: {
-          href: 'https://api.github.com/repos/octocat/Hello-World/pulls/comments{/number}'
-        },
-        commits: {
-          href: 'https://api.github.com/repos/octocat/Hello-World/pulls/1347/commits'
-        },
-        statuses: {
-          href: 'https://api.github.com/repos/octocat/Hello-World/statuses/6dcb09b5b57875f334f61aebed695e2e4193db5e'
-        }
       },
       author_association: 'OWNER',
       draft: false,
