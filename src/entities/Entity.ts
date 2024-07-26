@@ -263,3 +263,25 @@ export class TimelineEvent extends RepositoryResource implements Reactable {
     return { ...super.toJSON(), _issue: this._issue };
   }
 }
+
+const metadataSchema = z
+  .object({
+    entity: z.string(),
+    entity_id: z.string(),
+    page: z.union([z.string(), z.number().int()]).optional(),
+    per_page: z.number().int().optional()
+  })
+  .and(z.record(z.unknown()));
+
+export interface Metadata extends z.infer<typeof metadataSchema> {}
+export class Metadata extends Entity {
+  protected static override _schema = metadataSchema;
+
+  constructor(data: z.infer<typeof metadataSchema>) {
+    super(data);
+  }
+
+  get _id() {
+    return `${this.entity}_${this.entity_id}`;
+  }
+}
