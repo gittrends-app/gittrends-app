@@ -52,7 +52,7 @@ describe('Entities', () => {
 
     it('should serialize the entity', () => {
       const user = new EntityImpl({ id: '1' });
-      expect(user.toJSON()).toEqual({ id: '1', _id: '1', _obtained_at: user._obtained_at });
+      expect(user.toJSON()).toEqual({ id: '1', _id: '1', _entityname: 'entity_impl', _obtained_at: user._obtained_at });
     });
   });
 

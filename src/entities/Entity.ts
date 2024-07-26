@@ -2,6 +2,7 @@
 /* eslint-disable require-jsdoc */
 import cloneDeepWith from 'lodash/cloneDeepWith.js';
 import omitBy from 'lodash/omitBy.js';
+import snakeCase from 'lodash/snakeCase.js';
 import { Constructor } from 'type-fest';
 import { z } from 'zod';
 import events from './schemas/events.js';
@@ -22,8 +23,21 @@ export abstract class Entity {
   protected static _schema: z.ZodType;
   protected static _entitySchema: z.SomeZodObject;
 
-  abstract get _id(): string;
+  public static from<T extends Entity>(data: Record<string, any>) {
+    return new (this.prototype.constructor as Constructor<T>)(data);
+  }
+
+  public static validate(data: Record<string, any>): boolean {
+    return this._schema.safeParse(data).success;
+  }
+
   readonly _obtained_at!: Date;
+
+  get _entityname() {
+    return snakeCase(this.constructor.name);
+  }
+
+  abstract get _id(): string;
 
   constructor(data: Record<string, any>) {
     Object.assign(
@@ -36,14 +50,6 @@ export abstract class Entity {
     if (!this._obtained_at) this._obtained_at = new Date();
   }
 
-  public static from<T extends Entity>(data: Record<string, any>) {
-    return new (this.prototype.constructor as Constructor<T>)(data);
-  }
-
-  public static validate(data: Record<string, any>): boolean {
-    return this._schema.safeParse(data).success;
-  }
-
   public toJSON(): Record<string, any> {
     return {
       ...cloneDeepWith(
@@ -51,7 +57,7 @@ export abstract class Entity {
         (value) => (value instanceof Entity ? value.toJSON() : undefined)
       ),
       ...z
-        .object({ _id: z.string(), _obtained_at: z.coerce.date() })
+        .object({ _id: z.string(), _entityname: z.string(), _obtained_at: z.coerce.date() })
         .merge((this.constructor as typeof Entity)._entitySchema || z.object({}))
         .parse(this)
     };
@@ -204,13 +210,13 @@ export class Reaction extends RepositoryResource {
     z.object({ _reactable_name: z.string(), _reactable_id: z.string() }).partial()
   );
 
-  readonly _reactable_name!: string;
+  readonly _reactable!: string;
   readonly _reactable_id!: string;
 
-  constructor(data: Record<string, any>, props: { repository: string; reactable_name: string; reactable_id: string }) {
-    super(data, props);
-    this._reactable_name = props.reactable_name;
-    this._reactable_id = props.reactable_id;
+  constructor(data: Record<string, any>, props: { reactable: RepositoryResource & Reactable }) {
+    super(data, { repository: props.reactable._repository });
+    this._reactable = props.reactable._entityname;
+    this._reactable_id = props.reactable._id;
   }
 
   get _id() {
@@ -218,7 +224,7 @@ export class Reaction extends RepositoryResource {
   }
 
   override toJSON() {
-    return { ...super.toJSON(), _reactable_name: this._reactable_name, _reactable_id: this._reactable_id };
+    return { ...super.toJSON(), _reactable_name: this._reactable, _reactable_id: this._reactable_id };
   }
 }
 

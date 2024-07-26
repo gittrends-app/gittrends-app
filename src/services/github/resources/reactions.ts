@@ -33,11 +33,7 @@ export default async function <T extends Reactable & RepositoryResource>(
             client,
             url: 'GET /repositories/:repo/releases/:release/reactions',
             Entity: Reaction,
-            metadata: {
-              repository: entity._repository,
-              reactable_name: entity.constructor.name,
-              reactable_id: entity._id
-            }
+            metadata: { reactable: entity }
           },
           { ...options, repo: options.repo.id, release: entity.id }
         );
@@ -49,11 +45,7 @@ export default async function <T extends Reactable & RepositoryResource>(
             client,
             url: 'GET /repositories/:repo/issues/:number/reactions',
             Entity: Reaction,
-            metadata: {
-              repository: entity._repository,
-              reactable_name: entity.constructor.name,
-              reactable_id: entity._id
-            }
+            metadata: { reactable: entity }
           },
           { ...options, repo: options.repo.id, number: entity.number }
         );
@@ -70,11 +62,7 @@ export default async function <T extends Reactable & RepositoryResource>(
             client,
             url,
             Entity: Reaction,
-            metadata: {
-              repository: entity._repository,
-              reactable_name: entity.constructor.name,
-              reactable_id: entity._id
-            }
+            metadata: { reactable: entity }
           },
           { ...options, repo: options.repo.id, id: (entity.data as any).id }
         );
