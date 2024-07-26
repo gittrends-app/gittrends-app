@@ -1,5 +1,5 @@
 import { Class } from 'type-fest';
-import { Issue, Metadata, Repository, RepositoryResource, User } from '../../entities/Entity.js';
+import { Issue, Repository, RepositoryResource, User } from '../../entities/Entity.js';
 import { IterableEntity, ResourceParams, SearchOptions, Service } from '../service.js';
 import { Storage } from './storage.js';
 
@@ -24,19 +24,13 @@ export class StorageService implements Service {
 
   async user(loginOrId: string | number): Promise<User | null> {
     const user = await this.service.user(loginOrId);
-    if (user) {
-      await this.storage.create(User).save(user, true);
-      await this.storage.create(Metadata).save(new Metadata({ entity: user._entityname, entity_id: user._id }), true);
-    }
+    if (user) await this.storage.create(User).save(user, true);
     return user;
   }
 
   async repository(ownerOrId: string | number, name?: string): Promise<Repository | null> {
     const repo = await this.service.repository(ownerOrId, name);
-    if (repo) {
-      await this.storage.create(Repository).save(repo, true);
-      await this.storage.create(Metadata).save(new Metadata({ entity: repo._entityname, entity_id: repo._id }), true);
-    }
+    if (repo) await this.storage.create(Repository).save(repo, true);
     return repo;
   }
 
@@ -48,15 +42,7 @@ export class StorageService implements Service {
     return {
       [Symbol.asyncIterator]: async function* () {
         for await (const res of it) {
-          if (res.data.length) {
-            await storage.create(Entity).save(res.data);
-            await storage
-              .create(Metadata)
-              .save(
-                new Metadata({ entity: Entity.prototype._entityname, entity_id: opts.repo.node_id, ...res.params }),
-                true
-              );
-          }
+          if (res.data.length) await storage.create(Entity).save(res.data);
           yield res;
         }
       }

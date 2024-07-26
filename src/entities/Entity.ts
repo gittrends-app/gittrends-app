@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-declaration-merging */
 /* eslint-disable require-jsdoc */
 import cloneDeepWith from 'lodash/cloneDeepWith.js';
+import omit from 'lodash/omit.js';
 import omitBy from 'lodash/omitBy.js';
 import snakeCase from 'lodash/snakeCase.js';
 import { Constructor } from 'type-fest';
@@ -42,10 +43,13 @@ export abstract class Entity {
   constructor(data: Record<string, any>) {
     Object.assign(
       this,
-      (this.constructor as typeof Entity)._schema
-        .and(z.object({ _obtained_at: z.coerce.date().optional() }))
-        .and((this.constructor as typeof Entity)._entitySchema || z.object({}))
-        .parse(data)
+      omit(
+        (this.constructor as typeof Entity)._schema
+          .and(z.object({ _obtained_at: z.coerce.date().optional() }))
+          .and((this.constructor as typeof Entity)._entitySchema || z.object({}))
+          .parse(data),
+        ['_id', '_entityname']
+      )
     );
     if (!this._obtained_at) this._obtained_at = new Date();
   }
@@ -261,27 +265,5 @@ export class TimelineEvent extends RepositoryResource implements Reactable {
 
   override toJSON() {
     return { ...super.toJSON(), _issue: this._issue };
-  }
-}
-
-const metadataSchema = z
-  .object({
-    entity: z.string(),
-    entity_id: z.string(),
-    page: z.union([z.string(), z.number().int()]).optional(),
-    per_page: z.number().int().optional()
-  })
-  .and(z.record(z.unknown()));
-
-export interface Metadata extends z.infer<typeof metadataSchema> {}
-export class Metadata extends Entity {
-  protected static override _schema = metadataSchema;
-
-  constructor(data: z.infer<typeof metadataSchema>) {
-    super(data);
-  }
-
-  get _id() {
-    return `${this.entity}_${this.entity_id}`;
   }
 }
