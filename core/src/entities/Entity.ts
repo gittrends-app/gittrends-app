@@ -225,18 +225,16 @@ export class Reaction extends RepositoryResource {
 /**
  * Represents a timeline event entity.
  */
-export type TimelineEventSchema = z.infer<typeof events>;
-export interface TimelineEvent extends Record<string, unknown> {}
+export interface TimelineEvent extends Pick<z.infer<typeof events>, 'event'>, Record<string, unknown> {}
 export class TimelineEvent extends RepositoryResource implements Reactable {
   protected static override _schema = events;
 
   readonly _issue!: string;
-  readonly event!: z.infer<typeof events>['event'];
 
   _reactions: Reaction[] = [];
 
   get _hasReactions() {
-    return ((this.event as any).reactions?.total_count || 0) > 0;
+    return ((this as any).reactions?.total_count || 0) > 0;
   }
 
   constructor(data: Record<string, any>, props: { repository: string; issue: string }) {

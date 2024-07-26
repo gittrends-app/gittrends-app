@@ -64,7 +64,7 @@ export default async function <T extends Reactable & RepositoryResource>(
             Entity: Reaction,
             metadata: { reactable: entity }
           },
-          { ...options, repo: options.repo.id, id: (entity.data as any).id }
+          { ...options, repo: options.repo.id, id: (entity as any).id }
         );
         break;
       }
