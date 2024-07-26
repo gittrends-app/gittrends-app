@@ -1,56 +1,23 @@
 {
-  "name": "@hsborges/ts-template",
+  "name": "@gittrends-app/repo",
   "version": "0.0.1",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "type": "module",
   "license": "MIT",
+  "private": true,
   "engines": {
     "node": ">=18.0.0"
   },
   "scripts": {
-    "lint": "eslint src --ext .ts",
-    "prepare": "husky",
-    "build": "tsc",
-    "tsx": "tsx -r \"dotenv-flow/config\"",
-    "dev": "tsx  -r \"dotenv-flow/config\" src/index.ts",
-    "start": "node -r \"dotenv-flow/config\" dist/index.js",
-    "jest": "jest --runInBand",
-    "test": "jest --runInBand",
-    "test:coverage": "jest --collect-coverage",
-    "verify": "run-s lint build test",
-    "prettier": "prettier --write src"
+    "prepare": "husky"
   },
-  "dependencies": {
-    "@inquirer/prompts": "^5.1.3",
-    "@octokit/graphql": "^8.1.1",
-    "@octokit/plugin-retry": "^7.1.1",
-    "@octokit/plugin-throttling": "^9.3.0",
-    "@octokit/rest": "^21.0.0",
-    "@octokit/types": "^13.5.0",
-    "chalk": "^5.3.0",
-    "consola": "^3.2.3",
-    "lodash": "^4.17.21",
-    "mongodb": "^6.8.0",
-    "object-hash": "^3.0.0",
-    "pluralize": "^8.0.0",
-    "stringify-object": "^5.0.0",
-    "treeify": "^1.1.0",
-    "ts-mixer": "^6.0.4",
-    "type-fest": "^4.21.0",
-    "zod": "^3.23.8"
-  },
+  "workspaces": [
+    "core",
+    "cli"
+  ],
   "devDependencies": {
     "@jest/globals": "^29.7.0",
     "@tsconfig/node18": "^18.2.4",
     "@types/jest": "^29.5.10",
-    "@types/lodash": "^4.17.6",
-    "@types/mongodb": "^4.0.7",
     "@types/node": "^20.10.0",
-    "@types/object-hash": "^3.0.6",
-    "@types/pluralize": "^0.0.33",
-    "@types/stringify-object": "^4.0.5",
-    "@types/treeify": "^1.0.3",
     "@typescript-eslint/eslint-plugin": "^7.16.0",
     "@typescript-eslint/parser": "^7.16.0",
     "commitizen": "^4.3.0",
@@ -66,8 +33,10 @@
     "npm-run-all": "^4.1.5",
     "prettier": "^3.1.0",
     "prettier-plugin-organize-imports": "^4.0.0",
+    "shx": "^0.3.4",
     "ts-jest": "^29.2.0",
     "tsx": "^4.16.2",
+    "type-fest": "^4.23.0",
     "typescript": "^5.3.2"
   },
   "config": {

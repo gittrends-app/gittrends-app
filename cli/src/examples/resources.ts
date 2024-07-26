@@ -1,15 +1,12 @@
+import { Entity, Issue, Release, Stargazer, Tag, User, Watcher } from '@/core/entities/Entity.js';
+import { GithubClient, GithubService, IterableEntity, Service, StorageService } from '@/core/services/index.js';
+import { MongoStorage } from '@/db/mongo-storage.js';
+import env from '@/helpers/env.js';
 import { checkbox, input } from '@inquirer/prompts';
 import chalk from 'chalk';
 import consola from 'consola';
 import { MongoClient } from 'mongodb';
 import { ArrayValues } from 'type-fest';
-import { Entity, Issue, Release, Stargazer, Tag, User, Watcher } from '../entities/Entity.js';
-import env from '../env.js';
-import { GithubClient } from '../services/github/client.js';
-import { GithubService } from '../services/github/service.js';
-import { IterableEntity, Service } from '../services/service.js';
-import { MongoStorage } from '../services/storage/mongo.js';
-import { StorageService } from '../services/storage/service.js';
 
 (async () => {
   const conn = await MongoClient.connect('mongodb://localhost:27017');

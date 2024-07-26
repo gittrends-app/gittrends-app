@@ -1,7 +1,7 @@
+import { Entity, User } from '@/core/entities/Entity.js';
 import cloneDeep from 'lodash/cloneDeep.js';
 import forIn from 'lodash/forIn.js';
 import isPlainObject from 'lodash/isPlainObject.js';
-import { Entity, User } from '../entities/Entity.js';
 
 /**
  *  Extracts users from an entity.

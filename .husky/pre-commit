@@ -1,1 +1,1 @@
-npm run verify
+yarn workspaces run verify

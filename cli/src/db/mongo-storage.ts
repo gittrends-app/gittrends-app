@@ -1,10 +1,10 @@
+import { Entity, Issue, Reaction, TimelineEvent, User } from '@/core/entities/Entity.js';
+import { EntityStorage, Storage } from '@/core/services/index.js';
+import { extract } from '@/helpers/extract.js';
 import snakeCase from 'lodash/snakeCase.js';
 import { Db } from 'mongodb';
 import pluralize from 'pluralize';
 import { Class } from 'type-fest';
-import { Entity, Issue, Reaction, TimelineEvent, User } from '../../entities/Entity.js';
-import { extract } from '../../helpers/extract.js';
-import { EntityStorage, Storage } from './storage.js';
 
 /**
  * Mongo storage

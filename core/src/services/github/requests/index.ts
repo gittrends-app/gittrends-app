@@ -1,8 +1,5 @@
 import { OctokitResponse } from '@octokit/types';
-import consola from 'consola';
-import stringifyObject from 'stringify-object';
 import { Constructor } from 'type-fest';
-import { ZodError } from 'zod';
 import { IterableEntity } from '../../service.js';
 import { GithubClient } from '../client.js';
 import { IterableEndpoints, ResourceEndpoints } from './endpoints.js';
@@ -61,13 +58,7 @@ export function iterator<R extends keyof IterableEndpoints>(
 
         yield {
           data: response.data.map((data: Record<string, any>) => {
-            try {
-              return new resource.Entity(data, resource.metadata);
-            } catch (error: any) {
-              if (error instanceof ZodError)
-                consola.error(`${error.message || error}: `, stringifyObject(data, { indent: '  ' }));
-              throw error;
-            }
+            return new resource.Entity(data, resource.metadata);
           }),
           params: { ...requestParams, page: currentPage++, per_page: perPage || 100 }
         };

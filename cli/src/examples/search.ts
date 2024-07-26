@@ -1,8 +1,6 @@
+import { GithubClient, GithubService, Service } from '@/core/services/index.js';
+import env from '@/helpers/env.js';
 import consola from 'consola';
-import env from '../env.js';
-import { GithubClient } from '../services/github/client.js';
-import { GithubService } from '../services/github/service.js';
-import { Service } from '../services/service.js';
 
 (async () => {
   consola.info('Initializing the Github service...');

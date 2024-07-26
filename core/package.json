@@ -1,0 +1,41 @@
+{
+  "name": "@gittrends-app/core",
+  "version": "0.0.1",
+  "main": "./dist/index.js",
+  "exports": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "lint": "eslint --ext .ts ./src",
+    "compile": "tsc --build",
+    "build:clean": "shx rm -rf ./dist tsconfig.tsbuildinfo",
+    "build": "run-s build:clean compile",
+    "jest": "jest --runInBand",
+    "jest:coverage": "jest --runInBand --collect-coverage",
+    "verify": "run-s lint build jest",
+    "prettier": "prettier --write src"
+  },
+  "dependencies": {
+    "@octokit/core": "^6.1.2",
+    "@octokit/graphql": "^8.1.1",
+    "@octokit/plugin-retry": "^7.1.1",
+    "@octokit/plugin-throttling": "^9.3.0",
+    "@octokit/rest": "^21.0.0",
+    "@octokit/types": "^13.5.0",
+    "consola": "^3.2.3",
+    "lodash": "^4.17.21",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/lodash": "^4.17.6"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
+  }
+}

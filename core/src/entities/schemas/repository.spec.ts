@@ -1,5 +1,5 @@
 import { describe, expect, it } from '@jest/globals';
-import repositorySchema from './repository';
+import repositorySchema from './repository.js';
 
 describe('Repository entity', () => {
   const baseFields = {

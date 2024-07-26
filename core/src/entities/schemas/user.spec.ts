@@ -1,5 +1,5 @@
 import { describe, expect, it } from '@jest/globals';
-import userSchema from './user';
+import userSchema from './user.js';
 
 describe('User entity', () => {
   const baseFields = {

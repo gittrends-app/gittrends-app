@@ -1,16 +1,13 @@
 /* eslint-disable require-jsdoc */
 import { describe, expect, it } from '@jest/globals';
 import { z, ZodError } from 'zod';
-import { Entity, Reactable, Reaction } from './Entity';
-import reactable from './schemas/reactable';
+import { Entity, Reactable, Reaction } from './Entity.js';
+import reactable from './schemas/reactable.js';
 
 describe('Entities', () => {
   describe('Entity', () => {
     class EntityImpl extends Entity {
       protected static override _schema = z.object({ id: z.string() });
-      protected static override _entitySchema = z.object({ _node_id: z.string().optional() });
-
-      readonly _node_id!: string;
 
       constructor(data: Record<string, any>) {
         super(data);
@@ -40,14 +37,6 @@ describe('Entities', () => {
       user = EntityImpl.from({ id: '1' });
       expect(user).toHaveProperty('_id', '1');
       expect(user).toHaveProperty('_obtained_at', expect.any(Date));
-    });
-
-    it('should add schema properties to the entity', () => {
-      expect(() => new EntityImpl({ id: '1', _node_id: 2 })).toThrowError(ZodError);
-
-      const user = new EntityImpl({ id: '1', _node_id: '2' });
-      expect(user).toHaveProperty('id', '1');
-      expect(user).toHaveProperty('_node_id', '2');
     });
 
     it('should serialize the entity', () => {

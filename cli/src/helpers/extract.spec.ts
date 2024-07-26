@@ -2,9 +2,8 @@
 /* eslint-disable @typescript-eslint/no-unsafe-declaration-merging */
 import { describe, expect, it } from '@jest/globals';
 
+import { Entity } from '@/core/entities/Entity.js';
 import { z } from 'zod';
-import { Entity } from '../entities/Entity.js';
-import userSchema from '../entities/schemas/user.js';
 import { extract } from './extract.js';
 
 describe('extract', () => {
@@ -42,7 +41,18 @@ describe('extract', () => {
     });
 
     it('should extract data and users from entities', () => {
-      const schema = z.object({ user: z.union([userSchema, z.string()]) });
+      const schema = z.object({
+        user: z.union([
+          z.object({
+            login: z.string(),
+            id: z.number().int(),
+            node_id: z.string(),
+            type: z.string(),
+            site_admin: z.boolean()
+          }),
+          z.string()
+        ])
+      });
       interface EntityImpl extends z.infer<typeof schema> {}
       class EntityImpl extends Entity {
         protected static override _schema = schema;

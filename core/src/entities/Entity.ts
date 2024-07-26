@@ -22,7 +22,6 @@ import watcher from './schemas/watcher.js';
  */
 export abstract class Entity {
   protected static _schema: z.ZodType;
-  protected static _entitySchema: z.SomeZodObject;
 
   public static from<T extends Entity>(data: Record<string, any>) {
     return new (this.prototype.constructor as Constructor<T>)(data);
@@ -46,7 +45,6 @@ export abstract class Entity {
       omit(
         (this.constructor as typeof Entity)._schema
           .and(z.object({ _obtained_at: z.coerce.date().optional() }))
-          .and((this.constructor as typeof Entity)._entitySchema || z.object({}))
           .parse(data),
         ['_id', '_entityname']
       )
@@ -60,10 +58,7 @@ export abstract class Entity {
         omitBy(this, (_, key) => key.startsWith('_')),
         (value) => (value instanceof Entity ? value.toJSON() : undefined)
       ),
-      ...z
-        .object({ _id: z.string(), _entityname: z.string(), _obtained_at: z.coerce.date() })
-        .merge((this.constructor as typeof Entity)._entitySchema || z.object({}))
-        .parse(this)
+      ...z.object({ _id: z.string(), _entityname: z.string(), _obtained_at: z.coerce.date() }).parse(this)
     };
   }
 }
@@ -96,8 +91,6 @@ export class Repository extends Entity {
  * Represents an abstract repository resource.
  */
 export abstract class RepositoryResource extends Entity {
-  protected static override _entitySchema = z.object({ _repository: z.string() }).partial();
-
   readonly _repository: string;
 
   constructor(data: Record<string, any>, props: { repository: string }) {
@@ -210,9 +203,6 @@ export class PullRequest extends Issue {
 export interface Reaction extends z.infer<typeof reaction> {}
 export class Reaction extends RepositoryResource {
   protected static override _schema = reaction;
-  protected static override _entitySchema = RepositoryResource._entitySchema.merge(
-    z.object({ _reactable_name: z.string(), _reactable_id: z.string() }).partial()
-  );
 
   readonly _reactable!: string;
   readonly _reactable_id!: string;
@@ -239,9 +229,6 @@ export type TimelineEventSchema = z.infer<typeof events>;
 export interface TimelineEvent extends Record<string, unknown> {}
 export class TimelineEvent extends RepositoryResource implements Reactable {
   protected static override _schema = events;
-  protected static override _entitySchema = RepositoryResource._entitySchema.merge(
-    z.object({ _issue: z.string() }).partial()
-  );
 
   readonly _issue!: string;
   readonly event!: z.infer<typeof events>['event'];
