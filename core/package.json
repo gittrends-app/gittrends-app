@@ -16,7 +16,7 @@
     "build": "run-s build:clean compile",
     "jest": "jest --runInBand",
     "jest:coverage": "jest --runInBand --collect-coverage",
-    "verify": "run-s lint build jest",
+    "verify": "run-p lint build jest",
     "prettier": "prettier --write src"
   },
   "dependencies": {
