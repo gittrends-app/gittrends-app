@@ -4,7 +4,7 @@ import cloneDeepWith from 'lodash/cloneDeepWith.js';
 import omit from 'lodash/omit.js';
 import omitBy from 'lodash/omitBy.js';
 import snakeCase from 'lodash/snakeCase.js';
-import { Constructor } from 'type-fest';
+import { Class, Constructor, MergeExclusive } from 'type-fest';
 import { z } from 'zod';
 import events from './schemas/events.js';
 import issue from './schemas/issue.js';
@@ -84,6 +84,41 @@ export class Repository extends Entity {
 
   get _id() {
     return this.node_id;
+  }
+}
+
+const metadataSchema = z
+  .object({
+    entity: z.string(),
+    entity_id: z.string(),
+    updated_at: z.date().optional()
+  })
+  .passthrough();
+
+/**
+ * Represents a metadata entity.
+ */
+export interface Metadata extends z.infer<typeof metadataSchema> {}
+export class Metadata extends Entity {
+  protected static override _schema = metadataSchema;
+
+  constructor(
+    data: MergeExclusive<{ entity: Entity }, { entity: Class<RepositoryResource>; repository: string }> &
+      Record<string, unknown>
+  ) {
+    const { entity, repository, ...params } = data;
+    if (entity instanceof Entity) {
+      super({ entity: entity._entityname, entity_id: entity._id });
+    } else {
+      super({ entity: entity.prototype._entityname, entity_id: repository });
+    }
+
+    this.updated_at = this.updated_at || new Date();
+    Object.assign(this, params);
+  }
+
+  get _id() {
+    return `${this.entity}_${this.entity_id}`;
   }
 }
 

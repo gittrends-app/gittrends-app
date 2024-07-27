@@ -1,5 +1,5 @@
 import { RepositoryResource } from '../../../entities/Entity.js';
-import { IterableEntity, PageableParams } from '../../service.js';
+import { Iterable, PageableParams } from '../../service.js';
 import { GithubClient } from '../client.js';
 import issues from './issues.js';
 import releases from './releases.js';
@@ -16,4 +16,4 @@ export default {
   stargazers,
   releases,
   issues
-} satisfies Record<string, (client: GithubClient, opts: ResourcesParams) => IterableEntity<RepositoryResource>>;
+} satisfies Record<string, (client: GithubClient, opts: ResourcesParams) => Iterable<RepositoryResource>>;

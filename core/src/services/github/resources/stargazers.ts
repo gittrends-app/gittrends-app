@@ -1,6 +1,6 @@
 import { PartialDeep } from 'type-fest';
 import { Stargazer } from '../../../entities/Entity.js';
-import { IterableEntity, PageableParams } from '../../service.js';
+import { Iterable, PageableParams } from '../../service.js';
 import { GithubClient } from '../client.js';
 
 /**
@@ -48,7 +48,7 @@ type StargazersQuery = {
 export default function (
   client: GithubClient,
   options: PageableParams & { repo: { id: number; node_id: string } }
-): IterableEntity<Stargazer> {
+): Iterable<Stargazer> {
   const { repo, page, per_page: perPage } = options;
 
   return {
@@ -93,12 +93,16 @@ export default function (
           .map((edge) => edge && transform(edge))
           .map((data) => new Stargazer(data, { repository: repo.node_id }));
 
-        metadata.endCursor = repository.stargazers.pageInfo.endCursor || undefined;
+        metadata.endCursor = repository.stargazers.pageInfo.endCursor || metadata.endCursor;
         metadata.hasNextPage = repository.stargazers.pageInfo.hasNextPage || false;
 
         yield {
           data: stars,
-          params: { repo, page: metadata.endCursor }
+          params: {
+            page: metadata.endCursor,
+            per_page: perPage || 100,
+            has_more: metadata.hasNextPage
+          }
         };
       } while (metadata.hasNextPage);
     }

@@ -1,18 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import min from 'lodash/min.js';
 import { Class } from 'type-fest';
-import {
-  Issue,
-  PullRequest,
-  Release,
-  Repository,
-  RepositoryResource,
-  Stargazer,
-  Tag,
-  User,
-  Watcher
-} from '../../entities/Entity.js';
-import { IterableEntity, ResourceParams, SearchOptions, Service } from '../service.js';
+import { Issue, PullRequest, Release, Repository, Stargazer, Tag, User, Watcher } from '../../entities/Entity.js';
+import { Iterable, ResourceParams, SearchOptions, Service } from '../service.js';
 import { GithubClient } from './client.js';
 import { request } from './requests/index.js';
 import resources from './resources/index.js';
@@ -30,7 +20,7 @@ export class GithubService implements Service {
   search(
     total: number,
     opts?: SearchOptions
-  ): IterableEntity<Repository, { page: number; per_page: number; count: number } & SearchOptions> {
+  ): Iterable<Repository, { page: number; per_page: number; count: number } & SearchOptions> {
     const { language } = opts || {};
 
     let page = 1;
@@ -69,7 +59,14 @@ export class GithubService implements Service {
 
             yield {
               data: _repos,
-              params: { page: page++, per_page: 100, count, minStargazers, maxStargazers }
+              params: {
+                has_more: _repos.length === 100,
+                page: page++,
+                per_page: 100,
+                count,
+                minStargazers,
+                maxStargazers
+              }
             };
 
             if (count >= total) return;
@@ -97,8 +94,12 @@ export class GithubService implements Service {
     return request({ client: this.client, url, Entity: Repository }, args as any).then((repo) => repo || null);
   }
 
-  resource(Entity: Class<Issue>, opts: ResourceParams & { since?: Date }): IterableEntity<Issue, { since?: Date }>;
-  resource(Entity: Class<RepositoryResource>, opts: ResourceParams): IterableEntity<RepositoryResource> {
+  resource(Entity: Class<Tag>, opts: ResourceParams): Iterable<Tag>;
+  resource(Entity: Class<Release>, opts: ResourceParams): Iterable<Release>;
+  resource(Entity: Class<Stargazer>, opts: ResourceParams): Iterable<Stargazer>;
+  resource(Entity: Class<Watcher>, opts: ResourceParams): Iterable<Watcher>;
+  resource(Entity: Class<Issue>, opts: ResourceParams & { since?: Date }): Iterable<Issue, { since?: Date }>;
+  resource(Entity: Class<any>, opts: ResourceParams): Iterable<any> {
     switch (Entity.name) {
       case Stargazer.name:
         return resources.stargazers(this.client, opts);

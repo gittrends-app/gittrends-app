@@ -1,5 +1,5 @@
 import { Class } from 'type-fest';
-import { Entity, Issue, Repository, RepositoryResource, User } from '../entities/Entity.js';
+import { Entity, Issue, Release, Repository, Stargazer, Tag, User, Watcher } from '../entities/Entity.js';
 
 export type PageableParams = {
   page?: number | string;
@@ -7,9 +7,9 @@ export type PageableParams = {
   [key: string]: unknown;
 };
 
-export type IterableEntity<T extends Entity, P extends object = object> = AsyncIterable<{
+export type Iterable<T extends Entity, P extends object = object> = AsyncIterable<{
   data: T[];
-  params: PageableParams & P;
+  params: { has_more: boolean } & PageableParams & P;
 }>;
 
 export type SearchOptions = {
@@ -26,11 +26,14 @@ export interface Service {
   search(
     total: number,
     params?: SearchOptions
-  ): IterableEntity<Repository, { page: number; per_page: number; count: number } & SearchOptions>;
+  ): Iterable<Repository, { page: number; per_page: number; count: number } & SearchOptions>;
 
   user(loginOrId: string | number): Promise<User | null>;
   repository(ownerOrId: string | number, name?: string): Promise<Repository | null>;
 
-  resource(Entity: Class<Issue>, opts: ResourceParams & { since?: Date }): IterableEntity<Issue, { since?: Date }>;
-  resource<E extends RepositoryResource>(Entity: Class<E>, opts: ResourceParams): IterableEntity<E>;
+  resource(Entity: Class<Tag>, opts: ResourceParams): Iterable<Tag>;
+  resource(Entity: Class<Release>, opts: ResourceParams): Iterable<Release>;
+  resource(Entity: Class<Watcher>, opts: ResourceParams): Iterable<Watcher>;
+  resource(Entity: Class<Stargazer>, opts: ResourceParams): Iterable<Stargazer>;
+  resource(Entity: Class<Issue>, opts: ResourceParams & { since?: Date }): Iterable<Issue, { since?: Date }>;
 }

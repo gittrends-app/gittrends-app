@@ -1,5 +1,5 @@
 import { Entity, Issue, Release, Stargazer, Tag, User, Watcher } from '@/core/entities/Entity.js';
-import { GithubClient, GithubService, IterableEntity, Service, StorageService } from '@/core/services/index.js';
+import { GithubClient, GithubService, Iterable, StorageService } from '@/core/services/index.js';
 import { MongoStorage } from '@/db/mongo-storage.js';
 import env from '@/helpers/env.js';
 import { checkbox, input } from '@inquirer/prompts';
@@ -33,7 +33,7 @@ import { ArrayValues } from 'type-fest';
   });
 
   consola.info('Initializing the Github service...');
-  const client: Service = new StorageService(
+  const client = new StorageService(
     new GithubService(new GithubClient(env.GITHUB_API_BASE_URL, { apiToken: env.GITHUB_API_TOKEN })),
     new MongoStorage(conn.db('github'))
   );
@@ -70,7 +70,7 @@ import { ArrayValues } from 'type-fest';
     }
   } satisfies Record<
     ArrayValues<typeof resources>,
-    { it: () => IterableEntity<Entity>; print: (entity: any, index?: number) => any }
+    { it: () => Iterable<Entity>; print: (entity: any, index?: number) => any }
   >;
 
   for (const resource of resources) {

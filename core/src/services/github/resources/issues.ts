@@ -1,5 +1,5 @@
 import { Issue, PullRequest, TimelineEvent } from '../../../entities/Entity.js';
-import { IterableEntity } from '../../service.js';
+import { Iterable } from '../../service.js';
 import { GithubClient } from '../client.js';
 import { iterator, request } from '../requests/index.js';
 import { ResourcesParams } from './index.js';
@@ -45,7 +45,7 @@ function pullRequest(client: GithubClient, params: { repo: { id: number; node_id
 export default function (
   client: GithubClient,
   options: ResourcesParams & { since?: Date }
-): IterableEntity<Issue | PullRequest, { since?: Date }> {
+): Iterable<Issue | PullRequest, { since?: Date }> {
   return {
     [Symbol.asyncIterator]: async function* () {
       const it = iterator(

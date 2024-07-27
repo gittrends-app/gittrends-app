@@ -1,6 +1,6 @@
 import { OctokitResponse } from '@octokit/types';
 import { Constructor } from 'type-fest';
-import { IterableEntity } from '../../service.js';
+import { Iterable } from '../../service.js';
 import { GithubClient } from '../client.js';
 import { IterableEndpoints, ResourceEndpoints } from './endpoints.js';
 
@@ -41,8 +41,8 @@ export function iterator<R extends keyof IterableEndpoints>(
     metadata?: ConstructorParameters<Constructor<IterableEndpoints[R]['result']>>[1];
   },
   params: IterableEndpoints[R]['params']
-): IterableEntity<IterableEndpoints[R]['result']> {
-  const { page, per_page: perPage, ...requestParams } = params;
+): Iterable<IterableEndpoints[R]['result']> {
+  const { repo, page, per_page: perPage, ...requestParams } = params;
 
   return {
     [Symbol.asyncIterator]: async function* () {
@@ -51,6 +51,7 @@ export function iterator<R extends keyof IterableEndpoints>(
       do {
         const response: OctokitResponse<IterableEndpoints[R]['response']['data']> =
           await resource.client.rest.request<string>(resource.url, {
+            repo,
             page: currentPage,
             per_page: perPage || 100,
             ...requestParams
@@ -60,7 +61,12 @@ export function iterator<R extends keyof IterableEndpoints>(
           data: response.data.map((data: Record<string, any>) => {
             return new resource.Entity(data, resource.metadata);
           }),
-          params: { ...requestParams, page: currentPage++, per_page: perPage || 100 }
+          params: {
+            ...requestParams,
+            has_more: response.data.length === (perPage || 100),
+            page: currentPage++,
+            per_page: perPage || 100
+          }
         };
 
         if (response.data.length < (perPage || 100)) break;

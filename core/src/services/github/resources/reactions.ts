@@ -7,7 +7,7 @@ import {
   RepositoryResource,
   TimelineEvent
 } from '../../../entities/Entity.js';
-import { IterableEntity } from '../../service.js';
+import { Iterable } from '../../service.js';
 import { GithubClient } from '../client.js';
 import { IterableEndpoints } from '../requests/endpoints.js';
 import { iterator } from '../requests/index.js';
@@ -24,7 +24,7 @@ export default async function <T extends Reactable & RepositoryResource>(
   const reactions: Reaction[] = [];
 
   if (entity._hasReactions) {
-    let reactionsIt: IterableEntity<Reaction> | undefined;
+    let reactionsIt: Iterable<Reaction> | undefined;
 
     switch (true) {
       case entity instanceof Release:
