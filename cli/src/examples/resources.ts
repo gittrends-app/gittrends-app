@@ -1,4 +1,4 @@
-import { Entity, Issue, Release, Stargazer, Tag, User, Watcher } from '@/core/entities/Entity.js';
+import { Entity, Issue, Release, Stargazer, Tag, Watcher } from '@/core/entities/Entity.js';
 import { GithubClient, GithubService, Iterable, StorageService } from '@/core/services/index.js';
 import { MongoStorage } from '@/db/mongo-storage.js';
 import env from '@/helpers/env.js';
@@ -55,11 +55,13 @@ import { ArrayValues } from 'type-fest';
     },
     stargazers: {
       it: () => client.resource(Stargazer, { repo: repo }),
-      print: (entity: Stargazer, index) => consola.log(`${index || '?'}. ${(entity.user as User).login}`)
+      print: (entity: Stargazer, index) =>
+        consola.log(`${index || '?'}. ${typeof entity.user === 'string' ? entity.user : entity.user.login}`)
     },
     watchers: {
       it: () => client.resource(Watcher, { repo: repo }),
-      print: (entity: Watcher, index) => consola.log(`${index || '?'}. ${(entity.user as User).login}`)
+      print: (entity: Watcher, index) =>
+        consola.log(`${index || '?'}. ${typeof entity.user === 'string' ? entity.user : entity.user.login}`)
     },
     issues: {
       it: () => client.resource(Issue, { repo: repo, per_page: 25 }),

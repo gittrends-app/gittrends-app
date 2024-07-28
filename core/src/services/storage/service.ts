@@ -1,5 +1,17 @@
+import dayjs from 'dayjs';
+import pick from 'lodash/pick.js';
 import { Class } from 'type-fest';
-import { Issue, Metadata, Release, Repository, Stargazer, Tag, User, Watcher } from '../../entities/Entity.js';
+import {
+  Issue,
+  Metadata,
+  Release,
+  Repository,
+  RepositoryResource,
+  Stargazer,
+  Tag,
+  User,
+  Watcher
+} from '../../entities/Entity.js';
 import { Iterable, ResourceParams, SearchOptions, Service } from '../service.js';
 import { Storage } from './storage.js';
 
@@ -23,19 +35,40 @@ export class StorageService implements Service {
   }
 
   async user(loginOrId: string | number): Promise<User | null> {
-    const user = await this.service.user(loginOrId);
+    const metadataStorage = this.storage.create(Metadata);
+    const userStorage = this.storage.create(User);
+
+    let user = await userStorage.get(typeof loginOrId === 'string' ? { login: loginOrId } : { id: loginOrId });
     if (user) {
-      await this.storage.create(User).save(user, true);
-      await this.storage.create(Metadata).save(new Metadata({ entity: user }), true);
+      const meta = await metadataStorage.get({ entity: User.prototype._entityname, entity_id: user._id });
+      if (meta?.updated_at && dayjs(Date.now()).diff(meta.updated_at, 'days') < 7) return user;
     }
+
+    user = await this.service.user(loginOrId);
+    if (user) {
+      await userStorage.save(user, true);
+      await metadataStorage.save(new Metadata({ entity: user }), true);
+    }
+
     return user;
   }
 
   async repository(ownerOrId: string | number, name?: string): Promise<Repository | null> {
-    const repo = await this.service.repository(ownerOrId, name);
+    const metadataStorage = this.storage.create(Metadata);
+    const repoStorage = this.storage.create(Repository);
+
+    let repo = await repoStorage.get(
+      typeof ownerOrId === 'string' ? { full_name: `${ownerOrId}/${name}` } : { id: ownerOrId }
+    );
     if (repo) {
-      await this.storage.create(Repository).save(repo, true);
-      await this.storage.create(Metadata).save(new Metadata({ entity: repo }), true);
+      const meta = await metadataStorage.get({ entity: repo._entityname, entity_id: repo._id });
+      if (meta?.updated_at && dayjs(Date.now()).diff(meta.updated_at, 'days') < 7) return repo;
+    }
+
+    repo = await this.service.repository(ownerOrId, name);
+    if (repo) {
+      await repoStorage.save(repo, true);
+      await metadataStorage.save(new Metadata({ entity: repo }), true);
     }
     return repo;
   }
@@ -46,15 +79,27 @@ export class StorageService implements Service {
   resource(Entity: Class<Watcher>, opts: ResourceParams): Iterable<Watcher>;
   resource(Entity: Class<Issue>, opts: ResourceParams & { since?: Date }): Iterable<Issue, { since?: Date }>;
   resource(Entity: Class<any>, opts: ResourceParams): Iterable<any> {
-    const storage = this.storage;
-    const it = this.service.resource(Entity, opts);
+    const metadataStorage = this.storage.create(Metadata);
+    const resourceStorage = this.storage.create(Entity as Class<RepositoryResource>);
+
+    const service = this.service;
 
     return {
       [Symbol.asyncIterator]: async function* () {
+        const meta = await metadataStorage.get({ entity: Entity.prototype._entityname, entity_id: opts.repo.node_id });
+
+        if (meta) {
+          const resources = await resourceStorage.find({ _repository: opts.repo.node_id });
+          yield { data: resources, params: { has_more: true, ...pick(meta, ['page', 'per_page', 'since']) } };
+          if (!meta.has_more) return;
+        }
+
+        const it = service.resource(Entity, opts);
+
         for await (const res of it) {
           if (res.data.length) {
-            await storage.create(Entity).save(res.data);
-            await storage.create(Metadata).save(
+            await resourceStorage.save(res.data);
+            await metadataStorage.save(
               new Metadata({
                 entity: Entity,
                 repository: opts.repo.node_id,

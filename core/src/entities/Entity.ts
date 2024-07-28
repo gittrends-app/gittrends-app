@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-declaration-merging */
 /* eslint-disable require-jsdoc */
 import cloneDeepWith from 'lodash/cloneDeepWith.js';
-import omit from 'lodash/omit.js';
 import omitBy from 'lodash/omitBy.js';
 import snakeCase from 'lodash/snakeCase.js';
 import { Class, Constructor, MergeExclusive } from 'type-fest';
@@ -27,6 +26,18 @@ export abstract class Entity {
     return new (this.prototype.constructor as Constructor<T>)(data);
   }
 
+  public static create<T extends Entity>(data: Record<string, any>) {
+    const instance = Object.create(this.prototype);
+    Object.entries(data).forEach(([key, value]) => {
+      try {
+        Object.assign(instance, { [key]: value });
+      } catch (error) {
+        // do nothing
+      }
+    });
+    return instance as T;
+  }
+
   public static validate(data: Record<string, any>): boolean {
     return this._schema.safeParse(data).success;
   }
@@ -40,15 +51,18 @@ export abstract class Entity {
   abstract get _id(): string;
 
   constructor(data: Record<string, any>) {
-    Object.assign(
-      this,
-      omit(
-        (this.constructor as typeof Entity)._schema
-          .and(z.object({ _obtained_at: z.coerce.date().optional() }))
-          .parse(data),
-        ['_id', '_entityname']
-      )
-    );
+    const _data = (this.constructor as typeof Entity)._schema
+      .and(z.object({ _obtained_at: z.coerce.date().optional() }))
+      .parse(data);
+
+    for (const [key, value] of Object.entries(_data)) {
+      try {
+        Object.assign(this, { [key]: value });
+      } catch (e) {
+        // do nothign
+      }
+    }
+
     if (!this._obtained_at) this._obtained_at = new Date();
   }
 
@@ -108,13 +122,13 @@ export class Metadata extends Entity {
   ) {
     const { entity, repository, ...params } = data;
     if (entity instanceof Entity) {
-      super({ entity: entity._entityname, entity_id: entity._id });
+      super({ entity: entity._entityname, entity_id: entity._id, ...params });
+    } else if (typeof entity === 'function') {
+      super({ entity: entity.prototype._entityname, entity_id: repository, ...params });
     } else {
-      super({ entity: entity.prototype._entityname, entity_id: repository });
+      super(data);
     }
-
     this.updated_at = this.updated_at || new Date();
-    Object.assign(this, params);
   }
 
   get _id() {
