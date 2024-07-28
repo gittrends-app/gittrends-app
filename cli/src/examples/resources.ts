@@ -1,7 +1,7 @@
 import { Entity, Issue, Release, Stargazer, Tag, Watcher } from '@/core/entities/Entity.js';
 import { GithubClient, GithubService, Iterable, StorageService } from '@/core/services/index.js';
-import { MongoStorage } from '@/db/mongo-storage.js';
 import env from '@/helpers/env.js';
+import { MongoStorage } from '@/mongo/storage.js';
 import { checkbox, input } from '@inquirer/prompts';
 import chalk from 'chalk';
 import consola from 'consola';

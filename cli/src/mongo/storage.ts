@@ -37,9 +37,11 @@ export class MongoStorage implements Storage {
       get: async (params) => {
         return collection.findOne(params).then((data) => (data ? this._update((Entity as any).create(data)) : null));
       },
-      find: async (params) => {
+      find: async (params, opts) => {
         return collection
           .find(params)
+          .limit(opts?.limit || Number.MAX_SAFE_INTEGER)
+          .skip(opts?.offset || 0)
           .toArray()
           .then((data) => Promise.all(data.map((item) => this._update((Entity as any).create(item)))));
       },

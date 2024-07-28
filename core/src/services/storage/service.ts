@@ -86,15 +86,37 @@ export class StorageService implements Service {
 
     return {
       [Symbol.asyncIterator]: async function* () {
-        const meta = await metadataStorage.get({ entity: Entity.prototype._entityname, entity_id: opts.repo.node_id });
+        const params = { ...opts };
 
-        if (meta) {
-          const resources = await resourceStorage.find({ _repository: opts.repo.node_id });
-          yield { data: resources, params: { has_more: true, ...pick(meta, ['page', 'per_page', 'since']) } };
-          if (!meta.has_more) return;
+        if (!params.page) {
+          const meta = await metadataStorage.get({
+            entity: Entity.prototype._entityname,
+            entity_id: params.repo.node_id
+          });
+
+          const coreMeta = pick(meta, ['page', 'per_page', 'since']);
+
+          if (meta) {
+            let page = 0;
+            const limit = meta.per_page ? Number(meta.per_page) : 100;
+
+            while (true) {
+              const resources = await resourceStorage.find(
+                { _repository: params.repo.node_id },
+                { limit, offset: page++ * limit }
+              );
+
+              if (resources.length) yield { data: resources, params: { has_more: true, ...coreMeta } };
+              else break;
+            }
+
+            if (!meta.has_more) return;
+
+            Object.assign(params, coreMeta);
+          }
         }
 
-        const it = service.resource(Entity, opts);
+        const it = service.resource(Entity, params);
 
         for await (const res of it) {
           if (res.data.length) {
@@ -102,7 +124,7 @@ export class StorageService implements Service {
             await metadataStorage.save(
               new Metadata({
                 entity: Entity,
-                repository: opts.repo.node_id,
+                repository: params.repo.node_id,
                 ...res.params,
                 updated_at: res.params.has_more ? undefined : new Date()
               }),
