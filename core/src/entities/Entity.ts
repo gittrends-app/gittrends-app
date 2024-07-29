@@ -128,7 +128,7 @@ export class Metadata extends Entity {
     } else {
       super(data);
     }
-    this.updated_at = this.updated_at || new Date();
+    if (!('updated_at' in params)) this.updated_at = new Date();
   }
 
   get _id() {

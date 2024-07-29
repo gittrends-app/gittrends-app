@@ -22,9 +22,17 @@ export class StorageService implements Service {
   private readonly service: Service;
   private readonly storage: Storage;
 
-  constructor(service: Service, storage: Storage) {
+  private readonly validBy: number;
+
+  constructor(service: Service, storage: Storage, props?: { valid_by?: number }) {
     this.service = service;
     this.storage = storage;
+
+    this.validBy = props?.valid_by ?? 1;
+  }
+
+  private isUpdated(date: Date): boolean {
+    return dayjs().diff(date, 'days', true) < this.validBy;
   }
 
   search(
@@ -41,7 +49,7 @@ export class StorageService implements Service {
     let user = await userStorage.get(typeof loginOrId === 'string' ? { login: loginOrId } : { id: loginOrId });
     if (user) {
       const meta = await metadataStorage.get({ entity: User.prototype._entityname, entity_id: user._id });
-      if (meta?.updated_at && dayjs(Date.now()).diff(meta.updated_at, 'days') < 7) return user;
+      if (meta?.updated_at && this.isUpdated(meta.updated_at)) return user;
     }
 
     user = await this.service.user(loginOrId);
@@ -62,7 +70,7 @@ export class StorageService implements Service {
     );
     if (repo) {
       const meta = await metadataStorage.get({ entity: repo._entityname, entity_id: repo._id });
-      if (meta?.updated_at && dayjs(Date.now()).diff(meta.updated_at, 'days') < 7) return repo;
+      if (meta?.updated_at && this.isUpdated(meta.updated_at)) return repo;
     }
 
     repo = await this.service.repository(ownerOrId, name);
@@ -82,7 +90,8 @@ export class StorageService implements Service {
     const metadataStorage = this.storage.create(Metadata);
     const resourceStorage = this.storage.create(Entity as Class<RepositoryResource>);
 
-    const service = this.service;
+    const { service } = this;
+    const isUpdated = this.isUpdated.bind(this);
 
     return {
       [Symbol.asyncIterator]: async function* () {
@@ -96,7 +105,7 @@ export class StorageService implements Service {
 
           const coreMeta = pick(meta, ['page', 'per_page', 'since']);
 
-          if (meta) {
+          if (meta && (!meta.updated_at || isUpdated(meta.updated_at))) {
             let page = 0;
             const limit = meta.per_page ? Number(meta.per_page) : 100;
 

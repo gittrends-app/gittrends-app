@@ -48,6 +48,8 @@ export default function (
 ): Iterable<Issue | PullRequest, { since?: Date }> {
   return {
     [Symbol.asyncIterator]: async function* () {
+      let { since } = options;
+
       const it = iterator(
         {
           client,
@@ -61,7 +63,7 @@ export default function (
           state: 'all',
           sort: 'updated',
           direction: 'asc',
-          since: options.since?.toISOString()
+          since: since?.toISOString()
         }
       );
 
@@ -84,7 +86,9 @@ export default function (
           data[index]._reactions = await reactions(client, data[index], options);
         }
 
-        yield { data, params: { ...params, since: options.since } };
+        since = data.at(data.length - 1)?.updated_at || since;
+
+        yield { data, params: { ...params, page: 0, since } };
       }
     }
   };
