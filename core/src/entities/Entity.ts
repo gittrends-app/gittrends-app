@@ -5,7 +5,7 @@ import omitBy from 'lodash/omitBy.js';
 import snakeCase from 'lodash/snakeCase.js';
 import { Class, Constructor, MergeExclusive } from 'type-fest';
 import { z } from 'zod';
-import { errorMap } from 'zod-validation-error';
+import { errorMap, fromZodError } from 'zod-validation-error';
 import events from './schemas/events.js';
 import issue from './schemas/issue.js';
 import pr from './schemas/pull_request.js';
@@ -54,11 +54,13 @@ export abstract class Entity {
   abstract get _id(): string;
 
   constructor(data: Record<string, any>) {
-    const _data = (this.constructor as typeof Entity)._schema
+    const res = (this.constructor as typeof Entity)._schema
       .and(z.object({ _obtained_at: z.coerce.date().optional() }))
-      .parse(data);
+      .safeParse(data);
 
-    for (const [key, value] of Object.entries(_data)) {
+    if (!res.success) throw Object.assign(fromZodError(res.error, { includePath: true }), { data });
+
+    for (const [key, value] of Object.entries(res.data)) {
       try {
         Object.assign(this, { [key]: value });
       } catch (e) {

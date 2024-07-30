@@ -3,7 +3,7 @@ import { Iterable } from '../../service.js';
 import { GithubClient } from '../client.js';
 import { iterator, request } from '../requests/index.js';
 import { ResourcesParams } from './index.js';
-import reactions from './reactions.js';
+import _reactions from './reactions.js';
 
 /**
  * Get the timeline of an issue by its id
@@ -77,13 +77,13 @@ export default function (
 
           for await (const tl of timeline(client, { repo: options.repo, issue: data[index] })) {
             for (const event of tl.data) {
-              event._reactions = await reactions(client, event, options);
+              event._reactions = await _reactions(client, event, options);
             }
 
             data[index]._events = tl.data;
           }
 
-          data[index]._reactions = await reactions(client, data[index], options);
+          data[index]._reactions = await _reactions(client, data[index], options);
         }
 
         since = data.at(data.length - 1)?.updated_at || since;

@@ -40,6 +40,10 @@ export function iterator<R extends keyof IterableEndpoints>(
 ): Iterable<IterableEndpoints[R]['result']> {
   const { repo, page, per_page: perPage, ...requestParams } = params;
 
+  if (requestParams.since instanceof Date) {
+    (requestParams as any).since = requestParams.since.toISOString();
+  }
+
   return {
     [Symbol.asyncIterator]: async function* () {
       let currentPage = Math.max(Number(page) || 1, 1);

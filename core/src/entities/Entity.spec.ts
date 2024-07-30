@@ -1,6 +1,7 @@
 /* eslint-disable require-jsdoc */
 import { describe, expect, it } from '@jest/globals';
-import { z, ZodError } from 'zod';
+import { z } from 'zod';
+import { ValidationError } from 'zod-validation-error';
 import { Entity, Reactable, Reaction } from './Entity.js';
 import reactable from './schemas/reactable.js';
 
@@ -19,8 +20,8 @@ describe('Entities', () => {
     }
 
     it('should throw an error if invalid data is provided', () => {
-      expect(() => new EntityImpl({})).toThrowError(ZodError);
-      expect(() => EntityImpl.from({})).toThrowError(ZodError);
+      expect(() => new EntityImpl({})).toThrowError(ValidationError);
+      expect(() => EntityImpl.from({})).toThrowError(ValidationError);
     });
 
     it('should allow data validation', () => {

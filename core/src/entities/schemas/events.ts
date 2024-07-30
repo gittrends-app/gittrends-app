@@ -205,7 +205,7 @@ const commentedEventSchema = z.object({
 
 const timelineCrossReferencesEventSchema = z.object({
   event: z.literal('cross-referenced'),
-  actor: z.union([userSchema, z.string()]),
+  actor: z.union([userSchema, z.string()]).optional(),
   created_at: z.coerce.date(),
   updated_at: z.coerce.date(),
   source: z.object({
@@ -277,37 +277,44 @@ const reviewedEventSchema = z.object({
   reactions: reactableSchema.optional()
 });
 
+const lineComment = z.object({
+  pull_request_review_id: z.number().int().optional(),
+  id: z.number().int(),
+  node_id: z.string(),
+  diff_hunk: z.string(),
+  path: z.string(),
+  position: z.number().int().optional(),
+  original_position: z.number().int(),
+  commit_id: z.string(),
+  original_commit_id: z.string(),
+  in_reply_to_id: z.number().int().optional(),
+  user: z.union([userSchema, z.string()]),
+  body: z.string(),
+  created_at: z.string(),
+  updated_at: z.string(),
+  author_association: z.enum([
+    'COLLABORATOR',
+    'CONTRIBUTOR',
+    'FIRST_TIMER',
+    'FIRST_TIME_CONTRIBUTOR',
+    'MANNEQUIN',
+    'MEMBER',
+    'NONE',
+    'OWNER'
+  ]),
+  start_line: z.number().int().optional(),
+  original_start_line: z.number().int().optional(),
+  start_side: z.enum(['LEFT', 'RIGHT']).optional(),
+  line: z.number().int().optional(),
+  original_line: z.number().int().optional(),
+  side: z.enum(['LEFT', 'RIGHT']).optional(),
+  reactions: reactableSchema.optional()
+});
+
 const lineCommentedSchema = z.object({
   event: z.literal('line-commented'),
   node_id: z.string(),
-  comments: z
-    .array(
-      z.object({
-        pull_request_review_id: z.number().int().optional(),
-        id: z.number().int(),
-        node_id: z.string(),
-        diff_hunk: z.string(),
-        path: z.string(),
-        position: z.number().int().optional(),
-        original_position: z.number().int(),
-        commit_id: z.string(),
-        original_commit_id: z.string(),
-        in_reply_to_id: z.number().int().optional(),
-        user: z.union([userSchema, z.string()]),
-        body: z.string(),
-        created_at: z.string(),
-        updated_at: z.string(),
-        author_association: z.any(),
-        start_line: z.number().int().optional(),
-        original_start_line: z.number().int().optional(),
-        start_side: z.enum(['LEFT', 'RIGHT']).optional(),
-        line: z.number().int().optional(),
-        original_line: z.number().int().optional(),
-        side: z.enum(['LEFT', 'RIGHT']).optional(),
-        reactions: reactableSchema.optional()
-      })
-    )
-    .optional()
+  comments: z.array(lineComment).optional()
 });
 // ====== NON STANDARD EVENTS ======
 
@@ -344,7 +351,9 @@ export default zodSanitize(
     base('automatic_base_change_failed'),
     base('automatic_base_change_succeeded'),
     base('base_ref_changed'),
+    base('base_ref_force_pushed'),
     base('closed'),
+    base('comment_deleted'),
     base('connected'),
     base('convert_to_draft'),
     base('converted_to_discussion'),
