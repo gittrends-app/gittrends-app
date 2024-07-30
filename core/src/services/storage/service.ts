@@ -105,7 +105,7 @@ export class StorageService implements Service {
 
           const coreMeta = pick(meta, ['page', 'per_page', 'since']);
 
-          if (meta && (!meta.updated_at || isUpdated(meta.updated_at))) {
+          if (meta && (!meta.updated_at || isUpdated(meta.updated_at) || Entity === Stargazer || Entity === Issue)) {
             let page = 0;
             const limit = meta.per_page ? Number(meta.per_page) : 100;
 
