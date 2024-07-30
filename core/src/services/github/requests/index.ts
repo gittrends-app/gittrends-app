@@ -22,10 +22,6 @@ export async function request<K extends keyof ResourceEndpoints>(
     .then((response: OctokitResponse<ResourceEndpoints[K]['response']['data']>) => {
       if (response.status !== 200) throw new Error(`Failed to get ${resource.url} - ${response.status}`);
       return new resource.Entity(response.data, resource.metadata);
-    })
-    .catch((error) => {
-      if (error.response.status === 404) return undefined;
-      else throw error;
     });
 }
 

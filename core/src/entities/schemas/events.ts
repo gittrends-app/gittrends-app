@@ -276,6 +276,39 @@ const reviewedEventSchema = z.object({
   ]),
   reactions: reactableSchema.optional()
 });
+
+const lineCommentedSchema = z.object({
+  event: z.literal('line-commented'),
+  node_id: z.string(),
+  comments: z
+    .array(
+      z.object({
+        pull_request_review_id: z.number().int().optional(),
+        id: z.number().int(),
+        node_id: z.string(),
+        diff_hunk: z.string(),
+        path: z.string(),
+        position: z.number().int().optional(),
+        original_position: z.number().int(),
+        commit_id: z.string(),
+        original_commit_id: z.string(),
+        in_reply_to_id: z.number().int().optional(),
+        user: z.union([userSchema, z.string()]),
+        body: z.string(),
+        created_at: z.string(),
+        updated_at: z.string(),
+        author_association: z.any(),
+        start_line: z.number().int().optional(),
+        original_start_line: z.number().int().optional(),
+        start_side: z.enum(['LEFT', 'RIGHT']).optional(),
+        line: z.number().int().optional(),
+        original_line: z.number().int().optional(),
+        side: z.enum(['LEFT', 'RIGHT']).optional(),
+        reactions: reactableSchema.optional()
+      })
+    )
+    .optional()
+});
 // ====== NON STANDARD EVENTS ======
 
 const base = (name: string) => baseSchema.merge(z.object({ event: z.literal(name) }));
@@ -304,6 +337,7 @@ export default zodSanitize(
     commitedEventSchema,
     reviewedEventSchema,
     timelineCrossReferencesEventSchema,
+    lineCommentedSchema,
     // simple schemas
     base('auto_merge_disabled'),
     base('auto_squash_enabled'),

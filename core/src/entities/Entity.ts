@@ -5,6 +5,7 @@ import omitBy from 'lodash/omitBy.js';
 import snakeCase from 'lodash/snakeCase.js';
 import { Class, Constructor, MergeExclusive } from 'type-fest';
 import { z } from 'zod';
+import { errorMap } from 'zod-validation-error';
 import events from './schemas/events.js';
 import issue from './schemas/issue.js';
 import pr from './schemas/pull_request.js';
@@ -15,6 +16,8 @@ import stargazer from './schemas/stargazer.js';
 import tag from './schemas/tag.js';
 import user from './schemas/user.js';
 import watcher from './schemas/watcher.js';
+
+z.setErrorMap(errorMap);
 
 /**
  * Base class for all entities.

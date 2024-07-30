@@ -22,14 +22,14 @@ export default zodSanitize(
         )
         .optional(),
       head: z.object({
-        label: z.string(),
+        label: z.string().optional(),
         ref: z.string(),
         repo: repositorySchema.innerType().pick({ id: true, node_id: true, full_name: true }).optional(),
         sha: z.string(),
         user: z.union([userSchema, z.string()]).optional()
       }),
       base: z.object({
-        label: z.string(),
+        label: z.string().optional(),
         ref: z.string(),
         repo: repositorySchema.innerType().pick({ id: true, node_id: true, full_name: true }).optional(),
         sha: z.string(),
