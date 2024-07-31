@@ -43,7 +43,7 @@ const demilestonedEventSchema = baseSchema.merge(
 const renamedEventSchema = baseSchema.merge(
   z.object({
     event: z.literal('renamed'),
-    rename: z.object({ from: z.string(), to: z.string() })
+    rename: z.object({ from: z.string().optional(), to: z.string().optional() }).optional()
   })
 );
 

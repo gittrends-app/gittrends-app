@@ -27,8 +27,10 @@
     "async": "^3.2.5",
     "chalk": "^5.3.0",
     "cli-progress": "^3.12.0",
+    "commander": "^12.1.0",
     "consola": "^3.2.3",
     "lodash": "^4.17.21",
+    "migrate-mongo": "^11.0.0",
     "mongodb": "^6.8.0",
     "pluralize": "^8.0.0",
     "zod": "^3.23.8"
@@ -37,6 +39,7 @@
     "@types/async": "^3.2.24",
     "@types/cli-progress": "^3.11.6",
     "@types/lodash": "^4.17.6",
+    "@types/migrate-mongo": "^10.0.4",
     "@types/mongodb": "^4.0.7",
     "@types/pluralize": "^0.0.33"
   },

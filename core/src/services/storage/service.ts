@@ -39,7 +39,17 @@ export class StorageService implements Service {
     total: number,
     params?: SearchOptions
   ): Iterable<Repository, { page: number; per_page: number; count: number } & SearchOptions> {
-    return this.service.search(total, params);
+    const repoStorage = this.storage.create(Repository);
+    const it = this.service.search(total, params);
+
+    return {
+      [Symbol.asyncIterator]: async function* () {
+        for await (const res of it) {
+          if (res.data.length) await repoStorage.save(res.data);
+          yield res;
+        }
+      }
+    };
   }
 
   async user(loginOrId: string | number): Promise<User | null> {

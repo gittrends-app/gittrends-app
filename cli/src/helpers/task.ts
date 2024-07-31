@@ -19,8 +19,18 @@ export abstract class AbstractTask<T = unknown> implements Task<T> {
   }
 
   protected notify(data: T | Error): void {
-    if (data instanceof Error) return this.observers.forEach((observer) => observer?.error?.(data));
-    else this.observers.forEach((observer) => observer?.next?.(data));
+    if (typeof data === 'number') {
+      if (data === 1) this.complete();
+      this.observers.forEach((observer) => observer?.next?.(data));
+    } else if (data instanceof Error) {
+      this.observers.forEach((observer) => observer?.error?.(data));
+    } else {
+      this.observers.forEach((observer) => observer?.next?.(data));
+    }
+  }
+
+  protected complete(): void {
+    this.observers.forEach((observer) => observer?.complete?.());
   }
 
   [Symbol.observable](): ObservableLike<T> {

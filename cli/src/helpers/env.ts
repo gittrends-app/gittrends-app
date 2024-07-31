@@ -3,6 +3,7 @@ import { z } from 'zod';
 const schema = z
   .object({
     MONGO_URL: z.string().url().default('mongodb://localhost:27017'),
+    MONGO_DB: z.string().default('public'),
     GITHUB_API_BASE_URL: z.string().url().default('https://api.github.com'),
     GITHUB_API_TOKEN: z.string().optional()
   })
