@@ -6,6 +6,8 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     .version('0.0.1')
     .command('search', 'Search for repositories', { executableFile: 'search' })
     .command('update', 'Update a given repository', { executableFile: join('./update', 'repository') })
+    .command('schedule', 'Schedule updating tasks', { executableFile: 'schedule' })
+    .command('migrate', 'Schedule updating tasks', { executableFile: 'migrate' })
     .helpOption('-h, --help', 'Display this help message')
     .parse(process.argv);
 }

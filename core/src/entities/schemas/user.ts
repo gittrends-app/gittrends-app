@@ -13,7 +13,7 @@ export default zodSanitize(
     company: z.string().optional(),
     blog: z.string().optional(),
     location: z.string().optional(),
-    email: z.string().email().optional(),
+    email: z.string().optional(),
     notification_email: z.string().email().optional(),
     hireable: z.boolean().optional(),
     bio: z.string().optional(),

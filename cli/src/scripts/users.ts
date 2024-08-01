@@ -2,11 +2,10 @@ import { GithubClient, GithubService, StorageService, User } from '@/core/index.
 import env from '@/helpers/env.js';
 import client from '@/mongo/client.js';
 import { MongoStorage } from '@/mongo/storage.js';
-import { queue } from 'async';
 import { Presets, SingleBar } from 'cli-progress';
 import { Option, program } from 'commander';
 import consola from 'consola';
-import pluralize from 'pluralize';
+import { createQueue, createWorker } from './queue/queues.js';
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   program
@@ -16,23 +15,17 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     .action(async (opts: { concurrency: number }) => {
       consola.info('Connecting to the database...');
       await client.connect();
-      const db = client.db(env.MONGO_DB);
 
       consola.info('Initializing the storage service...');
       const service = new StorageService(
         new GithubService(new GithubClient(env.GITHUB_API_BASE_URL, { apiToken: env.GITHUB_API_TOKEN })),
-        new MongoStorage(db),
+        new MongoStorage(client.db(env.MONGO_DB)),
         { valid_by: 1 }
       );
 
       consola.info('Counting users to update...');
-      const count = await db
-        .collection(pluralize(User.prototype._entityname))
-        .countDocuments({ created_at: { $exists: false } });
 
-      const tasks = queue(async (id: number) => service.user(id), opts.concurrency);
-
-      const it = db.collection(pluralize(User.prototype._entityname)).find({ created_at: { $exists: false } });
+      const queue = createQueue(User);
 
       consola.info('Updating users...');
       const bar = new SingleBar(
@@ -45,14 +38,30 @@ if (import.meta.url === `file://${process.argv[1]}`) {
         Presets.shades_classic
       );
 
-      bar.start(count, 0);
-      while (await it.hasNext()) {
-        const user = await it.next();
-        if (!user) break;
-        tasks.push(user.id).then(() => bar.increment());
-        await tasks.unsaturated();
-      }
-      bar.stop();
+      bar.start(Infinity, 0);
+
+      setInterval(async () => {
+        const count = await queue
+          .getJobCounts()
+          .then((totals) => Object.values(totals).reduce((acc, total) => acc + total, 0));
+
+        bar.start(count, count - (await queue.count()));
+      }, 5000);
+
+      const worker = createWorker(
+        User,
+        async (job) => {
+          return service
+            .user(job.data.id)
+            .then(() => bar.increment())
+            .then(() => job.updateProgress(100));
+        },
+        opts.concurrency
+      );
+
+      await new Promise<void>((resolve) => {
+        worker.on('drained', async () => resolve());
+      });
 
       consola.success('Users updated successfully!');
     })
