@@ -13,6 +13,7 @@ import reaction from './schemas/reaction.js';
 import release from './schemas/release.js';
 import repository from './schemas/repository.js';
 import stargazer from './schemas/stargazer.js';
+import summary from './schemas/summary.js';
 import tag from './schemas/tag.js';
 import user from './schemas/user.js';
 import watcher from './schemas/watcher.js';
@@ -101,8 +102,19 @@ export interface Repository extends z.infer<typeof repository> {}
 export class Repository extends Entity {
   protected static override _schema = repository;
 
+  readonly _summary: z.infer<typeof summary> | undefined;
+
+  constructor(data: Record<string, any>, props?: { summary: Record<string, any> }) {
+    super(data);
+    if (props?.summary) this._summary = summary.parse(props.summary);
+  }
+
   get _id() {
     return this.node_id;
+  }
+
+  public toJSON(): Record<string, any> {
+    return { ...super.toJSON(), _summary: this._summary };
   }
 }
 

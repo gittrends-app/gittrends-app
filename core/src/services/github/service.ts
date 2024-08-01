@@ -6,6 +6,7 @@ import { Iterable, ResourceParams, SearchOptions, Service } from '../service.js'
 import { GithubClient } from './client.js';
 import { request } from './requests/index.js';
 import resources from './resources/index.js';
+import summary from './resources/summary.js';
 
 /**
  * Github service
@@ -91,7 +92,11 @@ export class GithubService implements Service {
         ? ['GET /repositories/:repo' as const, { repo: ownerOrId }]
         : ['GET /repos/:owner/:name' as const, { owner: ownerOrId, name: name }];
 
-    return request({ client: this.client, url, Entity: Repository }, args as any).then((repo) => repo || null);
+    return request({ client: this.client, url, Entity: Repository }, args as any).then(async (repo) => {
+      if (!repo) return null;
+      const res = await summary(this.client, { repo });
+      return res ? new Repository(repo, { summary: res }) : repo;
+    });
   }
 
   resource(Entity: Class<Tag>, opts: ResourceParams): Iterable<Tag>;
