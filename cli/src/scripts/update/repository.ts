@@ -14,7 +14,7 @@ import env from '@/helpers/env.js';
 import client from '@/mongo/client.js';
 import { MongoStorage } from '@/mongo/storage.js';
 import { QueueObject, queue } from 'async';
-import { Presets, SingleBar } from 'cli-progress';
+import { MultiBar, SingleBar } from 'cli-progress';
 import { Argument, Option, program } from 'commander';
 import consola from 'consola';
 import pluralize from 'pluralize';
@@ -120,32 +120,39 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       );
 
       consola.info('Starting the repository update...');
-      const progress = new SingleBar(
-        {
-          format: ' {bar} {percentage}% | {duration_formatted} | {message}',
-          clearOnComplete: true,
-          stopOnComplete: true,
-          hideCursor: true
-        },
-        Presets.shades_grey
-      );
+      const progress = new MultiBar({
+        format: ' {bar} | {resource} | {value}/{total} ({percentage}%) | {duration_formatted}',
+        hideCursor: true
+      });
 
-      progress.start(resources.length + 1, 0, { message: '...' });
+      const bars: Record<string, SingleBar> = {
+        repo: progress.create(1, 0, { resource: 'repository'.padEnd(12) }),
+        ...resources.reduce((mem: Record<string, SingleBar>, res) => {
+          const name = pluralize(res.prototype._entityname);
+          return { ...mem, [name]: progress.create(0, 0, { resource: name.padEnd(12) }) };
+        }, {})
+      };
 
       const task = new RepositoryUpdater(fullName, { service, resources, parallel: true });
-
-      const count: Record<string, number> = {};
 
       task.subscribe({
         next: (notification) => {
           if (!notification.resource) {
-            progress.increment(1, { message: 'repository update' });
-          } else {
-            const name = notification.resource.prototype._entityname;
-            if (!notification.done) count[name] = (count[name] || 0) + (notification.data.length || 0);
-            progress.increment(notification.done ? 1 : 0, {
-              message: `${count[name]} ${pluralize(name)} (${notification.done ? 'finished' : 'in progress'})`
+            const { repo, ...others } = bars;
+            repo.increment(1);
+            repo.stop();
+            Object.keys(others).forEach((key) => {
+              if (!notification.data._summary) return;
+              const summary: Record<string, number> = {
+                ...notification.data._summary,
+                issues: notification.data._summary.issues + notification.data._summary.pull_requests
+              };
+              others[key].setTotal(summary[key]);
             });
+          } else {
+            const name = pluralize(notification.resource.prototype._entityname);
+            if (notification.done) bars[name].stop();
+            else bars[name].increment(notification.data.length);
           }
         }
       });
