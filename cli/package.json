@@ -34,6 +34,7 @@
     "consola": "^3.2.3",
     "dayjs": "^1.11.12",
     "express": "^4.19.2",
+    "fetch-retry": "^6.0.0",
     "lodash": "^4.17.21",
     "migrate-mongo": "^11.0.0",
     "mongodb": "^6.8.0",

@@ -1,5 +1,6 @@
-import { GithubClient, GithubService, Repository, StorageService, User } from '@/core/index.js';
+import { GithubService, Repository, StorageService, User } from '@/core/index.js';
 import env from '@/helpers/env.js';
+import githubClient from '@/helpers/github-client.js';
 import client from '@/mongo/client.js';
 import migrate from '@/mongo/migrate.js';
 import { MongoStorage } from '@/mongo/storage.js';
@@ -55,11 +56,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       const db = client.db(env.MONGO_DB);
 
       consola.info('Initializing the storage service...');
-      const service = new StorageService(
-        new GithubService(new GithubClient(env.GITHUB_API_BASE_URL, { apiToken: env.GITHUB_API_TOKEN })),
-        new MongoStorage(db),
-        { valid_by: 1 }
-      );
+      const service = new StorageService(new GithubService(githubClient), new MongoStorage(db), { valid_by: 1 });
 
       consola.info('Connecting to the database...');
       await client.connect();

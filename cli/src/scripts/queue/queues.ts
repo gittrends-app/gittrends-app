@@ -29,6 +29,6 @@ export function createWorker<T>(Ref: Class<Entity>, func: Processor<T>, concurre
   return new Worker(pluralize(Ref.prototype._entityname), func, {
     concurrency: concurrency || 1,
     connection: {},
-    maxStalledCount: 5
+    maxStalledCount: Number.MAX_SAFE_INTEGER
   });
 }

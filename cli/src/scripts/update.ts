@@ -1,5 +1,6 @@
-import { GithubClient, GithubService, Repository, StorageService, User } from '@/core/index.js';
+import { GithubService, Repository, StorageService, User } from '@/core/index.js';
 import env from '@/helpers/env.js';
+import githubClient from '@/helpers/github-client.js';
 import client from '@/mongo/client.js';
 import { MongoStorage } from '@/mongo/storage.js';
 import { Worker } from 'bullmq';
@@ -21,16 +22,9 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       await client.connect();
 
       consola.info('Initializing the storage service...');
-      const service = new StorageService(
-        new GithubService(
-          new GithubClient(env.GITHUB_API_BASE_URL, {
-            apiToken: env.GITHUB_API_TOKEN,
-            disableThrottling: env.GITHUB_DISABLE_THROTTLING
-          })
-        ),
-        new MongoStorage(client.db(env.MONGO_DB)),
-        { valid_by: 1 }
-      );
+      const service = new StorageService(new GithubService(githubClient), new MongoStorage(client.db(env.MONGO_DB)), {
+        valid_by: 1
+      });
 
       const progress = new MultiBar(
         {
@@ -66,7 +60,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 }
 
 /**
- *
+ *  Update users.
  */
 function usersUpdate(service: StorageService, concurrency: number, progress: MultiBar): Worker {
   const queue = createQueue(User);

@@ -1,5 +1,4 @@
 import {
-  GithubClient,
   GithubService,
   Issue,
   Release,
@@ -11,6 +10,7 @@ import {
   Watcher
 } from '@/core/index.js';
 import env from '@/helpers/env.js';
+import githubClient from '@/helpers/github-client.js';
 import client from '@/mongo/client.js';
 import { MongoStorage } from '@/mongo/storage.js';
 import { QueueObject, queue } from 'async';
@@ -59,7 +59,7 @@ export class RepositoryUpdater extends AbstractTask<Notification> {
         }
         this.notify({ repository: opts.repo.node_id, resource: res, done: true });
       },
-      params.parallel ? params.resources?.length || 5 : 1
+      params.parallel ? this.resources.length : 1
     );
   }
 
@@ -113,11 +113,9 @@ if (import.meta.url === `file://${process.argv[1]}`) {
             .filter((r) => r !== undefined);
 
       consola.info('Initializing the Github service...');
-      const service = new StorageService(
-        new GithubService(new GithubClient(env.GITHUB_API_BASE_URL, { apiToken: env.GITHUB_API_TOKEN })),
-        new MongoStorage(client.db(env.MONGO_DB)),
-        { valid_by: 1 }
-      );
+      const service = new StorageService(new GithubService(githubClient), new MongoStorage(client.db(env.MONGO_DB)), {
+        valid_by: 1
+      });
 
       consola.info('Starting the repository update...');
       const progress = new MultiBar({

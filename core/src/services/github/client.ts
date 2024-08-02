@@ -17,15 +17,22 @@ export class GithubClient {
   private readonly disableRetry: boolean = false;
   private readonly disableThrottling: boolean = false;
 
-  constructor(baseUrl: string, opts?: { apiToken?: string; disableRetry?: boolean; disableThrottling?: boolean }) {
+  private readonly fetcher: any;
+
+  constructor(
+    baseUrl: string,
+    opts?: { apiToken?: string; disableRetry?: boolean; disableThrottling?: boolean; fetcher?: any }
+  ) {
     this.baseUrl = baseUrl;
     this.apiToken = opts?.apiToken;
     this.disableRetry = opts?.disableRetry ?? false;
     this.disableThrottling = opts?.disableThrottling ?? false;
+    this.fetcher = opts?.fetcher;
   }
 
   get rest(): Octokit {
     return new FullOctokit({
+      request: { fetch: this.fetcher },
       baseUrl: this.baseUrl,
       auth: this.apiToken,
       mediaType: { previews: ['starfox'] },
@@ -45,6 +52,7 @@ export class GithubClient {
 
   get graphql(): graphql {
     return graphqlClient.defaults({
+      request: { fetch: this.fetcher },
       baseUrl: this.baseUrl,
       headers: {
         authorization: `token ${this.apiToken}`

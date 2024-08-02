@@ -288,7 +288,7 @@ const lineComment = z.object({
   commit_id: z.string(),
   original_commit_id: z.string(),
   in_reply_to_id: z.number().int().optional(),
-  user: z.union([userSchema, z.string()]),
+  user: z.union([userSchema, z.string()]).optional(),
   body: z.string(),
   created_at: z.string(),
   updated_at: z.string(),
