@@ -1,4 +1,4 @@
-import { User } from '@/core/index.js';
+import { Metadata, Repository, User } from '@/core/index.js';
 import env from '@/helpers/env.js';
 import { AbstractTask } from '@/helpers/task.js';
 import client from '@/mongo/client.js';
@@ -13,30 +13,54 @@ import { createQueue } from './queue/queues.js';
  *  Task to schedule users for update.
  */
 export class Schedule extends AbstractTask {
-  constructor(
-    private db: Db,
-    private days: number = 1
-  ) {
+  constructor(private db: Db) {
     super();
   }
 
   async execute(): Promise<void> {
     const usersQueue = createQueue(User);
+    const reposQueue = createQueue(Repository);
 
     try {
       this.state = 'running';
 
-      const it = this.db.collection(pluralize(User.prototype._entityname)).find({
-        $or: [
-          { created_at: { $exists: false } },
-          { _obtained_at: { $lte: dayjs(new Date()).subtract(this.days, 'days').toDate() } }
-        ]
-      });
+      const users = await this.db
+        .collection(pluralize(User.prototype._entityname))
+        .find({
+          $or: [
+            { created_at: { $exists: false } },
+            { _obtained_at: { $lte: dayjs(new Date()).subtract(7, 'days').toDate() } }
+          ]
+        })
+        .project<{ id: number; node_id: string; login: string }>({ id: 1, node_id: 1, login: 1 })
+        .sort({ _obtained_at: 1 })
+        .toArray();
 
-      for await (const user of it) {
-        consola.debug(`Scheduling user ${user.id} (${user.login})...`);
-        await usersQueue.remove(`@${user.login}`);
-        await usersQueue.add('user', pick(user, ['id', 'node_id', 'login']), { jobId: `@${user.login}`, attempts: 3 });
+      await usersQueue.drain(true).then(() =>
+        usersQueue.addBulk(
+          users.map((user) => ({
+            name: user.login,
+            data: user,
+            opts: { jobId: `@${user.login}`, attempts: 3 }
+          }))
+        )
+      );
+
+      const it = this.db.collection(pluralize(Repository.prototype._entityname)).find({}).sort({ _obtained_at: 1 });
+
+      for await (const repo of it) {
+        const meta = await this.db
+          .collection(pluralize(Metadata.prototype._entityname))
+          .find({ entity_id: repo._id })
+          .toArray();
+
+        consola.debug(`Scheduling repo ${repo.id} (${repo.full_name})...`);
+        await reposQueue.remove(repo.full_name);
+        await reposQueue.add(repo.full_name, pick(repo, ['id', 'node_id', 'full_name']), {
+          jobId: repo.full_name,
+          attempts: 3,
+          priority: 1 + (meta.length + meta.reduce((acc, m) => (acc + m.updated_at ? 1 : 0), 0))
+        });
       }
 
       this.state = 'completed';
@@ -44,7 +68,7 @@ export class Schedule extends AbstractTask {
       this.state = 'error';
       throw error;
     } finally {
-      await usersQueue.close();
+      await Promise.all([usersQueue.close(), reposQueue.close()]);
     }
   }
 }
@@ -56,11 +80,11 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     consola.info('Connecting to the database...');
     await client.connect();
 
-    consola.info('Scheduling users...');
+    consola.info('Scheduling...');
     const task = new Schedule(db);
     await task.execute();
 
-    consola.success('Users scheduled successfully!');
+    consola.success('Schedule finished successfully!');
     await client.close();
   })();
 }

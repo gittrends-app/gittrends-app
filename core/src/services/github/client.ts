@@ -14,14 +14,14 @@ export class GithubClient {
   private readonly baseUrl: string;
 
   private readonly apiToken?: string;
-  private readonly enableRetry: boolean = true;
-  private readonly enableThrottling: boolean = true;
+  private readonly disableRetry: boolean = false;
+  private readonly disableThrottling: boolean = false;
 
-  constructor(baseUrl: string, opts?: { apiToken?: string; enableRetry?: boolean; enableThrottling?: boolean }) {
+  constructor(baseUrl: string, opts?: { apiToken?: string; disableRetry?: boolean; disableThrottling?: boolean }) {
     this.baseUrl = baseUrl;
     this.apiToken = opts?.apiToken;
-    this.enableRetry = opts?.enableRetry ?? true;
-    this.enableThrottling = opts?.enableThrottling ?? true;
+    this.disableRetry = opts?.disableRetry ?? false;
+    this.disableThrottling = opts?.disableThrottling ?? false;
   }
 
   get rest(): Octokit {
@@ -29,9 +29,9 @@ export class GithubClient {
       baseUrl: this.baseUrl,
       auth: this.apiToken,
       mediaType: { previews: ['starfox'] },
-      retry: { enabled: this.enableRetry },
+      retry: { enabled: !this.disableRetry },
       throttle: {
-        enabled: this.enableThrottling,
+        enabled: !this.disableThrottling,
         onRateLimit: (retryAfter, options) => {
           return options.request.retryCount < 3;
         },

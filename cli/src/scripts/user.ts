@@ -1,5 +1,5 @@
 import { StorageService, User } from '@/core/index.js';
-import { AbstractTask } from '../../helpers/task.js';
+import { AbstractTask } from '../helpers/task.js';
 
 /**
  * Task to retrieve all resources from a repository.

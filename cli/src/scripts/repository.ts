@@ -19,7 +19,7 @@ import { Argument, Option, program } from 'commander';
 import consola from 'consola';
 import pluralize from 'pluralize';
 import { Class } from 'type-fest';
-import { AbstractTask } from '../../helpers/task.js';
+import { AbstractTask } from '../helpers/task.js';
 
 type Notification<T extends RepositoryResource = RepositoryResource> = { repository: string } & (
   | { resource?: undefined; data: Repository }

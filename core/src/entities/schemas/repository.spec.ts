@@ -49,11 +49,6 @@ describe('Repository entity', () => {
     expect(result).not.toHaveProperty('bio');
   });
 
-  it('should remove empty strings', () => {
-    const result = repositorySchema.parse({ ...baseFields, homepage: '' });
-    expect(result).not.toHaveProperty('homepage');
-  });
-
   it('should parse repository from search', () => {
     const repository = {
       id: 28457823,

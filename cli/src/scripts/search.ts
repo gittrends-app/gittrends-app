@@ -7,7 +7,7 @@ import { SingleBar } from 'cli-progress';
 import { Option, program } from 'commander';
 import consola from 'consola';
 import { AbstractTask } from '../helpers/task.js';
-import { UserUpdater } from './update/user.js';
+import { UserUpdater } from './user.js';
 
 /**
  *  Task to add repositories to the database.

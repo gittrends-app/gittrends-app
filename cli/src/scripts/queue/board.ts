@@ -1,4 +1,4 @@
-import { User } from '@/core/index.js';
+import { Repository, User } from '@/core/index.js';
 import { createBullBoard } from '@bull-board/api';
 import { BullMQAdapter } from '@bull-board/api/bullMQAdapter.js';
 import { ExpressAdapter } from '@bull-board/express';
@@ -15,7 +15,7 @@ program
     serverAdapter.setBasePath('/');
 
     createBullBoard({
-      queues: [new BullMQAdapter(createQueue(User))],
+      queues: [new BullMQAdapter(createQueue(User)), new BullMQAdapter(createQueue(Repository))],
       serverAdapter: serverAdapter
     });
 

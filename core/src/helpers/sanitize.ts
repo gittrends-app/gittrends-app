@@ -15,10 +15,7 @@ export default function sanitize<T extends object>(data: T): PartialDeep<T> {
           omitBy(
             value,
             (v) =>
-              v === null ||
-              v === '' ||
-              (Array.isArray(v) && v.length === 0) ||
-              (isPlainObject(v) && Object.keys(v).length === 0)
+              v === null || (Array.isArray(v) && v.length === 0) || (isPlainObject(v) && Object.keys(v).length === 0)
           ),
           sanitize
         )

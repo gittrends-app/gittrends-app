@@ -229,12 +229,12 @@ const commitedEventSchema = z.object({
   author: z.object({
     date: z.coerce.date(),
     email: z.string(),
-    name: z.string()
+    name: z.string().optional()
   }),
   committer: z.object({
     date: z.coerce.date(),
     email: z.string(),
-    name: z.string()
+    name: z.string().optional()
   }),
   tree: z.object({
     sha: z.string()
