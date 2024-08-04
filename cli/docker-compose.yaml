@@ -12,6 +12,20 @@ services:
     container_name: redis
     ports:
       - '6379:6379'
+      
+  proxy:
+    build: https://github.com/gittrends-app/github-proxy-server.git
+    restart: unless-stopped
+    command: --tokens /tokens.txt
+    environment:
+      PORT: 80
+      GPS_REQUEST_INTERVAL: ${GPS_REQUEST_INTERVAL:-100}
+      GPS_REQUEST_TIMEOUT: ${GPS_REQUEST_TIMEOUT:-30000}
+      GPS_MIN_REMAINING: ${GPS_MIN_REMAINING:-100}
+    ports:
+      - 3000:80
+    volumes:
+      - ./${TOKENS_FILE:-tokens.txt}:/tokens.txt:ro
 
 volumes:
   mongo-data:

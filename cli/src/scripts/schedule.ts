@@ -24,7 +24,7 @@ export class Schedule extends AbstractTask {
     try {
       this.state = 'running';
 
-      const users = await this.db
+      const usersIt = this.db
         .collection(pluralize(User.prototype._entityname))
         .find({
           $or: [
@@ -33,22 +33,20 @@ export class Schedule extends AbstractTask {
           ]
         })
         .project<{ id: number; node_id: string; login: string }>({ id: 1, node_id: 1, login: 1 })
-        .sort({ _obtained_at: 1 })
-        .toArray();
+        .sort({ _obtained_at: 1 });
 
-      await usersQueue.drain(true).then(() =>
-        usersQueue.addBulk(
-          users.map((user) => ({
-            name: user.login,
-            data: user,
-            opts: { jobId: `@${user.login}`, attempts: 3 }
-          }))
-        )
-      );
+      await usersQueue.drain(true);
 
-      const it = this.db.collection(pluralize(Repository.prototype._entityname)).find({}).sort({ _obtained_at: 1 });
+      for await (const user of usersIt) {
+        usersQueue.add(user.login, user, { jobId: `@${user.login}`, attempts: 3 });
+      }
 
-      for await (const repo of it) {
+      const reposIt = this.db
+        .collection(pluralize(Repository.prototype._entityname))
+        .find({})
+        .sort({ _obtained_at: 1 });
+
+      for await (const repo of reposIt) {
         const meta = await this.db
           .collection(pluralize(Metadata.prototype._entityname))
           .find({ entity_id: repo._id })

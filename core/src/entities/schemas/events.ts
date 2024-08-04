@@ -50,7 +50,7 @@ const renamedEventSchema = baseSchema.merge(
 const reviewRequestedEventSchema = baseSchema.merge(
   z.object({
     event: z.literal('review_requested'),
-    review_requester: z.union([userSchema, z.string()]),
+    review_requester: z.union([userSchema, z.string()]).optional(),
     requested_team: z
       .object({
         id: z.number().int(),
@@ -66,7 +66,7 @@ const reviewRequestedEventSchema = baseSchema.merge(
 const reviewRequestedRemovedEventSchema = baseSchema.merge(
   z.object({
     event: z.literal('review_request_removed'),
-    review_requester: z.union([userSchema, z.string()]),
+    review_requester: z.union([userSchema, z.string()]).optional(),
     requested_team: z
       .object({
         id: z.number().int(),
@@ -154,7 +154,7 @@ const convertedNoteToIssueEventSchema = baseSchema.merge(
 const assignedEventSchema = baseSchema.merge(
   z.object({
     event: z.literal('assigned'),
-    assignee: z.union([userSchema, z.string()]),
+    assignee: z.union([userSchema, z.string()]).optional(),
     assigner: z.union([userSchema, z.string()]).optional()
   })
 );
@@ -162,7 +162,7 @@ const assignedEventSchema = baseSchema.merge(
 const unassignedEventSchema = baseSchema.merge(
   z.object({
     event: z.literal('unassigned'),
-    assignee: z.union([userSchema, z.string()]),
+    assignee: z.union([userSchema, z.string()]).optional(),
     assigner: z.union([userSchema, z.string()]).optional()
   })
 );

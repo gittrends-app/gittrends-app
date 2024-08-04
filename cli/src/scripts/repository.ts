@@ -13,10 +13,10 @@ import env from '@/helpers/env.js';
 import githubClient from '@/helpers/github-client.js';
 import client from '@/mongo/client.js';
 import { MongoStorage } from '@/mongo/storage.js';
-import { QueueObject, queue } from 'async';
 import { MultiBar, SingleBar } from 'cli-progress';
 import { Argument, Option, program } from 'commander';
 import consola from 'consola';
+import PQueue from 'p-queue';
 import pluralize from 'pluralize';
 import { Class } from 'type-fest';
 import { AbstractTask } from '../helpers/task.js';
@@ -37,7 +37,7 @@ export class RepositoryUpdater extends AbstractTask<Notification> {
 
   private service: StorageService;
   private resources: Class<Tag | Release | Stargazer | Watcher | Issue>[];
-  private queue: QueueObject<Parameters<StorageService['resource']>>;
+  private queue: PQueue;
 
   constructor(
     idOrName: string | number,
@@ -51,16 +51,7 @@ export class RepositoryUpdater extends AbstractTask<Notification> {
     this.idOrName = idOrName;
     this.service = params.service;
     this.resources = params.resources || RESOURCE_LIST;
-
-    this.queue = queue(
-      async ([res, opts]: Parameters<StorageService['resource']>) => {
-        for await (const response of this.service.resource(res, opts)) {
-          this.notify({ repository: opts.repo.node_id, resource: res, data: response.data, done: false });
-        }
-        this.notify({ repository: opts.repo.node_id, resource: res, done: true });
-      },
-      params.parallel ? this.resources.length : 1
-    );
+    this.queue = new PQueue({ concurrency: params.parallel ? this.resources.length : 1 });
   }
 
   async execute(): Promise<void> {
@@ -76,12 +67,22 @@ export class RepositoryUpdater extends AbstractTask<Notification> {
 
       this.notify({ repository: repo._id, data: repo });
 
-      await Promise.all(
-        this.resources.map((resource) =>
-          this.queue.pushAsync([[resource as any, { repo, per_page: resource === Issue ? 25 : 100 }]])
+      await Promise.allSettled(
+        this.resources.map(async (Ref) =>
+          this.queue.add(async () => {
+            const it = this.service.resource(Ref as any, { repo, per_page: Ref === Issue ? 25 : 100 });
+
+            for await (const response of it) {
+              this.notify({ repository: repo.node_id, resource: Ref, data: response.data, done: false });
+            }
+
+            this.notify({ repository: repo.node_id, resource: Ref, done: true });
+          })
         )
-      );
-      await this.queue.drain();
+      ).then((results) => {
+        const errors = results.filter((r) => r.status === 'rejected').map((r) => r.reason);
+        if (errors.length) throw new AggregateError(errors, 'Some resources failed to update!');
+      });
 
       this.state = 'completed';
     } catch (error) {
