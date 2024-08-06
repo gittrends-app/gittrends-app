@@ -94,28 +94,20 @@ class GenericStorage<T extends Entity> implements EntityStorage<T> {
     );
 
     const tableName = pluralize(this.Ref.prototype._entityname);
-    if (replace) {
-      await transaction(tableName)
-        .delete()
-        .whereIn(
-          '_id',
-          dataArr.map((d) => d._id)
-        );
-    }
 
     try {
       await Promise.all(
-        dataArr.map((d) =>
-          transaction
+        dataArr.map((d) => {
+          const op = transaction
             .table(tableName)
             .insert(
               mapValues(this.prepare(d.toJSON()), (v) =>
                 typeof v === 'object' && !(v instanceof Date) ? JSON.stringify(v) : v
               )
             )
-            .onConflict('_id')
-            .ignore()
-        )
+            .onConflict('_id');
+          return replace ? op.merge() : op.ignore();
+        })
       );
 
       await new GenericStorage(this.knex, TimelineEvent).save(

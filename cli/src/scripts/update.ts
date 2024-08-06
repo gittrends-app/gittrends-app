@@ -1,8 +1,7 @@
 import { GithubService, Repository, StorageService, User } from '@/core/index.js';
-import env from '@/helpers/env.js';
 import githubClient from '@/helpers/github-client.js';
-import client from '@/mongo/client.js';
-import { MongoStorage } from '@/mongo/storage.js';
+import { knex } from '@/knex/knex.js';
+import { RelationalStorage } from '@/knex/storage.js';
 import { Worker } from 'bullmq';
 import { MultiBar, Presets } from 'cli-progress';
 import { Option, program } from 'commander';
@@ -18,11 +17,8 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     .addOption(new Option('-uc <number>', 'Number of concurrent workers for users').argParser(Number).default(1))
     .helpOption('-h, --help', 'Display help for command')
     .action(async (opts: { Rc: number; Uc: number }) => {
-      consola.info('Connecting to the database...');
-      await client.connect();
-
       consola.info('Initializing the storage service...');
-      const service = new StorageService(new GithubService(githubClient), new MongoStorage(client.db(env.MONGO_DB)), {
+      const service = new StorageService(new GithubService(githubClient), new RelationalStorage(knex), {
         valid_by: 1
       });
 
@@ -55,7 +51,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       consola.error(error);
       process.exit(1);
     })
-    .finally(() => client.close())
+    .finally(() => knex.destroy())
     .finally(() => process.exit(0));
 }
 
