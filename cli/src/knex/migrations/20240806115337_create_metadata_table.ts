@@ -11,7 +11,7 @@ export async function up(knex: Knex): Promise<void> {
 
     table.string('entity').notNullable();
     table.string('entity_id').notNullable();
-    table.datetime('updated_at').notNullable();
+    table.datetime('updated_at').nullable();
 
     table.json('payload').nullable();
 

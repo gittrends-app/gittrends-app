@@ -9,10 +9,10 @@ import {
   Tag,
   Watcher
 } from '@/core/index.js';
-import env from '@/helpers/env.js';
 import githubClient from '@/helpers/github-client.js';
+import { knex } from '@/knex/knex.js';
+import { RelationalStorage } from '@/knex/storage.js';
 import client from '@/mongo/client.js';
-import { MongoStorage } from '@/mongo/storage.js';
 import { MultiBar, SingleBar } from 'cli-progress';
 import { Argument, Option, program } from 'commander';
 import consola from 'consola';
@@ -114,7 +114,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
             .filter((r) => r !== undefined);
 
       consola.info('Initializing the Github service...');
-      const service = new StorageService(new GithubService(githubClient), new MongoStorage(client.db(env.MONGO_DB)), {
+      const service = new StorageService(new GithubService(githubClient), new RelationalStorage(knex), {
         valid_by: 1
       });
 
