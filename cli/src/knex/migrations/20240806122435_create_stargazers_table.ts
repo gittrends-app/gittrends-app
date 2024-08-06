@@ -12,6 +12,11 @@ export async function up(knex: Knex): Promise<void> {
 
     table.string('user').notNullable();
     table.datetime('starred_at').notNullable();
+
+    table.index('_repository');
+
+    table.foreign('_repository').references('_id').inTable('repositories');
+    table.foreign('user').references('_id').inTable('users');
   });
 }
 

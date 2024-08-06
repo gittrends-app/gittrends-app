@@ -66,6 +66,9 @@ export async function up(knex: Knex): Promise<void> {
 
     table.index('id');
     table.index('full_name');
+
+    table.foreign('owner').references('_id').inTable('users');
+    table.foreign('organization').references('_id').inTable('users');
   });
 }
 
