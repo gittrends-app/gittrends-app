@@ -23,7 +23,10 @@ export class MongoStorage implements Storage {
     switch (true) {
       case entity instanceof Stargazer:
       case entity instanceof Watcher:
-        entity.user = (await this.userStorage.get({ _id: entity.user })) || entity.user;
+        entity.user =
+          (await this.userStorage.get({
+            _id: typeof entity.user === 'object' ? (entity.user as any)._id : entity.user
+          })) || entity.user;
         break;
     }
 

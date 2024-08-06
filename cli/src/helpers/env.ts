@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 const schema = z
   .object({
+    DATABASE_URL: z.string().url().default('postgres://localhost:5432/mining-tool'),
     MONGO_URL: z.string().url().default('mongodb://localhost:27017'),
     MONGO_DB: z.string().default('public'),
     GITHUB_API_BASE_URL: z.string().url().default('https://api.github.com'),

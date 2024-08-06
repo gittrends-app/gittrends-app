@@ -1,9 +1,7 @@
 import { GithubService, Repository, StorageService, User } from '@/core/index.js';
-import env from '@/helpers/env.js';
 import githubClient from '@/helpers/github-client.js';
-import client from '@/mongo/client.js';
-import migrate from '@/mongo/migrate.js';
-import { MongoStorage } from '@/mongo/storage.js';
+import { knex } from '@/knex/knex.js';
+import { RelationalStorage } from '@/knex/storage.js';
 import { SingleBar } from 'cli-progress';
 import { Option, program } from 'commander';
 import consola from 'consola';
@@ -53,16 +51,8 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     )
     .helpOption('-h, --help', 'Display this help message')
     .action(async (options: { total: number }) => {
-      const db = client.db(env.MONGO_DB);
-
       consola.info('Initializing the storage service...');
-      const service = new StorageService(new GithubService(githubClient), new MongoStorage(db), { valid_by: 1 });
-
-      consola.info('Connecting to the database...');
-      await client.connect();
-
-      consola.info('Running migrations...');
-      await migrate.up(db, client);
+      const service = new StorageService(new GithubService(githubClient), new RelationalStorage(knex), { valid_by: 1 });
 
       const task = new AddRepositories(options.total, { service });
 
@@ -100,7 +90,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
         })
         .then(() => {
           consola.success('Search completed!');
-          return Promise.all([client.close(), progress.stop()]);
+          return Promise.all([knex.destroy(), progress.stop()]);
         })
         .catch((err) => {
           consola.error('Search failed!', err);
