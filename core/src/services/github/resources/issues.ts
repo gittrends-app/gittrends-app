@@ -70,8 +70,12 @@ export default function (
       for await (const { data, params } of it) {
         for (let index = 0; index < data.length; index++) {
           if (data[index].pull_request) {
-            data[index] = await pullRequest(client, { repo: options.repo, number: data[index].number }).then(
-              (pr) => pr || Promise.reject(new Error('Pull request not found!'))
+            const { reactions } = data[index];
+            data[index] = Object.assign(
+              await pullRequest(client, { repo: options.repo, number: data[index].number }).then(
+                (pr) => pr || Promise.reject(new Error('Pull request not found!'))
+              ),
+              { reactions }
             );
           }
 

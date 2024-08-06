@@ -69,15 +69,21 @@ export class RepositoryUpdater extends AbstractTask<Notification> {
 
       await Promise.allSettled(
         this.resources.map(async (Ref) =>
-          this.queue.add(async () => {
-            const it = this.service.resource(Ref as any, { repo, per_page: Ref === Issue ? 25 : 100 });
+          this.queue
+            .add(async () => {
+              const it = this.service.resource(Ref as any, { repo, per_page: Ref === Issue ? 25 : 100 });
 
-            for await (const response of it) {
-              this.notify({ repository: repo.node_id, resource: Ref, data: response.data, done: false });
-            }
+              for await (const response of it) {
+                this.notify({ repository: repo.node_id, resource: Ref, data: response.data, done: false });
+              }
 
-            this.notify({ repository: repo.node_id, resource: Ref, done: true });
-          })
+              this.notify({ repository: repo.node_id, resource: Ref, done: true });
+            })
+            .catch((err) => {
+              this.notify(err);
+              consola.error(err);
+              throw err;
+            })
         )
       ).then((results) => {
         const errors = results.filter((r) => r.status === 'rejected').map((r) => r.reason);
