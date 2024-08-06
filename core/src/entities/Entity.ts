@@ -122,7 +122,7 @@ const metadataSchema = z
   .object({
     entity: z.string(),
     entity_id: z.string(),
-    updated_at: z.date().optional()
+    updated_at: z.coerce.date().optional()
   })
   .passthrough();
 

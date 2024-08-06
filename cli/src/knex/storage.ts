@@ -1,4 +1,4 @@
-import { Entity, EntityStorage, Metadata, Reaction, Storage, User } from '@/core/index.js';
+import { Entity, EntityStorage, Issue, Metadata, Reaction, Storage, TimelineEvent, User } from '@/core/index.js';
 import { extract } from '@/helpers/extract.js';
 import consola from 'consola';
 import { Knex } from 'knex';
@@ -8,6 +8,15 @@ import pick from 'lodash/pick.js';
 import uniqBy from 'lodash/uniqBy.js';
 import pluralize from 'pluralize';
 import { Class } from 'type-fest';
+
+/**
+ *
+ */
+function isIsoDate(str: string) {
+  if (!/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z/.test(str)) return false;
+  const d = new Date(str);
+  return d instanceof Date && !isNaN(d.getTime()) && d.toISOString() === str; // valid date
+}
 
 /**
  * User entity
@@ -24,6 +33,11 @@ class GenericStorage<T extends Entity> implements EntityStorage<T> {
       return { ...pick(data, fields), payload: omit(data, fields) };
     }
 
+    if (this.Ref.name === TimelineEvent.name) {
+      const fields = ['_id', '_entityname', '_obtained_at', '_repository', '_issue', 'event'];
+      return { ...pick(data, fields), payload: omit(data, fields) };
+    }
+
     return data;
   }
 
@@ -31,7 +45,14 @@ class GenericStorage<T extends Entity> implements EntityStorage<T> {
     if (!data) return data;
 
     if (this.Ref.name === Metadata.name) {
-      return { ...data, ...(data.payload || {}) };
+      return Metadata.from({
+        ...data,
+        ...(mapValues(data.payload, (v) => (isIsoDate(v) ? new Date(v) : v)) || {})
+      });
+    }
+
+    if (this.Ref.name === TimelineEvent.name) {
+      return TimelineEvent.from({ ...data, ...(data.payload || {}) });
     }
 
     return data;
@@ -50,14 +71,16 @@ class GenericStorage<T extends Entity> implements EntityStorage<T> {
       .offset(opts?.offset || 0)
       .then((data) => data.map((d) => (this.Ref as any).create(this.recover(d)) as T));
   }
-  async save(data: T | T[], replace?: boolean) {
+  async save(data: T | T[], replace?: boolean, trx?: Knex.Transaction) {
+    const transaction = trx || (await this.knex.transaction());
+
     let dataArr = uniqBy(Array.isArray(data) ? data : [data], '_id');
     if (!dataArr.length) return;
 
     if (this.Ref.name !== User.name) {
       const { data, users } = extract(dataArr);
       dataArr = data;
-      await new GenericStorage(this.knex, User).save(users || [], false);
+      await new GenericStorage(this.knex, User).save(users || [], false, transaction);
     }
 
     await new GenericStorage(this.knex, Reaction).save(
@@ -66,12 +89,13 @@ class GenericStorage<T extends Entity> implements EntityStorage<T> {
           (entity as any)._reactions ? memo.concat((entity as any)._reactions as Reaction[]) : memo,
         []
       ),
-      true
+      true,
+      transaction
     );
 
     const tableName = pluralize(this.Ref.prototype._entityname);
     if (replace) {
-      await this.knex(tableName)
+      await transaction(tableName)
         .delete()
         .whereIn(
           '_id',
@@ -82,7 +106,7 @@ class GenericStorage<T extends Entity> implements EntityStorage<T> {
     try {
       await Promise.all(
         dataArr.map((d) =>
-          this.knex
+          transaction
             .table(tableName)
             .insert(
               mapValues(this.prepare(d.toJSON()), (v) =>
@@ -93,7 +117,19 @@ class GenericStorage<T extends Entity> implements EntityStorage<T> {
             .ignore()
         )
       );
+
+      await new GenericStorage(this.knex, TimelineEvent).save(
+        dataArr.reduce(
+          (memo: TimelineEvent[], entity) => (entity instanceof Issue ? memo.concat(entity._events) : memo),
+          []
+        ),
+        true,
+        transaction
+      );
+
+      if (!trx) await transaction.commit();
     } catch (error) {
+      if (!trx) await transaction.rollback();
       consola.error(JSON.stringify(error, null, ' '));
       throw error;
     }
