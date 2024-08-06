@@ -284,7 +284,7 @@ export class Reaction extends RepositoryResource {
   }
 
   override toJSON() {
-    return { ...super.toJSON(), _reactable_name: this._reactable, _reactable_id: this._reactable_id };
+    return { ...super.toJSON(), _reactable: this._reactable, _reactable_id: this._reactable_id };
   }
 }
 

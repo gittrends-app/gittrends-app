@@ -1,4 +1,4 @@
-import { Entity, EntityStorage, Metadata, Storage, User } from '@/core/index.js';
+import { Entity, EntityStorage, Metadata, Reaction, Storage, User } from '@/core/index.js';
 import { extract } from '@/helpers/extract.js';
 import consola from 'consola';
 import { Knex } from 'knex';
@@ -51,7 +51,7 @@ class GenericStorage<T extends Entity> implements EntityStorage<T> {
       .then((data) => data.map((d) => (this.Ref as any).create(this.recover(d)) as T));
   }
   async save(data: T | T[], replace?: boolean) {
-    let dataArr = uniqBy(Array.isArray(data) ? data : [data], '_id').map((d) => this.prepare(d.toJSON()));
+    let dataArr = uniqBy(Array.isArray(data) ? data : [data], '_id');
     if (!dataArr.length) return;
 
     if (this.Ref.name !== User.name) {
@@ -59,6 +59,15 @@ class GenericStorage<T extends Entity> implements EntityStorage<T> {
       dataArr = data;
       await new GenericStorage(this.knex, User).save(users || [], false);
     }
+
+    await new GenericStorage(this.knex, Reaction).save(
+      dataArr.reduce(
+        (memo: Reaction[], entity) =>
+          (entity as any)._reactions ? memo.concat((entity as any)._reactions as Reaction[]) : memo,
+        []
+      ),
+      true
+    );
 
     const tableName = pluralize(this.Ref.prototype._entityname);
     if (replace) {
@@ -75,7 +84,11 @@ class GenericStorage<T extends Entity> implements EntityStorage<T> {
         dataArr.map((d) =>
           this.knex
             .table(tableName)
-            .insert(mapValues(d, (v) => (typeof v === 'object' && !(v instanceof Date) ? JSON.stringify(v) : v)))
+            .insert(
+              mapValues(this.prepare(d.toJSON()), (v) =>
+                typeof v === 'object' && !(v instanceof Date) ? JSON.stringify(v) : v
+              )
+            )
             .onConflict('_id')
             .ignore()
         )
