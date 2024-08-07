@@ -21,7 +21,6 @@ describe('Entities', () => {
 
     it('should throw an error if invalid data is provided', () => {
       expect(() => new EntityImpl({})).toThrowError(ValidationError);
-      expect(() => EntityImpl.from({})).toThrowError(ValidationError);
     });
 
     it('should allow data validation', () => {
@@ -30,19 +29,12 @@ describe('Entities', () => {
       expect(EntityImpl.validate({})).toBe(false);
     });
 
-    it('should add _id and _obtained_at to the schema', () => {
-      let user = new EntityImpl({ id: '1' });
-      expect(user).toHaveProperty('_id', '1');
-      expect(user).toHaveProperty('_obtained_at', expect.any(Date));
-
-      user = EntityImpl.from({ id: '1' });
-      expect(user).toHaveProperty('_id', '1');
-      expect(user).toHaveProperty('_obtained_at', expect.any(Date));
+    it('should add _id to the schema', () => {
+      expect(new EntityImpl({ id: '1' })).toHaveProperty('_id', '1');
     });
 
     it('should serialize the entity', () => {
-      const user = new EntityImpl({ id: '1' });
-      expect(user.toJSON()).toEqual({ id: '1', _id: '1', _entityname: 'entity_impl', _obtained_at: user._obtained_at });
+      expect(new EntityImpl({ id: '1' }).toJSON()).toEqual({ id: '1', _id: '1' });
     });
   });
 

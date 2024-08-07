@@ -6,8 +6,6 @@ import type { Knex } from 'knex';
 export async function up(knex: Knex): Promise<void> {
   return knex.schema.createTable('timeline_events', (table) => {
     table.string('_id').primary();
-    table.string('_entityname').notNullable();
-    table.string('_obtained_at').notNullable();
     table.string('_repository').notNullable();
     table.string('_issue').notNullable();
 

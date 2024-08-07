@@ -2,8 +2,7 @@
 /* eslint-disable require-jsdoc */
 import cloneDeepWith from 'lodash/cloneDeepWith.js';
 import omitBy from 'lodash/omitBy.js';
-import snakeCase from 'lodash/snakeCase.js';
-import { Class, Constructor, MergeExclusive } from 'type-fest';
+import { Class, MergeExclusive } from 'type-fest';
 import { z } from 'zod';
 import { errorMap, fromZodError } from 'zod-validation-error';
 import events from './schemas/events.js';
@@ -26,11 +25,10 @@ z.setErrorMap(errorMap);
 export abstract class Entity {
   protected static _schema: z.ZodType;
 
-  public static from<T extends Entity>(data: Record<string, any>) {
-    return new (this.prototype.constructor as Constructor<T>)(data);
-  }
-
-  public static create<T extends Entity>(data: Record<string, any>) {
+  /**
+   * Creates an instance without validations
+   */
+  public static create(data: Record<string, any>) {
     const instance = Object.create(this.prototype);
     Object.entries(data).forEach(([key, value]) => {
       try {
@@ -39,25 +37,20 @@ export abstract class Entity {
         // do nothing
       }
     });
-    return instance as T;
+    return instance;
   }
 
+  /**
+   *
+   */
   public static validate(data: Record<string, any>): boolean {
     return this._schema.safeParse(data).success;
-  }
-
-  readonly _obtained_at!: Date;
-
-  get _entityname() {
-    return snakeCase(this.constructor.name);
   }
 
   abstract get _id(): string;
 
   constructor(data: Record<string, any>) {
-    const res = (this.constructor as typeof Entity)._schema
-      .and(z.object({ _obtained_at: z.coerce.date().optional() }))
-      .safeParse(data);
+    const res = (this.constructor as typeof Entity)._schema.safeParse(data);
 
     if (!res.success) throw Object.assign(fromZodError(res.error, { includePath: true }), { data });
 
@@ -68,17 +61,15 @@ export abstract class Entity {
         // do nothign
       }
     }
-
-    if (!this._obtained_at) this._obtained_at = new Date();
   }
 
   public toJSON(): Record<string, any> {
     return {
+      _id: this._id,
       ...cloneDeepWith(
         omitBy(this, (_, key) => key.startsWith('_')),
         (value) => (value instanceof Entity ? value.toJSON() : undefined)
-      ),
-      ...z.object({ _id: z.string(), _entityname: z.string(), _obtained_at: z.coerce.date() }).parse(this)
+      )
     };
   }
 }
@@ -139,9 +130,9 @@ export class Metadata extends Entity {
   ) {
     const { entity, repository, ...params } = data;
     if (entity instanceof Entity) {
-      super({ entity: entity._entityname, entity_id: entity._id, ...params });
+      super({ entity: entity.constructor.name, entity_id: entity._id, ...params });
     } else if (typeof entity === 'function') {
-      super({ entity: entity.prototype._entityname, entity_id: repository, ...params });
+      super({ entity: entity.name, entity_id: repository, ...params });
     } else {
       super(data);
     }
@@ -275,7 +266,7 @@ export class Reaction extends RepositoryResource {
 
   constructor(data: Record<string, any>, props: { reactable: RepositoryResource & Reactable }) {
     super(data, { repository: props.reactable._repository });
-    this._reactable = props.reactable._entityname;
+    this._reactable = props.reactable.constructor.name;
     this._reactable_id = props.reactable._id;
   }
 

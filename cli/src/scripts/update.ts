@@ -1,5 +1,5 @@
 import { GithubService, Repository, StorageService, User } from '@/core/index.js';
-import githubClient from '@/helpers/github-client.js';
+import githubClient from '@/helpers/github.js';
 import { knex } from '@/knex/knex.js';
 import { RelationalStorage } from '@/knex/storage.js';
 import { Worker } from 'bullmq';

@@ -9,13 +9,13 @@ import {
   Tag,
   Watcher
 } from '@/core/index.js';
-import githubClient from '@/helpers/github-client.js';
+import githubClient from '@/helpers/github.js';
 import { knex } from '@/knex/knex.js';
 import { RelationalStorage } from '@/knex/storage.js';
-import client from '@/mongo/client.js';
 import { MultiBar, SingleBar } from 'cli-progress';
 import { Argument, Option, program } from 'commander';
 import consola from 'consola';
+import snakeCase from 'lodash/snakeCase.js';
 import PQueue from 'p-queue';
 import pluralize from 'pluralize';
 import { Class } from 'type-fest';
@@ -101,7 +101,7 @@ export class RepositoryUpdater extends AbstractTask<Notification> {
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   program
-    .name('search')
+    .name('repo')
     .addArgument(new Argument('<full_name>', 'Repository to update'))
     .addOption(
       new Option('-r, --resources <resources...>', 'Resources to update')
@@ -132,8 +132,8 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 
       const bars: Record<string, SingleBar> = {
         repo: progress.create(1, 0, { resource: 'repository'.padEnd(12) }),
-        ...resources.reduce((mem: Record<string, SingleBar>, res) => {
-          const name = pluralize(res.prototype._entityname);
+        ...resources.reduce((mem: Record<string, SingleBar>, Ref) => {
+          const name = pluralize(snakeCase(Ref.name));
           return { ...mem, [name]: progress.create(0, 0, { resource: name.padEnd(12) }) };
         }, {})
       };
@@ -155,7 +155,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
               others[key].setTotal(summary[key]);
             });
           } else {
-            const name = pluralize(notification.resource.prototype._entityname);
+            const name = pluralize(snakeCase(notification.resource.name));
             if (notification.done) bars[name].stop();
             else bars[name].increment(notification.data.length);
           }
@@ -166,7 +166,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
         .execute()
         .then(() => {
           consola.success('Done!');
-          return Promise.all([client.close(), progress.stop()]);
+          return Promise.all([knex.destroy(), progress.stop()]);
         })
         .catch((err) => {
           consola.error(err);

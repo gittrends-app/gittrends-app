@@ -1,12 +1,14 @@
 import { program } from 'commander';
 
+import packageJson from '../../package.json' with { type: 'json' };
+
 if (import.meta.url === `file://${process.argv[1]}`) {
   program
-    .version('0.0.1')
+    .version(packageJson.version || '0.0.0')
     .command('search', 'Search for repositories', { executableFile: 'search' })
     .command('update', 'Process scheduled tasks', { executableFile: 'update' })
+    .command('update:repo', 'Update a given repository', { executableFile: 'repository' })
     .command('schedule', 'Schedule updating tasks', { executableFile: 'schedule' })
-    .command('migrate', 'Run migrations', { executableFile: 'migrate' })
     .helpOption('-h, --help', 'Display this help message')
     .parse(process.argv);
 }

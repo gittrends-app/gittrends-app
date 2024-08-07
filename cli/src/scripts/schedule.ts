@@ -2,7 +2,7 @@ import { Metadata, Repository, User } from '@/core/index.js';
 import { knex } from '@/knex/knex.js';
 import { Command, program } from 'commander';
 import consola from 'consola';
-import dayjs from 'dayjs';
+import { snakeCase } from 'lodash';
 import pick from 'lodash/pick.js';
 import pluralize from 'pluralize';
 import { createQueue } from './queue/queues.js';
@@ -25,11 +25,10 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       const usersQueue = createQueue(User);
       const reposQueue = createQueue(Repository);
 
-      const usersIt = knex<WithoutMethods<User>>(pluralize(User.prototype._entityname))
+      const usersIt = knex<WithoutMethods<User>>(pluralize(snakeCase(User.name)))
         .select(['id', 'node_id', 'login'])
-        .whereNull('created_at')
-        .orWhere('_obtained_at', '<', dayjs(new Date()).subtract(7, 'days').toDate())
-        .orderBy('_obtained_at', 'asc')
+        .whereNull('updated_at')
+        .orderBy('login', 'asc')
         .stream();
 
       await usersQueue.drain(true);
@@ -38,13 +37,13 @@ if (import.meta.url === `file://${process.argv[1]}`) {
         usersQueue.add(user.login, user, { jobId: `@${user.login}`, attempts: 3 });
       }
 
-      const reposIt = knex<WithoutMethods<Repository>>(pluralize(Repository.prototype._entityname))
+      const reposIt = knex<WithoutMethods<Repository>>(pluralize(snakeCase(Repository.name)))
         .select(['id', 'node_id', 'full_name'])
-        .orderBy('_obtained_at', 'asc')
+        .orderBy('updated_at', 'asc')
         .stream();
 
       for await (const repo of reposIt) {
-        const meta = await knex<Metadata>(pluralize(Metadata.prototype._entityname)).where({
+        const meta = await knex<Metadata>(pluralize(snakeCase(Metadata.name))).where({
           entity_id: repo.node_id
         });
 

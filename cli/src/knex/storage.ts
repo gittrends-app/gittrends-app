@@ -1,7 +1,17 @@
-import { Entity, EntityStorage, Issue, Metadata, Reaction, Storage, TimelineEvent, User } from '@/core/index.js';
+import {
+  Entity,
+  EntityStorage,
+  Issue,
+  Metadata,
+  PullRequest,
+  Reaction,
+  Storage,
+  TimelineEvent,
+  User
+} from '@/core/index.js';
 import { extract } from '@/helpers/extract.js';
-import consola from 'consola';
 import { Knex } from 'knex';
+import { snakeCase } from 'lodash';
 import mapValues from 'lodash/mapValues.js';
 import omit from 'lodash/omit.js';
 import pick from 'lodash/pick.js';
@@ -22,20 +32,35 @@ function isIsoDate(str: string) {
  * User entity
  */
 class GenericStorage<T extends Entity> implements EntityStorage<T> {
+  private readonly tablename;
+
+  private readonly userStorage: GenericStorage<User>;
+  private readonly reactionsStorage: GenericStorage<Reaction>;
+  private readonly timelineStorage: GenericStorage<TimelineEvent>;
+
   constructor(
     private knex: Knex,
-    private Ref: Class<T>
-  ) {}
+    private ClassRef: Class<T>
+  ) {
+    this.tablename = pluralize(snakeCase(ClassRef.name));
+    this.userStorage = new GenericStorage(this.knex, User);
+    this.reactionsStorage = new GenericStorage(this.knex, Reaction);
+    this.timelineStorage = new GenericStorage(this.knex, TimelineEvent);
+  }
 
   private prepare(data: Record<string, any>) {
-    if (this.Ref.name === Metadata.name) {
-      const fields = ['_id', '_entityname', '_obtained_at', 'entity', 'entity_id', 'updated_at'];
+    if (this.ClassRef.name === Metadata.name) {
+      const fields = ['_id', 'entity', 'entity_id', 'updated_at'];
       return { ...pick(data, fields), payload: omit(data, fields) };
     }
 
-    if (this.Ref.name === TimelineEvent.name) {
-      const fields = ['_id', '_entityname', '_obtained_at', '_repository', '_issue', 'event'];
+    if (this.ClassRef.name === TimelineEvent.name) {
+      const fields = ['_id', '_repository', '_issue', 'event'];
       return { ...pick(data, fields), payload: omit(data, fields) };
+    }
+
+    if ([Issue.name, PullRequest.name].includes(this.ClassRef.name)) {
+      return { ...Entity, _type: this.ClassRef.name };
     }
 
     return data;
@@ -44,32 +69,32 @@ class GenericStorage<T extends Entity> implements EntityStorage<T> {
   private recover(data: Record<string, any>) {
     if (!data) return data;
 
-    if (this.Ref.name === Metadata.name) {
-      return Metadata.from({
+    if (this.ClassRef.name === Metadata.name) {
+      return Metadata.create({
         ...data,
         ...(mapValues(data.payload, (v) => (isIsoDate(v) ? new Date(v) : v)) || {})
       });
     }
 
-    if (this.Ref.name === TimelineEvent.name) {
-      return TimelineEvent.from({ ...data, ...(data.payload || {}) });
+    if (this.ClassRef.name === TimelineEvent.name) {
+      return TimelineEvent.create({ ...data, ...(data.payload || {}) });
     }
 
     return data;
   }
 
   async get(criteria: Partial<WithoutMethods<User>>) {
-    return this.knex(pluralize(this.Ref.prototype._entityname))
+    return this.knex(this.tablename)
       .where(criteria)
       .first()
-      .then((user) => (user ? ((this.Ref as any).create(this.recover(user)) as T) : null));
+      .then((user) => (user ? (this.ClassRef as unknown as typeof Entity).create(this.recover(user)) : null));
   }
   async find(query: Partial<WithoutMethods<T>>, opts?: { limit: number; offset?: number }) {
-    return this.knex(pluralize(this.Ref.prototype._entityname))
+    return this.knex(this.tablename)
       .where(query)
       .limit(opts?.limit || 100)
       .offset(opts?.offset || 0)
-      .then((data) => data.map((d) => (this.Ref as any).create(this.recover(d)) as T));
+      .then((data) => data.map((d) => (this.ClassRef as unknown as typeof Entity).create(this.recover(d))));
   }
   async save(data: T | T[], replace?: boolean, trx?: Knex.Transaction) {
     const transaction = trx || (await this.knex.transaction());
@@ -77,29 +102,17 @@ class GenericStorage<T extends Entity> implements EntityStorage<T> {
     let dataArr = uniqBy(Array.isArray(data) ? data : [data], '_id');
     if (!dataArr.length) return;
 
-    if (this.Ref.name !== User.name) {
+    if (this.ClassRef.name !== User.name) {
       const { data, users } = extract(dataArr);
       dataArr = data;
-      await new GenericStorage(this.knex, User).save(users || [], false, transaction);
+      await this.userStorage.save(users || [], false, transaction);
     }
-
-    await new GenericStorage(this.knex, Reaction).save(
-      dataArr.reduce(
-        (memo: Reaction[], entity) =>
-          (entity as any)._reactions ? memo.concat((entity as any)._reactions as Reaction[]) : memo,
-        []
-      ),
-      true,
-      transaction
-    );
-
-    const tableName = pluralize(this.Ref.prototype._entityname);
 
     try {
       await Promise.all(
         dataArr.map((d) => {
           const op = transaction
-            .table(tableName)
+            .table(this.tablename)
             .insert(
               mapValues(this.prepare(d.toJSON()), (v) =>
                 typeof v === 'object' && !(v instanceof Date) ? JSON.stringify(v) : v
@@ -110,19 +123,29 @@ class GenericStorage<T extends Entity> implements EntityStorage<T> {
         })
       );
 
-      await new GenericStorage(this.knex, TimelineEvent).save(
-        dataArr.reduce(
-          (memo: TimelineEvent[], entity) => (entity instanceof Issue ? memo.concat(entity._events) : memo),
-          []
+      await Promise.all([
+        this.timelineStorage.save(
+          dataArr.reduce(
+            (memo: TimelineEvent[], entity) => (entity instanceof Issue ? memo.concat(entity._events) : memo),
+            []
+          ),
+          true,
+          transaction
         ),
-        true,
-        transaction
-      );
+        this.reactionsStorage.save(
+          dataArr.reduce(
+            (memo: Reaction[], entity) =>
+              (entity as any)._reactions ? memo.concat((entity as any)._reactions as Reaction[]) : memo,
+            []
+          ),
+          true,
+          transaction
+        )
+      ]);
 
       if (!trx) await transaction.commit();
     } catch (error) {
       if (!trx) await transaction.rollback();
-      consola.error(JSON.stringify(error, null, ' '));
       throw error;
     }
   }

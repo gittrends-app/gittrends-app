@@ -6,8 +6,6 @@ import type { Knex } from 'knex';
 export async function up(knex: Knex): Promise<void> {
   return knex.schema.createTable('tags', (table) => {
     table.string('_id').primary();
-    table.string('_entityname').primary();
-    table.string('_obtained_at').primary();
     table.string('_repository').notNullable();
 
     table.string('node_id').notNullable();

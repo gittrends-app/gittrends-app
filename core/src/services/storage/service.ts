@@ -58,7 +58,7 @@ export class StorageService implements Service {
 
     let user = await userStorage.get(typeof loginOrId === 'string' ? { login: loginOrId } : { id: loginOrId });
     if (user) {
-      const meta = await metadataStorage.get({ entity: User.prototype._entityname, entity_id: user._id });
+      const meta = await metadataStorage.get({ entity: User.name, entity_id: user._id });
       if (meta?.updated_at && this.isUpdated(meta.updated_at)) return user;
     }
 
@@ -79,7 +79,7 @@ export class StorageService implements Service {
       typeof ownerOrId === 'string' ? { full_name: `${ownerOrId}/${name}` } : { id: ownerOrId }
     );
     if (repo) {
-      const meta = await metadataStorage.get({ entity: repo._entityname, entity_id: repo._id });
+      const meta = await metadataStorage.get({ entity: Repository.name, entity_id: repo._id });
       if (meta?.updated_at && this.isUpdated(meta.updated_at)) return repo;
     }
 
@@ -108,10 +108,7 @@ export class StorageService implements Service {
         const params = { ...opts };
 
         if (!params.page) {
-          const meta = await metadataStorage.get({
-            entity: Entity.prototype._entityname,
-            entity_id: params.repo.node_id
-          });
+          const meta = await metadataStorage.get({ entity: Entity.name, entity_id: params.repo.node_id });
 
           const coreMeta = pick(meta, ['page', 'per_page', 'since']);
 
