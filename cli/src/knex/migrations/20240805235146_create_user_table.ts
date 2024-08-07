@@ -8,7 +8,7 @@ export async function up(knex: Knex): Promise<void> {
     table.text('_id').primary();
 
     table.text('login').notNullable();
-    table.integer('id').notNullable();
+    table.bigInteger('id').notNullable();
     table.text('node_id').notNullable();
     table.text('gravatar_id');
     table.text('type').notNullable();

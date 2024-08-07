@@ -10,7 +10,7 @@ export async function up(knex: Knex): Promise<void> {
     table.text('_reactable').notNullable();
     table.text('_reactable_id').notNullable();
 
-    table.integer('id').notNullable();
+    table.bigInteger('id').notNullable();
     table.text('node_id').notNullable();
     table.text('user');
     table.enum('content', ['+1', '-1', 'laugh', 'confused', 'heart', 'hooray', 'rocket', 'eyes']).notNullable();

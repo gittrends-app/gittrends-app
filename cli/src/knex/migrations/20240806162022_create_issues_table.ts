@@ -9,7 +9,7 @@ export async function up(knex: Knex): Promise<void> {
     table.text('_repository').notNullable();
     table.enum('_type', ['Issue', 'PullRequest']).notNullable();
 
-    table.integer('id').notNullable();
+    table.bigInteger('id').notNullable();
     table.text('node_id').notNullable();
     table.integer('number').notNullable();
     table.enum('state', ['open', 'closed']).notNullable();
