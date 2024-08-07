@@ -38,7 +38,7 @@ export class StorageService implements Service {
   search(
     total: number,
     params?: SearchOptions
-  ): Iterable<Repository, { page: number; per_page: number; count: number } & SearchOptions> {
+  ): Iterable<Repository, { page: number; per_page: number } & SearchOptions> {
     const repoStorage = this.storage.create(Repository);
     const it = this.service.search(total, params);
 

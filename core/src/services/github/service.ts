@@ -21,7 +21,7 @@ export class GithubService implements Service {
   search(
     total: number,
     opts?: SearchOptions
-  ): Iterable<Repository, { page: number; per_page: number; count: number } & SearchOptions> {
+  ): Iterable<Repository, { page: number; per_page: number } & SearchOptions> {
     const { language } = opts || {};
 
     let page = 1;
@@ -64,7 +64,6 @@ export class GithubService implements Service {
                 has_more: _repos.length === 100,
                 page: page++,
                 per_page: 100,
-                count,
                 minStargazers,
                 maxStargazers
               }
@@ -95,7 +94,7 @@ export class GithubService implements Service {
     return request({ client: this.client, url, Entity: Repository }, args as any).then(async (repo) => {
       if (!repo) return null;
       const res = await summary(this.client, { repo });
-      return res ? new Repository(repo, { summary: res }) : repo;
+      return res ? new Repository(repo, { counts: res }) : repo;
     });
   }
 

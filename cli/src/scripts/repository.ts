@@ -147,10 +147,10 @@ if (import.meta.url === `file://${process.argv[1]}`) {
             repo.increment(1);
             repo.stop();
             Object.keys(others).forEach((key) => {
-              if (!notification.data._summary) return;
+              if (!notification.data._resources_counts) return;
               const summary: Record<string, number> = {
-                ...notification.data._summary,
-                issues: notification.data._summary.issues + notification.data._summary.pull_requests
+                ...notification.data._resources_counts,
+                issues: notification.data._resources_counts.issues + notification.data._resources_counts.pull_requests
               };
               others[key].setTotal(summary[key]);
             });

@@ -26,7 +26,7 @@ export interface Service {
   search(
     total: number,
     params?: SearchOptions
-  ): Iterable<Repository, { page: number; per_page: number; count: number } & SearchOptions>;
+  ): Iterable<Repository, { page: number; per_page: number } & SearchOptions>;
 
   user(loginOrId: string | number): Promise<User | null>;
   repository(ownerOrId: string | number, name?: string): Promise<Repository | null>;

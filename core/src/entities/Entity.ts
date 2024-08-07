@@ -93,11 +93,11 @@ export interface Repository extends z.infer<typeof repository> {}
 export class Repository extends Entity {
   protected static override _schema = repository;
 
-  readonly _summary: z.infer<typeof summary> | undefined;
+  readonly _resources_counts: z.infer<typeof summary> | undefined;
 
-  constructor(data: Record<string, any>, props?: { summary: Record<string, any> }) {
+  constructor(data: Record<string, any>, props?: { counts: Record<string, number> }) {
     super(data);
-    if (props?.summary) this._summary = summary.parse(props.summary);
+    if (props?.counts) this._resources_counts = summary.parse(props.counts);
   }
 
   get _id() {
@@ -105,7 +105,7 @@ export class Repository extends Entity {
   }
 
   public toJSON(): Record<string, any> {
-    return { ...super.toJSON(), _summary: this._summary };
+    return { ...super.toJSON(), _resources_counts: this._resources_counts };
   }
 }
 

@@ -5,23 +5,23 @@ import type { Knex } from 'knex';
  */
 export async function up(knex: Knex): Promise<void> {
   return knex.schema.createTable('repositories', (table) => {
-    table.string('_id').primary();
-    table.json('_summary');
+    table.text('_id').primary();
+    table.json('_resources_counts');
 
     table.integer('id').notNullable();
-    table.string('node_id').notNullable();
-    table.string('name').notNullable();
-    table.string('full_name').notNullable();
-    table.string('owner').notNullable();
+    table.text('node_id').notNullable();
+    table.text('name').notNullable();
+    table.text('full_name').notNullable();
+    table.text('owner').notNullable();
     table.text('description');
     table.boolean('fork');
-    table.string('homepage');
-    table.string('language');
+    table.text('homepage');
+    table.text('language');
     table.integer('forks_count').notNullable();
     table.integer('stargazers_count').notNullable();
     table.integer('watchers_count').notNullable();
     table.integer('size').notNullable();
-    table.string('default_branch').notNullable();
+    table.text('default_branch').notNullable();
     table.integer('open_issues_count').notNullable();
     table.boolean('is_template');
     table.json('topics');
@@ -52,15 +52,15 @@ export async function up(knex: Knex): Promise<void> {
     table.boolean('web_commit_signoff_required');
     table.integer('subscribers_count');
     table.integer('network_count');
-    table.string('license');
-    table.string('organization');
+    table.text('license');
+    table.text('organization');
     table.json('parent');
     table.json('source');
     table.integer('forks').notNullable();
-    table.string('master_branch');
+    table.text('master_branch');
     table.integer('open_issues').notNullable();
     table.integer('watchers').notNullable();
-    table.string('code_of_conduct');
+    table.text('code_of_conduct');
 
     table.index('id');
     table.index('full_name');

@@ -2,8 +2,8 @@ import { Metadata, Repository, User } from '@/core/index.js';
 import { knex } from '@/knex/knex.js';
 import { Command, program } from 'commander';
 import consola from 'consola';
-import { snakeCase } from 'lodash';
 import pick from 'lodash/pick.js';
+import snakeCase from 'lodash/snakeCase.js';
 import pluralize from 'pluralize';
 import { createQueue } from './queue/queues.js';
 

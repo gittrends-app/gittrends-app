@@ -119,7 +119,9 @@ function reposUpdate(service: StorageService, concurrency: number, progress: Mul
         next: (notification) => {
           if (!notification.resource) {
             repoBar.increment(1);
-            repoBar.setTotal(Object.values(notification.data._summary || {}).reduce((acc, total) => acc + total, 1));
+            repoBar.setTotal(
+              Object.values(notification.data._resources_counts || {}).reduce((acc, total) => acc + total, 1)
+            );
           } else {
             if (!notification.done) {
               repoBar.increment(notification.data.length);

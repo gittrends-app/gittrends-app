@@ -5,10 +5,10 @@ import type { Knex } from 'knex';
  */
 export async function up(knex: Knex): Promise<void> {
   return knex.schema.createTable('watchers', (table) => {
-    table.string('_id').primary();
-    table.string('_repository').notNullable();
+    table.text('_id').primary();
+    table.text('_repository').notNullable();
 
-    table.string('user').notNullable();
+    table.text('user').notNullable();
 
     table.index('_repository');
 

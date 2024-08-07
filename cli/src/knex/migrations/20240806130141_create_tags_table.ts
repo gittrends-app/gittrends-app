@@ -5,12 +5,12 @@ import type { Knex } from 'knex';
  */
 export async function up(knex: Knex): Promise<void> {
   return knex.schema.createTable('tags', (table) => {
-    table.string('_id').primary();
-    table.string('_repository').notNullable();
+    table.text('_id').primary();
+    table.text('_repository').notNullable();
 
-    table.string('node_id').notNullable();
-    table.string('name').notNullable();
-    table.string('commit').notNullable();
+    table.text('node_id').notNullable();
+    table.text('name').notNullable();
+    table.text('commit').notNullable();
 
     table.index('_repository');
 

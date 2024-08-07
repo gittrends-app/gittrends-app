@@ -5,23 +5,23 @@ import type { Knex } from 'knex';
  */
 export async function up(knex: Knex): Promise<void> {
   return knex.schema.createTable('users', (table) => {
-    table.string('_id').primary();
+    table.text('_id').primary();
 
-    table.string('login').notNullable();
+    table.text('login').notNullable();
     table.integer('id').notNullable();
-    table.string('node_id').notNullable();
-    table.string('gravatar_id');
-    table.string('type').notNullable();
+    table.text('node_id').notNullable();
+    table.text('gravatar_id');
+    table.text('type').notNullable();
     table.boolean('site_admin').notNullable();
-    table.string('name');
-    table.string('company');
-    table.string('blog');
-    table.string('location');
-    table.string('email');
-    table.string('notification_email');
+    table.text('name');
+    table.text('company');
+    table.text('blog');
+    table.text('location');
+    table.text('email');
+    table.text('notification_email');
     table.boolean('hireable');
-    table.string('bio');
-    table.string('twitter_username');
+    table.text('bio');
+    table.text('twitter_username');
     table.integer('public_repos');
     table.integer('public_gists');
     table.integer('followers');

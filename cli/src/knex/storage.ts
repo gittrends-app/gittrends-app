@@ -11,10 +11,10 @@ import {
 } from '@/core/index.js';
 import { extract } from '@/helpers/extract.js';
 import { Knex } from 'knex';
-import { snakeCase } from 'lodash';
 import mapValues from 'lodash/mapValues.js';
 import omit from 'lodash/omit.js';
 import pick from 'lodash/pick.js';
+import snakeCase from 'lodash/snakeCase.js';
 import uniqBy from 'lodash/uniqBy.js';
 import pluralize from 'pluralize';
 import { Class } from 'type-fest';
@@ -34,36 +34,31 @@ function isIsoDate(str: string) {
 class GenericStorage<T extends Entity> implements EntityStorage<T> {
   private readonly tablename;
 
-  private readonly userStorage: GenericStorage<User>;
-  private readonly reactionsStorage: GenericStorage<Reaction>;
-  private readonly timelineStorage: GenericStorage<TimelineEvent>;
-
   constructor(
     private knex: Knex,
     private ClassRef: Class<T>
   ) {
     this.tablename = pluralize(snakeCase(ClassRef.name));
-    this.userStorage = new GenericStorage(this.knex, User);
-    this.reactionsStorage = new GenericStorage(this.knex, Reaction);
-    this.timelineStorage = new GenericStorage(this.knex, TimelineEvent);
   }
 
-  private prepare(data: Record<string, any>) {
-    if (this.ClassRef.name === Metadata.name) {
+  private prepare(data: Entity): Record<string, any> {
+    const jsonData = data.toJSON();
+
+    if (data.constructor.name === Metadata.name) {
       const fields = ['_id', 'entity', 'entity_id', 'updated_at'];
-      return { ...pick(data, fields), payload: omit(data, fields) };
+      return { ...pick(jsonData, fields), payload: omit(jsonData, fields) };
     }
 
-    if (this.ClassRef.name === TimelineEvent.name) {
+    if (data.constructor.name === TimelineEvent.name) {
       const fields = ['_id', '_repository', '_issue', 'event'];
-      return { ...pick(data, fields), payload: omit(data, fields) };
+      return { ...pick(jsonData, fields), payload: omit(jsonData, fields) };
     }
 
-    if ([Issue.name, PullRequest.name].includes(this.ClassRef.name)) {
-      return { ...Entity, _type: this.ClassRef.name };
+    if ([Issue.name, PullRequest.name].includes(data.constructor.name)) {
+      return { ...jsonData, _type: data.constructor.name };
     }
 
-    return data;
+    return jsonData;
   }
 
   private recover(data: Record<string, any>) {
@@ -87,14 +82,26 @@ class GenericStorage<T extends Entity> implements EntityStorage<T> {
     return this.knex(this.tablename)
       .where(criteria)
       .first()
-      .then((user) => (user ? (this.ClassRef as unknown as typeof Entity).create(this.recover(user)) : null));
+      .then((data) => {
+        if (!data) return null;
+        else if (this.ClassRef.name === Issue.name)
+          return (data._type === 'Issue' ? Issue : PullRequest).create(this.recover(data));
+        else return (this.ClassRef as unknown as typeof Entity).create(this.recover(data));
+      });
   }
   async find(query: Partial<WithoutMethods<T>>, opts?: { limit: number; offset?: number }) {
     return this.knex(this.tablename)
       .where(query)
       .limit(opts?.limit || 100)
       .offset(opts?.offset || 0)
-      .then((data) => data.map((d) => (this.ClassRef as unknown as typeof Entity).create(this.recover(d))));
+      .then((data) =>
+        data.map((d) => {
+          if (!d) return null;
+          else if (this.ClassRef.name === Issue.name)
+            return (d._type === 'Issue' ? Issue : PullRequest).create(this.recover(d));
+          else return (this.ClassRef as unknown as typeof Entity).create(this.recover(d));
+        })
+      );
   }
   async save(data: T | T[], replace?: boolean, trx?: Knex.Transaction) {
     const transaction = trx || (await this.knex.transaction());
@@ -105,7 +112,7 @@ class GenericStorage<T extends Entity> implements EntityStorage<T> {
     if (this.ClassRef.name !== User.name) {
       const { data, users } = extract(dataArr);
       dataArr = data;
-      await this.userStorage.save(users || [], false, transaction);
+      await new GenericStorage(this.knex, User).save(users || [], false, transaction);
     }
 
     try {
@@ -114,9 +121,7 @@ class GenericStorage<T extends Entity> implements EntityStorage<T> {
           const op = transaction
             .table(this.tablename)
             .insert(
-              mapValues(this.prepare(d.toJSON()), (v) =>
-                typeof v === 'object' && !(v instanceof Date) ? JSON.stringify(v) : v
-              )
+              mapValues(this.prepare(d), (v) => (typeof v === 'object' && !(v instanceof Date) ? JSON.stringify(v) : v))
             )
             .onConflict('_id');
           return replace ? op.merge() : op.ignore();
@@ -124,7 +129,7 @@ class GenericStorage<T extends Entity> implements EntityStorage<T> {
       );
 
       await Promise.all([
-        this.timelineStorage.save(
+        new GenericStorage(this.knex, TimelineEvent).save(
           dataArr.reduce(
             (memo: TimelineEvent[], entity) => (entity instanceof Issue ? memo.concat(entity._events) : memo),
             []
@@ -132,7 +137,7 @@ class GenericStorage<T extends Entity> implements EntityStorage<T> {
           true,
           transaction
         ),
-        this.reactionsStorage.save(
+        new GenericStorage(this.knex, Reaction).save(
           dataArr.reduce(
             (memo: Reaction[], entity) =>
               (entity as any)._reactions ? memo.concat((entity as any)._reactions as Reaction[]) : memo,
