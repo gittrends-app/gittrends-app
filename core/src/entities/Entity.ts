@@ -30,7 +30,11 @@ export abstract class Entity {
    */
   public static create(data: Record<string, any>) {
     const instance = Object.create(this.prototype);
-    Object.entries(data).forEach(([key, value]) => {
+
+    const res = this._schema.safeParse(data);
+    if (!res.success) throw Object.assign(fromZodError(res.error, { includePath: true }), { data });
+
+    Object.entries(Object.assign({}, data, res.data)).forEach(([key, value]) => {
       try {
         Object.assign(instance, { [key]: value });
       } catch (error) {

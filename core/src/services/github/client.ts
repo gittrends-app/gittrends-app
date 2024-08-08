@@ -46,7 +46,7 @@ export class GithubClient {
           return options.request.retryCount < 3;
         }
       },
-      log: { debug: () => void 0, info: () => void 0, warn: consola.warn, error: consola.error }
+      log: { debug: () => void 0, info: () => void 0, warn: consola.warn, error: consola.debug }
     });
   }
 

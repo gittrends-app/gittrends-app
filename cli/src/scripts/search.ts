@@ -1,6 +1,7 @@
 import { GithubService, Repository, StorageService, User } from '@/core/index.js';
+import env from '@/helpers/env.js';
 import githubClient from '@/helpers/github.js';
-import { knex } from '@/knex/knex.js';
+import { connect } from '@/knex/knex.js';
 import { RelationalStorage } from '@/knex/storage.js';
 import { SingleBar } from 'cli-progress';
 import { Option, program } from 'commander';
@@ -51,8 +52,11 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     )
     .helpOption('-h, --help', 'Display this help message')
     .action(async (options: { total: number }) => {
+      consola.info('Connecting to the database...');
+      const db = await connect(env.DATABASE_URL, { schema: 'public', migrate: true });
+
       consola.info('Initializing the storage service...');
-      const service = new StorageService(new GithubService(githubClient), new RelationalStorage(knex), { valid_by: 1 });
+      const service = new StorageService(new GithubService(githubClient), new RelationalStorage(db), { valid_by: 1 });
 
       const task = new AddRepositories(options.total, { service });
 
@@ -90,7 +94,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
         })
         .then(() => {
           consola.success('Search completed!');
-          return Promise.all([knex.destroy(), progress.stop()]);
+          return Promise.all([db.destroy(), progress.stop()]);
         })
         .catch((err) => {
           consola.error('Search failed!', err);

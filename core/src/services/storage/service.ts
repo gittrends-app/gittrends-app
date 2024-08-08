@@ -19,8 +19,8 @@ import { Storage } from './storage.js';
  * Storage service
  */
 export class StorageService implements Service {
-  private readonly service: Service;
-  private readonly storage: Storage;
+  public readonly service: Service;
+  public readonly storage: Storage;
 
   private readonly validBy: number;
 

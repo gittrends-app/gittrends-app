@@ -40,3 +40,30 @@ export function extract<T = any>(entity: T): { data: T; users?: User[] } {
     users: users.length ? users : undefined
   };
 }
+
+/**
+ *  Extracts users references from an entity (without replacing by its id).
+ */
+export function extractRefs<T = any>(entity: T): Omit<WithoutMethods<User>, '_id'>[] {
+  let data: any = entity;
+
+  const users: Omit<WithoutMethods<User>, '_id'>[] = [];
+
+  if (isPlainObject(entity) || entity instanceof Entity) {
+    forIn(entity as object, (value: any) => {
+      users.push(...extractRefs(value));
+    });
+
+    if (User.validate(data)) {
+      users.push(data);
+    }
+  }
+
+  if (Array.isArray(entity)) {
+    data = entity.map((item) => {
+      users.push(...extractRefs(item));
+    });
+  }
+
+  return users;
+}

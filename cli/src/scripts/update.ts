@@ -1,6 +1,7 @@
-import { GithubService, Repository, StorageService, User } from '@/core/index.js';
+import { GithubService, Repository, StorageService } from '@/core/index.js';
+import env from '@/helpers/env.js';
 import githubClient from '@/helpers/github.js';
-import { knex } from '@/knex/knex.js';
+import { connect } from '@/knex/knex.js';
 import { RelationalStorage } from '@/knex/storage.js';
 import { Worker } from 'bullmq';
 import { MultiBar, Presets } from 'cli-progress';
@@ -8,19 +9,15 @@ import { Option, program } from 'commander';
 import consola from 'consola';
 import { createQueue, createWorker } from './queue/queues.js';
 import { RepositoryUpdater } from './repository.js';
-import { UserUpdater } from './user.js';
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   program
     .name('update')
-    .addOption(new Option('-rc <number>', 'Number of concurrent workers for repositories').argParser(Number).default(1))
-    .addOption(new Option('-uc <number>', 'Number of concurrent workers for users').argParser(Number).default(1))
+    .addOption(new Option('-w, --workers <number>', 'Number of concurrent workers').argParser(Number).default(1))
     .helpOption('-h, --help', 'Display help for command')
-    .action(async (opts: { Rc: number; Uc: number }) => {
+    .action(async (opts: { workers: number }) => {
       consola.info('Initializing the storage service...');
-      const service = new StorageService(new GithubService(githubClient), new RelationalStorage(knex), {
-        valid_by: 1
-      });
+      const service = new GithubService(githubClient);
 
       const progress = new MultiBar(
         {
@@ -32,17 +29,11 @@ if (import.meta.url === `file://${process.argv[1]}`) {
         Presets.shades_classic
       );
 
-      const worker = usersUpdate(service, opts.Uc, progress);
-      const repoWorker = reposUpdate(service, opts.Rc, progress);
+      const worker = reposUpdate(service, opts.workers, progress);
 
-      await Promise.all([
-        new Promise<void>((resolve) => {
-          worker.on('closed', async () => resolve());
-        }),
-        new Promise<void>((resolve) => {
-          repoWorker.on('closed', async () => resolve());
-        })
-      ]);
+      await new Promise<void>((resolve) => {
+        worker.on('closed', async () => resolve());
+      });
 
       consola.success('Update process finished!');
     })
@@ -51,46 +42,13 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       consola.error(error);
       process.exit(1);
     })
-    .finally(() => knex.destroy())
     .finally(() => process.exit(0));
-}
-
-/**
- *  Update users.
- */
-function usersUpdate(service: StorageService, concurrency: number, progress: MultiBar): Worker {
-  const queue = createQueue(User);
-
-  const bar = progress.create(Infinity, 0, { name: '> users' });
-
-  setInterval(async () => {
-    const count = await queue
-      .getJobCounts()
-      .then((totals) => Object.values(totals).reduce((acc, total) => acc + total, 0));
-
-    bar.start(count, count - (await queue.count()), { name: '> users' });
-  }, 5000);
-
-  const worker = createWorker(
-    User,
-    async (job) => {
-      return new UserUpdater(job.data.id, { service })
-        .execute()
-        .then(() => bar.increment())
-        .then(() => job.updateProgress(100));
-    },
-    concurrency
-  );
-
-  worker.on('closed', () => progress.remove(bar));
-
-  return worker;
 }
 
 /**
  *
  */
-function reposUpdate(service: StorageService, concurrency: number, progress: MultiBar): Worker {
+function reposUpdate(service: GithubService, concurrency: number, progress: MultiBar): Worker {
   const queue = createQueue(Repository);
 
   const queueBar = progress.create(Infinity, 0, { name: '> repos' });
@@ -106,7 +64,15 @@ function reposUpdate(service: StorageService, concurrency: number, progress: Mul
   return createWorker(
     Repository,
     async (job) => {
-      const task = new RepositoryUpdater(job.data.full_name, { service, parallel: true });
+      const knex = await connect(env.DATABASE_URL, {
+        schema: job.data.full_name.replace('/', '@').replace(/[^a-zA-Z0-9_]/g, '_'),
+        migrate: true
+      });
+
+      const task = new RepositoryUpdater(job.data.full_name, {
+        service: new StorageService(service, new RelationalStorage(knex), { valid_by: 1 }),
+        parallel: true
+      });
 
       const repoBar = progress.create(
         0,
@@ -140,7 +106,8 @@ function reposUpdate(service: StorageService, concurrency: number, progress: Mul
         .then(() => job.updateProgress(100))
         .then(() => queueBar.increment())
         .finally(() => queueBar.stop())
-        .finally(() => progress.remove(queueBar));
+        .finally(() => progress.remove(queueBar))
+        .finally(() => knex.destroy());
     },
     concurrency
   );

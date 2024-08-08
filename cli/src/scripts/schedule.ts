@@ -1,5 +1,6 @@
-import { Metadata, Repository, User } from '@/core/index.js';
-import { knex } from '@/knex/knex.js';
+import { Metadata, Repository } from '@/core/index.js';
+import env from '@/helpers/env.js';
+import { connect } from '@/knex/knex.js';
 import { Command, program } from 'commander';
 import consola from 'consola';
 import pick from 'lodash/pick.js';
@@ -12,38 +13,25 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     .name('schedule')
     .addCommand(
       new Command('obliterate').action(async () => {
-        const usersQueue = createQueue(User);
         const reposQueue = createQueue(Repository);
-
-        await Promise.all([usersQueue.obliterate({ force: true }), reposQueue.obliterate({ force: true })]).finally(
-          () => Promise.all([knex.destroy(), usersQueue.close(), reposQueue.close()])
-        );
+        await reposQueue.obliterate({ force: true });
+        return reposQueue.close();
       })
     )
     .action(async () => {
       consola.info('Starting schedule...');
-      const usersQueue = createQueue(User);
       const reposQueue = createQueue(Repository);
 
-      const usersIt = knex<WithoutMethods<User>>(pluralize(snakeCase(User.name)))
-        .select(['id', 'node_id', 'login'])
-        .whereNull('updated_at')
-        .orderBy('login', 'asc')
-        .stream();
+      consola.info('Connecting to database...');
+      const conn = await connect(env.DATABASE_URL, { schema: 'public', migrate: true });
 
-      await usersQueue.drain(true);
-
-      for await (const user of usersIt) {
-        usersQueue.add(user.login, user, { jobId: `@${user.login}`, attempts: 3 });
-      }
-
-      const reposIt = knex<WithoutMethods<Repository>>(pluralize(snakeCase(Repository.name)))
+      const reposIt = conn<WithoutMethods<Repository>>(pluralize(snakeCase(Repository.name)))
         .select(['id', 'node_id', 'full_name'])
         .orderBy('updated_at', 'asc')
         .stream();
 
       for await (const repo of reposIt) {
-        const meta = await knex<Metadata>(pluralize(snakeCase(Metadata.name))).where({
+        const meta = await conn<Metadata>(pluralize(snakeCase(Metadata.name))).where({
           entity_id: repo.node_id
         });
 
@@ -57,7 +45,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       }
 
       consola.success('Schedule finished successfully!');
-      await Promise.all([knex.destroy(), usersQueue.close(), reposQueue.close()]);
+      await Promise.all([conn.destroy(), reposQueue.close()]);
     })
     .parse(process.argv);
 }

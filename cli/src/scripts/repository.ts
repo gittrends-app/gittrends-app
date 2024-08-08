@@ -7,10 +7,12 @@ import {
   Stargazer,
   StorageService,
   Tag,
+  User,
   Watcher
 } from '@/core/index.js';
+import env from '@/helpers/env.js';
 import githubClient from '@/helpers/github.js';
-import { knex } from '@/knex/knex.js';
+import { connect } from '@/knex/knex.js';
 import { RelationalStorage } from '@/knex/storage.js';
 import { MultiBar, SingleBar } from 'cli-progress';
 import { Argument, Option, program } from 'commander';
@@ -67,28 +69,49 @@ export class RepositoryUpdater extends AbstractTask<Notification> {
 
       this.notify({ repository: repo._id, data: repo });
 
-      await Promise.allSettled(
-        this.resources.map(async (Ref) =>
-          this.queue
-            .add(async () => {
-              const it = this.service.resource(Ref as any, { repo, per_page: Ref === Issue ? 25 : 100 });
+      const promises = this.resources.map(async (Ref) =>
+        this.queue
+          .add(async () => {
+            const it = this.service.resource(Ref as any, { repo, per_page: Ref === Issue ? 25 : 100 });
 
-              for await (const response of it) {
-                this.notify({ repository: repo.node_id, resource: Ref, data: response.data, done: false });
-              }
+            for await (const response of it) {
+              this.notify({ repository: repo.node_id, resource: Ref, data: response.data, done: false });
+            }
 
-              this.notify({ repository: repo.node_id, resource: Ref, done: true });
-            })
-            .catch((err) => {
-              this.notify(err);
-              consola.error(err);
-              throw err;
-            })
-        )
-      ).then((results) => {
-        const errors = results.filter((r) => r.status === 'rejected').map((r) => r.reason);
-        if (errors.length) throw new AggregateError(errors, errors.map((e) => e.message).join(' -- '));
-      });
+            this.notify({ repository: repo.node_id, resource: Ref, done: true });
+          })
+          .catch((err) => {
+            this.notify(err);
+            throw err;
+          })
+      );
+
+      let finished = false;
+
+      const usersUpdate = (async () => {
+        const storage = this.service.storage.create(User);
+        let users: User[] = [];
+        do {
+          users = await storage.find({ updated_at: undefined });
+
+          if (users.length > 0) {
+            await Promise.all(
+              users.map((user) =>
+                this.service.user(user.login).catch((error) => (error.status === 404 ? null : Promise.reject(error)))
+              )
+            );
+          } else {
+            if (!finished) await new Promise((resolve) => setTimeout(resolve, 1000));
+          }
+        } while (users.length > 0 || !finished);
+      })();
+
+      await Promise.allSettled([...promises, Promise.all(promises).then(() => (finished = true))])
+        .then((results) => {
+          const errors = results.filter((r) => r.status === 'rejected').map((r) => r.reason);
+          if (errors.length) throw new AggregateError(errors, errors.map((e) => e.message).join(' -- '));
+        })
+        .finally(() => usersUpdate);
 
       this.state = 'completed';
     } catch (error) {
@@ -119,8 +142,14 @@ if (import.meta.url === `file://${process.argv[1]}`) {
             .map((r) => RESOURCE_LIST.find((res) => pluralize(res.name.toLowerCase()) === r))
             .filter((r) => r !== undefined);
 
+      consola.info('Connecting to the database...');
+      const db = await connect(env.DATABASE_URL, {
+        schema: fullName.replace('/', '@').replace(/[^a-zA-Z0-9_]/g, '_'),
+        migrate: true
+      });
+
       consola.info('Initializing the Github service...');
-      const service = new StorageService(new GithubService(githubClient), new RelationalStorage(knex), {
+      const replicaService = new StorageService(new GithubService(githubClient), new RelationalStorage(db), {
         valid_by: 1
       });
 
@@ -138,7 +167,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
         }, {})
       };
 
-      const task = new RepositoryUpdater(fullName, { service, resources, parallel: true });
+      const task = new RepositoryUpdater(fullName, { service: replicaService, resources, parallel: true });
 
       task.subscribe({
         next: (notification) => {
@@ -166,7 +195,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
         .execute()
         .then(() => {
           consola.success('Done!');
-          return Promise.all([knex.destroy(), progress.stop()]);
+          return Promise.all([db.destroy(), progress.stop()]);
         })
         .catch((err) => {
           consola.error(err);

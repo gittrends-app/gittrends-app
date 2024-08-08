@@ -41,6 +41,7 @@
     "lodash": "^4.17.21",
     "migrate-mongo": "^11.0.0",
     "mongodb": "^6.8.0",
+    "node-fetch-cache": "^4.1.2",
     "p-queue": "^8.0.1",
     "pg": "^8.12.0",
     "pg-query-stream": "^4.6.0",
@@ -53,6 +54,7 @@
     "@types/lodash": "^4.17.6",
     "@types/migrate-mongo": "^10.0.4",
     "@types/mongodb": "^4.0.7",
+    "@types/pg": "^8.11.6",
     "@types/pluralize": "^0.0.33"
   },
   "config": {

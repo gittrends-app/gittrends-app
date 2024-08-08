@@ -91,7 +91,7 @@ class GenericStorage<T extends Entity> implements EntityStorage<T> {
   }
   async find(query: Partial<WithoutMethods<T>>, opts?: { limit: number; offset?: number }) {
     return this.knex(this.tablename)
-      .where(query)
+      .where(mapValues(query, (v) => (v === undefined ? null : v)))
       .limit(opts?.limit || 100)
       .offset(opts?.offset || 0)
       .then((data) =>
