@@ -8,7 +8,7 @@ import consola from 'consola';
 const FullOctokit = Octokit.plugin(throttling).plugin(retry);
 
 /**
- * Github client
+ * GithubClient is a wrapper around Octokit that provides a consistent interface for interacting with the Github API.
  */
 export class GithubClient {
   private readonly baseUrl: string;

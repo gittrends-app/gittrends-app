@@ -9,7 +9,7 @@ import resources from './resources/index.js';
 import summary from './resources/summary.js';
 
 /**
- * Github service
+ * A service that interacts with the Github API.
  */
 export class GithubService implements Service {
   private readonly client: GithubClient;

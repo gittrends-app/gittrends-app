@@ -22,6 +22,9 @@ export type ResourceParams = PageableParams & {
   repo: { id: number; node_id: string };
 };
 
+/**
+ * Service interface to be implemented by all services.
+ */
 export interface Service {
   search(
     total: number,

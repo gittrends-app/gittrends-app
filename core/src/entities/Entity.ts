@@ -26,7 +26,7 @@ export abstract class Entity {
   protected static _schema: z.ZodType;
 
   /**
-   * Creates an instance without validations
+   * Creates an instance from the given data.
    */
   public static create(data: Record<string, any>) {
     const instance = Object.create(this.prototype);
@@ -38,14 +38,14 @@ export abstract class Entity {
       try {
         Object.assign(instance, { [key]: value });
       } catch (error) {
-        // do nothing
+        // ignore errors when assigning properties (e.g. _id)
       }
     });
     return instance;
   }
 
   /**
-   *
+   *  Validates the given data.
    */
   public static validate(data: Record<string, any>): boolean {
     return this._schema.safeParse(data).success;
@@ -53,6 +53,9 @@ export abstract class Entity {
 
   abstract get _id(): string;
 
+  /**
+   * Creates a new instance.
+   */
   constructor(data: Record<string, any>) {
     const res = (this.constructor as typeof Entity)._schema.safeParse(data);
 
@@ -62,11 +65,14 @@ export abstract class Entity {
       try {
         Object.assign(this, { [key]: value });
       } catch (e) {
-        // do nothign
+        // ignore errors when assigning properties (e.g. _id)
       }
     }
   }
 
+  /**
+   * Returns a JSON representation of the entity.
+   */
   public toJSON(): Record<string, any> {
     return {
       _id: this._id,
@@ -79,19 +85,19 @@ export abstract class Entity {
 }
 
 /**
- * Represents a user entity.
+ * Represents a User entity.
  */
 export interface User extends z.infer<typeof user> {}
 export class User extends Entity {
   protected static override _schema = user;
 
-  get _id() {
+  override get _id() {
     return this.node_id;
   }
 }
 
 /**
- * Represents a repository entity.
+ * Represents a Repository entity.
  */
 export interface Repository extends z.infer<typeof repository> {}
 export class Repository extends Entity {
@@ -104,7 +110,7 @@ export class Repository extends Entity {
     if (props?.counts) this._resources_counts = summary.parse(props.counts);
   }
 
-  get _id() {
+  override get _id() {
     return this.node_id;
   }
 
@@ -122,7 +128,7 @@ const metadataSchema = z
   .passthrough();
 
 /**
- * Represents a metadata entity.
+ * Represents a Metadata entity.
  */
 export interface Metadata extends z.infer<typeof metadataSchema> {}
 export class Metadata extends Entity {
@@ -143,7 +149,7 @@ export class Metadata extends Entity {
     if (!('updated_at' in params)) this.updated_at = new Date();
   }
 
-  get _id() {
+  override get _id() {
     return `${this.entity}_${this.entity_id}`;
   }
 }
@@ -165,7 +171,7 @@ export abstract class RepositoryResource extends Entity {
 }
 
 /**
- * Represents a reactable entity.
+ * Represents a Reactable entity.
  */
 export interface Reactable {
   _hasReactions: boolean;
@@ -173,19 +179,19 @@ export interface Reactable {
 }
 
 /**
- * Represents a tag entity.
+ * Represents a Tag entity.
  */
 export interface Tag extends z.infer<typeof tag> {}
 export class Tag extends RepositoryResource {
   protected static override _schema = tag;
 
-  get _id() {
+  override get _id() {
     return this.node_id;
   }
 }
 
 /**
- * Represents a release entity.
+ * Represents a Release entity.
  */
 export interface Release extends z.infer<typeof release> {}
 export class Release extends RepositoryResource implements Reactable {
@@ -197,37 +203,37 @@ export class Release extends RepositoryResource implements Reactable {
     return (this.reactions?.total_count || 0) > 0;
   }
 
-  get _id() {
+  override get _id() {
     return this.node_id;
   }
 }
 
 /**
- * Represents a watcher entity.
+ * Represents a Watcher entity.
  */
 export interface Watcher extends z.infer<typeof watcher> {}
 export class Watcher extends RepositoryResource {
   protected static override _schema = watcher;
 
-  get _id() {
+  override get _id() {
     return `${this._repository}_${typeof this.user === 'string' ? this.user : this.user.node_id}`;
   }
 }
 
 /**
- * Represents a stargazer entity.
+ * Represents a Stargazer entity.
  */
 export interface Stargazer extends z.infer<typeof stargazer> {}
 export class Stargazer extends RepositoryResource {
   protected static override _schema = stargazer;
 
-  get _id() {
+  override get _id() {
     return `${this._repository}_${typeof this.user === 'string' ? this.user : this.user.node_id}`;
   }
 }
 
 /**
- * Represents an issue entity.
+ * Represents an Issue entity.
  */
 
 export interface Issue extends z.infer<typeof issue> {}
@@ -241,19 +247,19 @@ export class Issue extends RepositoryResource implements Reactable {
     return (this.reactions?.total_count || 0) > 0;
   }
 
-  get _id() {
+  override get _id() {
     return this.node_id;
   }
 }
 
 /**
- * Represents a pull request entity.
+ * Represents a Pull Request entity.
  */
 export interface PullRequest extends z.infer<typeof pr> {}
 export class PullRequest extends Issue {
   protected static override _schema = pr;
 
-  get _id() {
+  override get _id() {
     return this.node_id;
   }
 }
@@ -274,7 +280,7 @@ export class Reaction extends RepositoryResource {
     this._reactable_id = props.reactable._id;
   }
 
-  get _id() {
+  override get _id() {
     return this.node_id;
   }
 
@@ -304,7 +310,7 @@ export class TimelineEvent extends RepositoryResource implements Reactable {
     this._issue = props.issue;
   }
 
-  get _id() {
+  override get _id() {
     const { id, node_id: nodeId, created_at: createdAt } = this;
     return `${this._repository}_${this._issue}_${nodeId || id || (createdAt as Date | undefined)?.toISOString()}`;
   }

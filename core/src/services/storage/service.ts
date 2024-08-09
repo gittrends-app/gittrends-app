@@ -17,7 +17,7 @@ import { Iterable, ResourceParams, SearchOptions, Service } from '../service.js'
 import { Storage } from './storage.js';
 
 /**
- * Storage service
+ * A service that interacts with the Github API and stores the results in a storage.
  */
 export class StorageService extends PassThroughService {
   public readonly storage: Storage;

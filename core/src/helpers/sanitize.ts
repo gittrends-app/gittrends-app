@@ -6,7 +6,7 @@ import { PartialDeep } from 'type-fest';
 import { z, ZodType } from 'zod';
 
 /**
- * Sanitize an object by removing null and empty string values.
+ * Function to sanitize data by removing null values, empty objects and empty arrays.
  */
 export default function sanitize<T extends object>(data: T): PartialDeep<T> {
   return cloneDeepWith(data, (value) => {
@@ -24,7 +24,7 @@ export default function sanitize<T extends object>(data: T): PartialDeep<T> {
 }
 
 /**
- * Preprocess a Zod schema by sanitizing the data before validation.
+ * Zod preprocessor to sanitize data by removing null values, empty objects and empty arrays.
  */
 export function zodSanitize<Z extends ZodType>(schema: Z) {
   return z.preprocess<Z>((data: any) => sanitize(data), schema);
