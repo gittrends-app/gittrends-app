@@ -93,16 +93,8 @@ export class RepositoryUpdater extends AbstractTask<Notification> {
         let users: User[] = [];
         do {
           users = await storage.find({ updated_at: undefined });
-
-          if (users.length > 0) {
-            await Promise.all(
-              users.map((user) =>
-                this.service.user(user.id).catch((error) => (error.status === 404 ? null : Promise.reject(error)))
-              )
-            );
-          } else {
-            if (!finished) await new Promise((resolve) => setTimeout(resolve, 1000));
-          }
+          if (users.length > 0) await this.service.user(users.map((u) => u.id));
+          else if (!finished) await new Promise((resolve) => setTimeout(resolve, 1000));
         } while (users.length > 0 || !finished);
       })();
 

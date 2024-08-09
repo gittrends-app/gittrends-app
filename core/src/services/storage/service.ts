@@ -52,23 +52,34 @@ export class StorageService implements Service {
     };
   }
 
-  async user(loginOrId: string | number): Promise<User | null> {
+  async user(loginOrId: string | number): Promise<User | null>;
+  async user(loginOrId: string[] | number[]): Promise<(User | null)[]>;
+  async user(id: any): Promise<any> {
+    const arr = Array.isArray(id) ? id : [id];
+
     const metadataStorage = this.storage.create(Metadata);
     const userStorage = this.storage.create(User);
 
-    let user = await userStorage.get(typeof loginOrId === 'string' ? { login: loginOrId } : { id: loginOrId });
-    if (user) {
-      const meta = await metadataStorage.get({ entity: User.name, entity_id: user._id });
-      if (meta?.updated_at && this.isUpdated(meta.updated_at)) return user;
-    }
+    const result = await Promise.all(
+      arr.map(async (loginOrId) => {
+        const user = await userStorage.get(typeof loginOrId === 'string' ? { login: loginOrId } : { id: loginOrId });
+        if (user) {
+          const meta = await metadataStorage.get({ entity: User.name, entity_id: user._id });
+          if (meta?.updated_at && this.isUpdated(meta.updated_at)) return { user, new: false };
+        }
 
-    user = await this.service.user(loginOrId);
-    if (user) {
-      await userStorage.save(user, true);
-      await metadataStorage.save(new Metadata({ entity: user }), true);
-    }
+        return { user: await this.service.user(loginOrId), new: true };
+      })
+    );
 
-    return user;
+    const newUsers = result.map((r) => r.user).filter((u) => u !== null);
+    await userStorage.save(newUsers, true);
+    await metadataStorage.save(
+      newUsers.map((user) => new Metadata({ entity: user })),
+      true
+    );
+
+    return Array.isArray(id) ? result.map((r) => r.user) : result[0].user;
   }
 
   async repository(ownerOrId: string | number, name?: string): Promise<Repository | null> {

@@ -1,13 +1,13 @@
 import { GithubClient } from '@/core/index.js';
 import fetchRetry from 'fetch-retry';
-import NodeFetchCache, { FileSystemCache } from 'node-fetch-cache';
+import NodeFetchCache, { FileSystemCache, MemoryCache } from 'node-fetch-cache';
 import env from './env.js';
 
 const fetch = NodeFetchCache.create({
-  cache: new FileSystemCache({
-    ttl: 1000 * 60 * 60 * 7,
-    cacheDirectory: './.cache'
-  }),
+  cache:
+    env.CACHE_MODE === 'memory'
+      ? new MemoryCache({ ttl: 1000 * 60 * 30 })
+      : new FileSystemCache({ ttl: 1000 * 60 * 60 * 7, cacheDirectory: './.cache' }),
   shouldCacheResponse: (response) => /\/users?\//.test(response.url) && response.status === 200
 });
 

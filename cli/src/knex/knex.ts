@@ -12,7 +12,7 @@ export async function connect(url: string, opts?: { schema: string; migrate: boo
     client: 'pg',
     connection: url,
     searchPath: [opts?.schema || 'public'],
-    pool: { min: 0, max: 3 },
+    pool: { min: 0, max: 5 },
     migrations: {
       directory: join(import.meta.dirname, 'migrations'),
       tableName: 'knex_migrations'

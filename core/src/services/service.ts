@@ -29,6 +29,8 @@ export interface Service {
   ): Iterable<Repository, { page: number; per_page: number } & SearchOptions>;
 
   user(loginOrId: string | number): Promise<User | null>;
+  user(loginOrId: string[] | number[]): Promise<(User | null)[]>;
+
   repository(ownerOrId: string | number, name?: string): Promise<Repository | null>;
 
   resource(Entity: Class<Tag>, opts: ResourceParams): Iterable<Tag>;

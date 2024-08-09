@@ -76,13 +76,23 @@ export class GithubService implements Service {
     };
   }
 
-  async user(loginOrId: string | number): Promise<User | null> {
-    const [url, args] =
-      typeof loginOrId === 'number'
-        ? [`GET /user/:id` as const, { id: loginOrId }]
-        : [`GET /users/:login` as const, { login: loginOrId }];
+  async user(loginOrId: string | number): Promise<User | null>;
+  async user(loginOrId: string[] | number[]): Promise<(User | null)[]>;
+  async user(id: any): Promise<any> {
+    const arr = Array.isArray(id) ? id : [id];
 
-    return request({ client: this.client, url, Entity: User }, args as any).then((user) => user || null);
+    const res = arr.map(async (loginOrId) => {
+      const [url, args] =
+        typeof loginOrId === 'number'
+          ? [`GET /user/:id` as const, { id: loginOrId }]
+          : [`GET /users/:login` as const, { login: loginOrId }];
+
+      return request({ client: this.client, url, Entity: User }, args as any)
+        .then((user) => user || null)
+        .catch((error) => (error.status === 404 ? null : Promise.reject(error)));
+    });
+
+    return Array.isArray(id) ? res : res[0];
   }
 
   async repository(ownerOrId: string | number, name?: string): Promise<Repository | null> {

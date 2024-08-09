@@ -3,6 +3,7 @@ import { z } from 'zod';
 const schema = z
   .object({
     DATABASE_URL: z.string().url().default('postgres://localhost:5432/mining-tool'),
+    CACHE_MODE: z.enum(['memory', 'file']).default('memory'),
     QUEUE_BOARD_PORT: z.coerce.number().default(3001),
     GITHUB_API_BASE_URL: z.string().url().default('https://api.github.com'),
     GITHUB_API_TOKEN: z.string().optional()
