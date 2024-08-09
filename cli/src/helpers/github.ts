@@ -8,7 +8,7 @@ const fetch = NodeFetchCache.create({
     ttl: 1000 * 60 * 60 * 7,
     cacheDirectory: './.cache'
   }),
-  shouldCacheResponse: (response) => response.url.includes('/users/')
+  shouldCacheResponse: (response) => /\/users?\//.test(response.url) && response.status === 200
 });
 
 export default new GithubClient(env.GITHUB_API_BASE_URL, {

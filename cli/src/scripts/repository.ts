@@ -97,7 +97,7 @@ export class RepositoryUpdater extends AbstractTask<Notification> {
           if (users.length > 0) {
             await Promise.all(
               users.map((user) =>
-                this.service.user(user.login).catch((error) => (error.status === 404 ? null : Promise.reject(error)))
+                this.service.user(user.id).catch((error) => (error.status === 404 ? null : Promise.reject(error)))
               )
             );
           } else {
