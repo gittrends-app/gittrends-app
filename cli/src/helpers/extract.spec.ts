@@ -130,7 +130,7 @@ describe('extract', () => {
     });
   });
 
-  describe.only('refs', () => {
+  describe('refs', () => {
     const user = {
       login: 'danielbruns',
       id: 1478925,
