@@ -7,7 +7,7 @@ const schema = z
     REDIS_HOST: z.string().ip().default('127.0.0.1'),
     REDIS_PORT: z.number().default(6379),
     REDIS_QUEUE_DB: z.number().default(1),
-    REDIS_CACHE_DB: z.number().default(2),
+    REDIS_CACHE_DB: z.number().default(0),
     QUEUE_BOARD_PORT: z.coerce.number().default(3001),
     GITHUB_API_BASE_URL: z.string().url().default('https://api.github.com'),
     GITHUB_API_TOKEN: z.string().optional()

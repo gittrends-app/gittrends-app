@@ -1,13 +1,17 @@
-import { GithubService, Repository, StorageService } from '@/core/index.js';
+import { GithubService, Repository, Service, StorageService } from '@/core/index.js';
 import env from '@/helpers/env.js';
 import githubClient from '@/helpers/github.js';
 import { connect } from '@/knex/knex.js';
 import { RelationalStorage } from '@/knex/storage.js';
+import { CacheService } from '@/services/cache.js';
 import { Worker } from 'bullmq';
+import { caching } from 'cache-manager';
+import { redisStore } from 'cache-manager-redis-yet';
 import { MultiBar, Presets } from 'cli-progress';
 import { Option, program } from 'commander';
 import consola from 'consola';
 import readline from 'readline';
+import { RedisClientOptions } from 'redis';
 import { createQueue, createWorker } from './queue/queues.js';
 import { RepositoryUpdater } from './repository.js';
 
@@ -20,8 +24,15 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       readline.emitKeypressEvents(process.stdin);
       process.stdin.setRawMode(true);
 
+      const cache = await caching(redisStore, {
+        ttl: 1000 * 60 * 60 * 24 * 7,
+        max: 100000,
+        url: `redis://${env.REDIS_HOST}:${env.REDIS_PORT}/${env.REDIS_CACHE_DB}`,
+        database: env.REDIS_CACHE_DB
+      } satisfies RedisClientOptions & Record<string, any>);
+
       consola.info('Initializing the storage service...');
-      const service = new GithubService(githubClient);
+      const service = new CacheService(new GithubService(githubClient), cache);
 
       const progress = new MultiBar(
         {
@@ -62,7 +73,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 /**
  *
  */
-function reposUpdate(service: GithubService, concurrency: number, progress: MultiBar): Worker {
+function reposUpdate(service: Service, concurrency: number, progress: MultiBar): Worker {
   const queue = createQueue(Repository);
 
   const queueBar = progress.create(Infinity, 0, { name: '> repos' });
