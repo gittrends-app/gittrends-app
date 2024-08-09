@@ -41,7 +41,7 @@ describe('Asset entity', () => {
           site_admin: false
         }
       })
-    ).toHaveProperty('uploader', expect.objectContaining({ id: 33505452 }));
+    ).toHaveProperty('uploader', expect.objectContaining({ node_id: 'MDQ6VXNlcjMzNTA1NDUy' }));
   });
 
   it('should parse assets from release list', () => {
@@ -84,7 +84,7 @@ describe('Asset entity', () => {
       node_id: 'RA_kwDOAToIks4GecJt',
       name: 'kubernetes.tar.gz',
       label: 'Kubernetes Source Code',
-      uploader: expect.objectContaining({ id: 33505452 }),
+      uploader: expect.objectContaining({ node_id: 'MDQ6VXNlcjMzNTA1NDUy' }),
       content_type: 'application/x-gzip',
       state: 'uploaded',
       size: 528255,
@@ -96,6 +96,6 @@ describe('Asset entity', () => {
   });
 
   it('should allow uploader to be a number', () => {
-    expect(() => assetSchema.parse({ ...baseFields, uploader: 33505452 })).not.toThrowError();
+    expect(() => assetSchema.parse({ ...baseFields, uploader: 'MDQ6VXNlcjMzNTA1NDUy' })).not.toThrowError();
   });
 });

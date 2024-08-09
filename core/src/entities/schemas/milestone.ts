@@ -10,7 +10,7 @@ export default zodSanitize(
     state: z.enum(['open', 'closed']),
     title: z.string(),
     description: z.string().optional(),
-    creator: z.union([userSchema, z.number()]).optional(),
+    creator: z.union([userSchema, z.string()]).optional(),
     open_issues: z.number().int(),
     closed_issues: z.number().int(),
     created_at: z.coerce.date(),

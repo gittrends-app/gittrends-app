@@ -1,9 +1,9 @@
 import {
+  Entity,
   GithubService,
   Issue,
   Release,
   Repository,
-  RepositoryResource,
   Stargazer,
   StorageService,
   Tag,
@@ -27,7 +27,7 @@ import { RedisClientOptions } from 'redis';
 import { Class } from 'type-fest';
 import { AbstractTask } from '../helpers/task.js';
 
-type Notification<T extends RepositoryResource = RepositoryResource> = { repository: string } & (
+type Notification<T extends Entity = Entity> = { repository: string } & (
   | { resource?: undefined; data: Repository }
   | { resource: Class<T>; data: T[]; done: false }
   | { resource: Class<T>; done: true }
@@ -97,9 +97,18 @@ export class RepositoryUpdater extends AbstractTask<Notification> {
         let users: User[] = [];
         do {
           users = await storage.find({ updated_at: undefined });
-          if (users.length > 0) await this.service.user(users.map((u) => u.id));
-          else if (!finished) await new Promise((resolve) => setTimeout(resolve, 1000));
+          if (users.length > 0) {
+            const updatedUsers = await this.service.user(users.map((u) => u.id));
+            this.notify({
+              repository: repo._id,
+              resource: User,
+              data: updatedUsers.filter((u) => u !== null),
+              done: false
+            });
+          } else if (!finished) await new Promise((resolve) => setTimeout(resolve, 1000));
         } while (users.length > 0 || !finished);
+
+        this.notify({ repository: repo._id, resource: User, done: true });
       })();
 
       await Promise.allSettled([...promises, Promise.all(promises).then(() => (finished = true))])
@@ -144,6 +153,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
         migrate: true
       });
 
+      consola.info('Initializing cache...');
       const cache = await caching(redisStore, {
         ttl: 1000 * 60 * 60 * 24 * 7,
         max: 100000,
@@ -166,11 +176,27 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 
       const bars: Record<string, SingleBar> = {
         repo: progress.create(1, 0, { resource: 'repository'.padEnd(12) }),
+        users: progress.create(Infinity, 0, { resource: 'users'.padEnd(12) }),
         ...resources.reduce((mem: Record<string, SingleBar>, Ref) => {
           const name = pluralize(snakeCase(Ref.name));
           return { ...mem, [name]: progress.create(0, 0, { resource: name.padEnd(12) }) };
         }, {})
       };
+
+      const interval = setInterval(async () => {
+        const [total, updated] = await Promise.all([
+          db(pluralize(snakeCase(User.name)))
+            .count({ count: '*' })
+            .then(([res]) => res.count as number),
+          db(pluralize(snakeCase(User.name)))
+            .whereNull('updated_at')
+            .count({ count: '*' })
+            .then(([res]) => res.count as number)
+        ]);
+
+        bars.users.setTotal(total);
+        bars.users.update(updated);
+      }, 1000 * 60);
 
       const task = new RepositoryUpdater(fullName, { service: replicaService, resources, parallel: true });
 
@@ -200,7 +226,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
         .execute()
         .then(() => {
           consola.success('Done!');
-          return Promise.all([db.destroy(), progress.stop()]);
+          return Promise.all([db.destroy(), progress.stop(), clearInterval(interval)]);
         })
         .catch((err) => {
           consola.error(err);

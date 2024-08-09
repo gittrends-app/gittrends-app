@@ -13,5 +13,5 @@ export default z.object({
   download_count: z.number().int(),
   created_at: z.coerce.date(),
   updated_at: z.coerce.date(),
-  uploader: z.union([userSchema, z.number()]).optional()
+  uploader: z.union([userSchema, z.string()]).optional()
 });
