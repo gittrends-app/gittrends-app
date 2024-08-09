@@ -1,23 +1,12 @@
-import {
-  Issue,
-  Iterable,
-  Release,
-  Repository,
-  ResourceParams,
-  SearchOptions,
-  Service,
-  Stargazer,
-  Tag,
-  User,
-  Watcher
-} from '@/core/index.js';
 import { Class } from 'type-fest';
+import { Issue, Release, Repository, Stargazer, Tag, User, Watcher } from '../entities/Entity.js';
+import { Iterable, ResourceParams, SearchOptions, Service } from './service.js';
 
 /**
  * A service that passes all requests through to the underlying service.
  */
-export class PassthroughService implements Service {
-  constructor(private readonly service: Service) {}
+export class PassThroughService implements Service {
+  constructor(public readonly service: Service) {}
 
   search(
     total: number,

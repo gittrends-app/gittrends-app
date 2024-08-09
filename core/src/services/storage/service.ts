@@ -12,20 +12,20 @@ import {
   User,
   Watcher
 } from '../../entities/Entity.js';
+import { PassThroughService } from '../passthrough.js';
 import { Iterable, ResourceParams, SearchOptions, Service } from '../service.js';
 import { Storage } from './storage.js';
 
 /**
  * Storage service
  */
-export class StorageService implements Service {
-  public readonly service: Service;
+export class StorageService extends PassThroughService {
   public readonly storage: Storage;
 
   private readonly validBy: number;
 
   constructor(service: Service, storage: Storage, props?: { valid_by?: number }) {
-    this.service = service;
+    super(service);
     this.storage = storage;
 
     this.validBy = props?.valid_by ?? 1;

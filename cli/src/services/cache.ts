@@ -1,5 +1,4 @@
-import { Service, User } from '@/core/index.js';
-import { PassthroughService } from './passthrough.js';
+import { PassThroughService, Service, User } from '@/core/index.js';
 
 import { Cache } from 'cache-manager';
 
@@ -27,7 +26,7 @@ async function decompress(buffer: Buffer): Promise<string> {
 /**
  * A service that caches responses from the underlying service.
  */
-export class CacheService extends PassthroughService {
+export class CacheService extends PassThroughService {
   constructor(
     service: Service,
     private cache: Cache
