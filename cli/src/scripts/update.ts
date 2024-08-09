@@ -11,15 +11,15 @@ import readline from 'readline';
 import { createQueue, createWorker } from './queue/queues.js';
 import { RepositoryUpdater } from './repository.js';
 
-readline.emitKeypressEvents(process.stdin);
-process.stdin.setRawMode(true);
-
 if (import.meta.url === `file://${process.argv[1]}`) {
   program
     .name('update')
     .addOption(new Option('-w, --workers <number>', 'Number of concurrent workers').argParser(Number).default(1))
     .helpOption('-h, --help', 'Display help for command')
     .action(async (opts: { workers: number }) => {
+      readline.emitKeypressEvents(process.stdin);
+      process.stdin.setRawMode(true);
+
       consola.info('Initializing the storage service...');
       const service = new GithubService(githubClient);
 
