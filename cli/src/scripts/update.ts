@@ -1,4 +1,4 @@
-import { GithubService, Repository, Service, StorageService } from '@/core/index.js';
+import { GithubService, Repository, Service, StorageService, User } from '@/core/index.js';
 import env from '@/helpers/env.js';
 import githubClient from '@/helpers/github.js';
 import { connect } from '@/knex/knex.js';
@@ -10,6 +10,8 @@ import { redisStore } from 'cache-manager-redis-yet';
 import { MultiBar, Presets } from 'cli-progress';
 import { Option, program } from 'commander';
 import consola from 'consola';
+import snakeCase from 'lodash/snakeCase.js';
+import pluralize from 'pluralize';
 import readline from 'readline';
 import { RedisClientOptions } from 'redis';
 import { createQueue, createWorker } from './queue/queues.js';
@@ -99,6 +101,16 @@ function reposUpdate(service: Service, concurrency: number, progress: MultiBar):
         parallel: true
       });
 
+      const usersCounts = await Promise.all([
+        knex(pluralize(snakeCase(User.name)))
+          .count({ count: '*' })
+          .then(([res]) => res.count as number),
+        knex(pluralize(snakeCase(User.name)))
+          .whereNotNull('updated_at')
+          .count({ count: '*' })
+          .then(([res]) => res.count as number)
+      ]);
+
       const repoBar = progress.create(
         0,
         0,
@@ -109,9 +121,10 @@ function reposUpdate(service: Service, concurrency: number, progress: MultiBar):
       task.subscribe({
         next: (notification) => {
           if (!notification.resource) {
-            repoBar.increment(1);
+            repoBar.increment(1 + usersCounts[1]);
             repoBar.setTotal(
-              Object.values(notification.data._resources_counts || {}).reduce((acc, total) => acc + total, 1)
+              Object.values(notification.data._resources_counts || {}).reduce((acc, total) => acc + total, 1) +
+                usersCounts[0]
             );
           } else {
             if (!notification.done) {
