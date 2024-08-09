@@ -189,7 +189,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
             .count({ count: '*' })
             .then(([res]) => res.count as number),
           db(pluralize(snakeCase(User.name)))
-            .whereNull('updated_at')
+            .whereNotNull('updated_at')
             .count({ count: '*' })
             .then(([res]) => res.count as number)
         ]);
