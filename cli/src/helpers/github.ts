@@ -18,7 +18,7 @@ function cacheMode() {
         host: env.REDIS_HOST,
         port: env.REDIS_PORT,
         db: env.REDIS_CACHE_DB,
-        ttl: 1000 * 60 * 60 * 24 * 7
+        ttl: 1000 * 60 * 60 * 24
       });
     default:
       throw new Error('Unknown cache mode');

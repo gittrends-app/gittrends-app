@@ -7,8 +7,12 @@ import { Worker } from 'bullmq';
 import { MultiBar, Presets } from 'cli-progress';
 import { Option, program } from 'commander';
 import consola from 'consola';
+import readline from 'readline';
 import { createQueue, createWorker } from './queue/queues.js';
 import { RepositoryUpdater } from './repository.js';
+
+readline.emitKeypressEvents(process.stdin);
+process.stdin.setRawMode(true);
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   program
@@ -30,6 +34,16 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       );
 
       const worker = reposUpdate(service, opts.workers, progress);
+
+      process.stdin.on('keypress', async (str, key) => {
+        if (key.sequence === '+') {
+          worker.concurrency = ++opts.workers;
+        } else if (key.sequence === '-') {
+          worker.concurrency = Math.max(1, --opts.workers);
+        } else if (key.ctrl && key.name === 'c') {
+          process.exit();
+        }
+      });
 
       await new Promise<void>((resolve) => {
         worker.on('closed', async () => resolve());
