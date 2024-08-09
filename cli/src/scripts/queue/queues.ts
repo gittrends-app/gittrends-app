@@ -1,5 +1,6 @@
 /* eslint-disable jsdoc/require-jsdoc */
 import { Entity, Repository, User } from '@/core/index.js';
+import env from '@/helpers/env.js';
 import { Processor, Queue, Worker } from 'bullmq';
 import snakeCase from 'lodash/snakeCase.js';
 import pluralize from 'pluralize';
@@ -14,7 +15,9 @@ type RepoJob = { id: number; node_id: string; full_name: string };
 export function createQueue<T extends UserJob, R = any>(Ref: Class<User>): Queue<T, R>;
 export function createQueue<T extends RepoJob, R = any>(Ref: Class<Repository>): Queue<T, R>;
 export function createQueue<T = any, R = any>(Ref: Class<Entity>): Queue<T, R> {
-  return new Queue<T, R>(pluralize(snakeCase(Ref.name)));
+  return new Queue<T, R>(pluralize(snakeCase(Ref.name)), {
+    connection: { host: env.REDIS_HOST, port: env.REDIS_PORT, db: env.REDIS_QUEUE_DB }
+  });
 }
 
 /**
@@ -29,7 +32,7 @@ export function createWorker<T extends RepoJob>(
 export function createWorker<T>(Ref: Class<Entity>, func: Processor<T>, concurrency?: number): Worker<T> {
   return new Worker(pluralize(snakeCase(Ref.name)), func, {
     concurrency: concurrency || 1,
-    connection: {},
+    connection: { host: env.REDIS_HOST, port: env.REDIS_PORT, db: env.REDIS_QUEUE_DB },
     maxStalledCount: Number.MAX_SAFE_INTEGER
   });
 }

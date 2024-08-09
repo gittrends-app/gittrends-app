@@ -1,13 +1,32 @@
 import { GithubClient } from '@/core/index.js';
+import { RedisCache } from '@node-fetch-cache/redis';
 import fetchRetry from 'fetch-retry';
 import NodeFetchCache, { FileSystemCache, MemoryCache } from 'node-fetch-cache';
 import env from './env.js';
 
+/**
+ *
+ */
+function cacheMode() {
+  switch (env.CACHE_MODE) {
+    case 'memory':
+      return new MemoryCache({ ttl: 1000 * 60 * 30 });
+    case 'file':
+      return new FileSystemCache({ ttl: 1000 * 60 * 60 * 7, cacheDirectory: './.cache' });
+    case 'redis':
+      return new RedisCache({
+        host: env.REDIS_HOST,
+        port: env.REDIS_PORT,
+        db: env.REDIS_CACHE_DB,
+        ttl: 1000 * 60 * 60 * 24 * 7
+      });
+    default:
+      throw new Error('Unknown cache mode');
+  }
+}
+
 const fetch = NodeFetchCache.create({
-  cache:
-    env.CACHE_MODE === 'memory'
-      ? new MemoryCache({ ttl: 1000 * 60 * 30 })
-      : new FileSystemCache({ ttl: 1000 * 60 * 60 * 7, cacheDirectory: './.cache' }),
+  cache: cacheMode(),
   shouldCacheResponse: (response) => /\/users?\//.test(response.url) && response.status === 200
 });
 

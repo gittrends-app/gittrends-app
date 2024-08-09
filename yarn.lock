@@ -983,6 +983,14 @@
   resolved "https://registry.yarnpkg.com/@msgpackr-extract/msgpackr-extract-win32-x64/-/msgpackr-extract-win32-x64-3.0.3.tgz#0aa5502d547b57abfc4ac492de68e2006e417242"
   integrity sha512-x0fWaQtYp4E6sktbsdAqnehxDgEc/VwM7uLsRCYWaiGu0ykYdZPiS8zCWdnjHwyiumousxfBm4SO31eXqwEZhQ==
 
+"@node-fetch-cache/redis@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@node-fetch-cache/redis/-/redis-1.0.0.tgz#c83ed5726c712951271b075a182763ddd6167b32"
+  integrity sha512-zqF5qVoQK0r/n0VOaOJ8WxU+wsvJ2WMt9hWzw0MYH9fyIq8bu7MNNNDYizoIYio0+Z75YHbDLRVOUcdzuyJ2Og==
+  dependencies:
+    ioredis "^5.4.1"
+    node-fetch-cache "^4.1.1"
+
 "@nodelib/fs.scandir@2.1.5":
   version "2.1.5"
   resolved "https://registry.npmjs.org/@nodelib/fs.scandir/-/fs.scandir-2.1.5.tgz"
@@ -4554,7 +4562,7 @@ node-abort-controller@^3.1.1:
   resolved "https://registry.yarnpkg.com/node-abort-controller/-/node-abort-controller-3.1.1.tgz#a94377e964a9a37ac3976d848cb5c765833b8548"
   integrity sha512-AGK2yQKIjRuqnc6VkX2Xj5d+QW8xZ87pa1UK6yA6ouUyuxfHuMP6umE5QK7UmTeOAymo+Zx1Fxiuw9rVx8taHQ==
 
-node-fetch-cache@^4.1.2:
+node-fetch-cache@^4.1.1, node-fetch-cache@^4.1.2:
   version "4.1.2"
   resolved "https://registry.yarnpkg.com/node-fetch-cache/-/node-fetch-cache-4.1.2.tgz#4fdbd152c80ec5de76749076a1c4bb16510af8ee"
   integrity sha512-pcdJlxXE/fT0wcCY13RJUAyZeMKW4altG7P1GKLn1d4z1nLzM9Ua0ZIBiZUp90ppI/UqenZ+8UKWq+cKBk1fFA==
