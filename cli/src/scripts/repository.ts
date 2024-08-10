@@ -1,9 +1,9 @@
 import {
-  Entity,
   GithubService,
   Issue,
   Release,
   Repository,
+  RepositoryResource,
   Stargazer,
   StorageService,
   Tag,
@@ -27,36 +27,34 @@ import { RedisClientOptions } from 'redis';
 import { Class } from 'type-fest';
 import { AbstractTask } from '../helpers/task.js';
 
-type Notification<T extends Entity = Entity> = { repository: string } & (
+type Updatable = Class<RepositoryResource | User>;
+
+type Notification<T extends RepositoryResource | User = any> = { repository: string } & (
   | { resource?: undefined; data: Repository }
   | { resource: Class<T>; data: T[]; done: false }
   | { resource: Class<T>; done: true }
 );
 
-const RESOURCE_LIST = [Tag, Release, Stargazer, Watcher, Issue];
-
 /**
  * Task to retrieve all resources from a repository.
  */
 export class RepositoryUpdater extends AbstractTask<Notification> {
+  public static readonly resources: Updatable[] = [Tag, Release, Stargazer, Watcher, Issue, User];
+
   private idOrName: string | number;
 
   private service: StorageService;
-  private resources: Class<Tag | Release | Stargazer | Watcher | Issue>[];
+  private resources: Updatable[];
   private queue: PQueue;
 
   constructor(
     idOrName: string | number,
-    params: {
-      service: StorageService;
-      resources?: Class<Tag | Release | Stargazer | Watcher | Issue>[];
-      parallel?: boolean;
-    }
+    params: { service: StorageService; resources?: Updatable[]; parallel?: boolean }
   ) {
     super();
     this.idOrName = idOrName;
     this.service = params.service;
-    this.resources = params.resources || RESOURCE_LIST;
+    this.resources = params.resources || RepositoryUpdater.resources;
     this.queue = new PQueue({ concurrency: params.parallel ? this.resources.length : 1 });
   }
 
@@ -76,13 +74,37 @@ export class RepositoryUpdater extends AbstractTask<Notification> {
       const promises = this.resources.map(async (Ref) =>
         this.queue
           .add(async () => {
-            const it = this.service.resource(Ref as any, { repo, per_page: Ref === Issue ? 25 : 100 });
+            if (Ref === User) {
+              const storage = this.service.storage.create(User);
 
-            for await (const response of it) {
-              this.notify({ repository: repo.node_id, resource: Ref, data: response.data, done: false });
+              let users: User[] = [];
+
+              do {
+                users = await storage.find({ updated_at: undefined });
+
+                if (users.length > 0) {
+                  const updatedUsers = await this.service.user(users.map((u) => u.id));
+                  this.notify({
+                    repository: repo._id,
+                    resource: User,
+                    data: updatedUsers.filter((u) => u !== null),
+                    done: false
+                  });
+                } else if (this.queue.pending > 1) {
+                  await new Promise((resolve) => setTimeout(resolve, 1000));
+                }
+              } while (users.length > 0 || this.queue.pending > 1);
+
+              this.notify({ repository: repo._id, resource: User, done: true });
+            } else {
+              const it = this.service.resource(Ref as any, { repo, per_page: Ref === Issue ? 25 : 100 });
+
+              for await (const response of it) {
+                this.notify({ repository: repo.node_id, resource: Ref, data: response.data, done: false });
+              }
+
+              this.notify({ repository: repo.node_id, resource: Ref, done: true });
             }
-
-            this.notify({ repository: repo.node_id, resource: Ref, done: true });
           })
           .catch((err) => {
             this.notify(err);
@@ -90,33 +112,10 @@ export class RepositoryUpdater extends AbstractTask<Notification> {
           })
       );
 
-      let finished = false;
-
-      const usersUpdate = (async () => {
-        const storage = this.service.storage.create(User);
-        let users: User[] = [];
-        do {
-          users = await storage.find({ updated_at: undefined });
-          if (users.length > 0) {
-            const updatedUsers = await this.service.user(users.map((u) => u.id));
-            this.notify({
-              repository: repo._id,
-              resource: User,
-              data: updatedUsers.filter((u) => u !== null),
-              done: false
-            });
-          } else if (!finished) await new Promise((resolve) => setTimeout(resolve, 1000));
-        } while (users.length > 0 || !finished);
-
-        this.notify({ repository: repo._id, resource: User, done: true });
-      })();
-
-      await Promise.allSettled([...promises, Promise.all(promises).then(() => (finished = true))])
-        .then((results) => {
-          const errors = results.filter((r) => r.status === 'rejected').map((r) => r.reason);
-          if (errors.length) throw new AggregateError(errors, errors.map((e) => e.message).join(' -- '));
-        })
-        .finally(() => usersUpdate);
+      await Promise.allSettled(promises).then((results) => {
+        const errors = results.filter((r) => r.status === 'rejected').map((r) => r.reason);
+        if (errors.length) throw new AggregateError(errors, errors.map((e) => e.message).join(' -- '));
+      });
 
       this.state = 'completed';
     } catch (error) {
@@ -132,20 +131,18 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     .name('repo')
     .addArgument(new Argument('<full_name>', 'Repository to update'))
     .addOption(
-      new Option('-r, --resources <resources...>', 'Resources to update')
-        .choices([...RESOURCE_LIST.map((r) => pluralize(r.name.toLowerCase())), 'all'])
-        .default(['all'])
+      new Option('-r, --resource <resource...>', 'Resource to update')
+        .choices(RepositoryUpdater.resources.map((r) => r.name))
+        .default(RepositoryUpdater.resources.map((r) => r.name))
     )
     .addOption(new Option('-p, --parallel', 'Run in parallel').default(false))
     .helpOption('-h, --help', 'Display this help message')
-    .action(async (fullName: string, opts: { resources: string[]; parallel: boolean }) => {
-      if (fullName.split('/').length !== 2) throw new Error('Invalid repository name! Use the format owner/name.');
+    .action(async (fullName: string, opts: { resource: string[]; parallel: boolean }) => {
+      const resources = opts.resource
+        .map((r) => RepositoryUpdater.resources.find((R) => R.name === r))
+        .filter((r) => r !== undefined);
 
-      const resources = opts.resources.includes('all')
-        ? RESOURCE_LIST
-        : opts.resources
-            .map((r) => RESOURCE_LIST.find((res) => pluralize(res.name.toLowerCase()) === r))
-            .filter((r) => r !== undefined);
+      if (fullName.split('/').length !== 2) throw new Error('Invalid repository name! Use the format owner/name.');
 
       consola.info('Connecting to the database...');
       const db = await connect(env.DATABASE_URL, {
@@ -176,7 +173,6 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 
       const bars: Record<string, SingleBar> = {
         repo: progress.create(1, 0, { resource: 'repository'.padEnd(12) }),
-        users: progress.create(Infinity, 0, { resource: 'users'.padEnd(12) }),
         ...resources.reduce((mem: Record<string, SingleBar>, Ref) => {
           const name = pluralize(snakeCase(Ref.name));
           return { ...mem, [name]: progress.create(0, 0, { resource: name.padEnd(12) }) };
@@ -196,7 +192,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 
         bars.users.setTotal(total);
         bars.users.update(updated);
-      }, 1000 * 60);
+      }, 1000 * 15);
 
       const task = new RepositoryUpdater(fullName, { service: replicaService, resources, parallel: true });
 
@@ -207,7 +203,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
             repo.increment(1);
             repo.stop();
             Object.keys(others).forEach((key) => {
-              if (!notification.data._resources_counts) return;
+              if (key === 'users' || !notification.data._resources_counts) return;
               const summary: Record<string, number> = {
                 ...notification.data._resources_counts,
                 issues: notification.data._resources_counts.issues + notification.data._resources_counts.pull_requests
@@ -231,7 +227,8 @@ if (import.meta.url === `file://${process.argv[1]}`) {
         .catch((err) => {
           consola.error(err);
           process.exit(1);
-        });
+        })
+        .finally(() => process.exit(0));
     })
     .parseAsync(process.argv);
 }
