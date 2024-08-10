@@ -72,12 +72,18 @@ export class StorageService extends PassThroughService {
       })
     );
 
-    const newUsers = result.map((r) => r.user).filter((u) => u !== null);
-    await userStorage.save(newUsers, true);
-    await metadataStorage.save(
-      newUsers.map((user) => new Metadata({ entity: user })),
-      true
-    );
+    const newUsers = result
+      .filter((r) => r.new)
+      .map((r) => r.user)
+      .filter((u) => u !== null);
+
+    if (newUsers.length > 0) {
+      await userStorage.save(newUsers, true);
+      await metadataStorage.save(
+        newUsers.map((user) => new Metadata({ entity: user })),
+        true
+      );
+    }
 
     return Array.isArray(id) ? result.map((r) => r.user) : result[0].user;
   }
