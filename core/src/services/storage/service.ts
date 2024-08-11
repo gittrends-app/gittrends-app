@@ -65,27 +65,25 @@ export class StorageService extends PassThroughService {
         const user = await userStorage.get(typeof loginOrId === 'string' ? { login: loginOrId } : { id: loginOrId });
         if (user) {
           const meta = await metadataStorage.get({ entity: User.name, entity_id: user._id });
-          if (meta?.updated_at && this.isUpdated(meta.updated_at)) return { user, new: false };
+          if (meta?.updated_at && this.isUpdated(meta.updated_at)) return user;
         }
 
-        return { user: await this.service.user(loginOrId), new: true };
+        const newUser = await this.service.user(loginOrId);
+
+        if (newUser) {
+          await userStorage.save(newUser, true);
+          await metadataStorage.save(new Metadata({ entity: newUser }), true);
+          return newUser;
+        } else if (user) {
+          await metadataStorage.save(new Metadata({ entity: user, deleted_at: new Date() }), true);
+          return user;
+        }
+
+        return null;
       })
     );
 
-    const newUsers = result
-      .filter((r) => r.new)
-      .map((r) => r.user)
-      .filter((u) => u !== null);
-
-    if (newUsers.length > 0) {
-      await userStorage.save(newUsers, true);
-      await metadataStorage.save(
-        newUsers.map((user) => new Metadata({ entity: user })),
-        true
-      );
-    }
-
-    return Array.isArray(id) ? result.map((r) => r.user) : result[0].user;
+    return Array.isArray(id) ? result : result[0];
   }
 
   async repository(ownerOrId: string | number, name?: string): Promise<Repository | null> {

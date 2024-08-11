@@ -11,6 +11,7 @@ import {
 } from '@/core/index.js';
 import { extract } from '@/helpers/extract.js';
 import { Knex } from 'knex';
+import mapKeys from 'lodash/mapKeys.js';
 import mapValues from 'lodash/mapValues.js';
 import omit from 'lodash/omit.js';
 import pick from 'lodash/pick.js';
@@ -84,14 +85,29 @@ class GenericStorage<T extends Entity> implements EntityStorage<T> {
       .first()
       .then((data) => {
         if (!data) return null;
-        else if (this.ClassRef.name === Issue.name)
+        else if (this.ClassRef.name === Issue.name) {
           return (data._type === 'Issue' ? Issue : PullRequest).create(this.recover(data));
-        else return (this.ClassRef as unknown as typeof Entity).create(this.recover(data));
+        } else {
+          return (this.ClassRef as unknown as typeof Entity).create(this.recover(data));
+        }
       });
   }
   async find(query: Partial<WithoutMethods<T>>, opts?: { limit: number; offset?: number }) {
-    return this.knex(this.tablename)
-      .where(mapValues(query, (v) => (v === undefined ? null : v)))
+    const { tablename, ClassRef } = this;
+
+    return this.knex(tablename)
+      .select(`${tablename}.*`)
+      .leftJoin('metadata', function () {
+        // eslint-disable-next-line no-invalid-this
+        this.on('metadata.entity_id', '=', `${tablename}._id`).andOnVal('metadata.entity', ClassRef.name);
+      })
+      .where(
+        mapValues(
+          mapKeys(query, (_, k) => `${tablename}.${k}`),
+          (v) => (v === undefined ? null : v)
+        )
+      )
+      .andWhereRaw('metadata.payload->>? is null', ['deleted_at'])
       .limit(opts?.limit || 100)
       .offset(opts?.offset || 0)
       .then((data) =>
@@ -103,6 +119,27 @@ class GenericStorage<T extends Entity> implements EntityStorage<T> {
         })
       );
   }
+
+  async count(query: Partial<WithoutMethods<T>>): Promise<number> {
+    const { tablename, ClassRef } = this;
+
+    return this.knex(tablename)
+      .select(`${tablename}.*`)
+      .leftJoin('metadata', function () {
+        // eslint-disable-next-line no-invalid-this
+        this.on('metadata.entity_id', '=', `${tablename}._id`).andOnVal('metadata.entity', ClassRef.name);
+      })
+      .where(
+        mapValues(
+          mapKeys(query, (_, k) => `${tablename}.${k}`),
+          (v) => (v === undefined ? null : v)
+        )
+      )
+      .andWhereRaw('metadata.payload->>? is null', ['deleted_at'])
+      .count({ count: '*' })
+      .then((data) => Number(data[0].count));
+  }
+
   async save(data: T | T[], replace?: boolean, trx?: Knex.Transaction) {
     const transaction = trx || (await this.knex.transaction());
 

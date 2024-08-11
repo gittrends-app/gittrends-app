@@ -8,6 +8,7 @@ export interface EntityStorage<T extends Entity> {
   get: (query: Partial<WithoutMethods<T>>) => Promise<T | null>;
   find: (query: Partial<WithoutMethods<T>>, opts?: { limit: number; offset?: number }) => Promise<T[]>;
   save: (data: T | T[], replace?: boolean) => Promise<void>;
+  count: (query: Partial<WithoutMethods<T>>) => Promise<number>;
 }
 
 /**

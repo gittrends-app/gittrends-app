@@ -5,6 +5,7 @@ import omitBy from 'lodash/omitBy.js';
 import { Class, MergeExclusive } from 'type-fest';
 import { z } from 'zod';
 import { errorMap, fromZodError } from 'zod-validation-error';
+import { zodSanitize } from '../helpers/sanitize.js';
 import events from './schemas/events.js';
 import issue from './schemas/issue.js';
 import pr from './schemas/pull_request.js';
@@ -34,7 +35,7 @@ export abstract class Entity {
     const res = this._schema.safeParse(data);
     if (!res.success) throw Object.assign(fromZodError(res.error, { includePath: true }), { data });
 
-    Object.entries(Object.assign({}, data, res.data)).forEach(([key, value]) => {
+    Object.entries(res.data).forEach(([key, value]) => {
       try {
         Object.assign(instance, { [key]: value });
       } catch (error) {
@@ -101,7 +102,7 @@ export class User extends Entity {
  */
 export interface Repository extends z.infer<typeof repository> {}
 export class Repository extends Entity {
-  protected static override _schema = repository;
+  protected static override _schema = repository.and(z.object({ _resources_counts: summary.optional() }));
 
   readonly _resources_counts: z.infer<typeof summary> | undefined;
 
@@ -119,13 +120,15 @@ export class Repository extends Entity {
   }
 }
 
-const metadataSchema = z
-  .object({
-    entity: z.string(),
-    entity_id: z.string(),
-    updated_at: z.coerce.date().optional()
-  })
-  .passthrough();
+const metadataSchema = zodSanitize(
+  z
+    .object({
+      entity: z.string(),
+      entity_id: z.string(),
+      updated_at: z.coerce.date().optional()
+    })
+    .passthrough()
+);
 
 /**
  * Represents a Metadata entity.

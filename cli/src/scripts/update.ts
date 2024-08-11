@@ -1,4 +1,4 @@
-import { GithubService, Repository, Service, StorageService, User } from '@/core/index.js';
+import { GithubService, Issue, Repository, Service, StorageService, User } from '@/core/index.js';
 import env from '@/helpers/env.js';
 import githubClient from '@/helpers/github.js';
 import { connect } from '@/knex/knex.js';
@@ -114,9 +114,16 @@ function reposUpdate(service: Service, concurrency: number, progress: MultiBar):
         next: async (notification) => {
           if (!notification.resource) {
             if (job.name !== User.name) {
-              taskBar.setTotal(
-                (notification.data._resources_counts as Record<string, number>)[pluralize(snakeCase(job.name))] || 0
-              );
+              if (job.name === Issue.name) {
+                taskBar.setTotal(
+                  (notification.data._resources_counts?.issues || 0) +
+                    (notification.data._resources_counts?.pull_requests || 0)
+                );
+              } else {
+                taskBar.setTotal(
+                  (notification.data._resources_counts as Record<string, number>)[pluralize(snakeCase(job.name))] || 0
+                );
+              }
             } else {
               const [total, count] = await Promise.all([
                 knex(pluralize(snakeCase(User.name)))
