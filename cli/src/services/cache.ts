@@ -1,6 +1,6 @@
 import { PassThroughService, Service, User } from '@/core/index.js';
 
-import { Cache } from 'cache-manager';
+import { Cache, MultiCache } from 'cache-manager';
 
 import { promisify } from 'util';
 import { gunzip, gzip } from 'zlib';
@@ -29,7 +29,7 @@ async function decompress(buffer: Buffer): Promise<string> {
 export class CacheService extends PassThroughService {
   constructor(
     service: Service,
-    private cache: Cache
+    private cache: Cache | MultiCache
   ) {
     super(service);
   }

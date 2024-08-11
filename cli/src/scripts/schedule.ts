@@ -11,10 +11,10 @@ import { createQueue } from './queue/queues.js';
 const PRIORITIES = [
   { Entity: Tag, priority: 10 },
   { Entity: Release, priority: 10 },
-  { Entity: Stargazer, priority: 20 },
-  { Entity: Watcher, priority: 20 },
-  { Entity: Issue, priority: 30 },
-  { Entity: User, priority: 40 }
+  { Entity: Stargazer, priority: 10 },
+  { Entity: Watcher, priority: 10 },
+  { Entity: Issue, priority: 20 },
+  { Entity: User, priority: 30 }
 ];
 
 if (import.meta.url === `file://${process.argv[1]}`) {

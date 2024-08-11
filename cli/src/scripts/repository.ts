@@ -10,20 +10,18 @@ import {
   User,
   Watcher
 } from '@/core/index.js';
+import { createCache } from '@/helpers/cache.js';
 import env from '@/helpers/env.js';
 import githubClient from '@/helpers/github.js';
 import { connect } from '@/knex/knex.js';
 import { RelationalStorage } from '@/knex/storage.js';
 import { CacheService } from '@/services/cache.js';
-import { caching } from 'cache-manager';
-import { redisStore } from 'cache-manager-redis-yet';
 import { MultiBar, SingleBar } from 'cli-progress';
 import { Argument, Option, program } from 'commander';
 import consola from 'consola';
 import snakeCase from 'lodash/snakeCase.js';
 import PQueue from 'p-queue';
 import pluralize from 'pluralize';
-import { RedisClientOptions } from 'redis';
 import { Class } from 'type-fest';
 import { AbstractTask } from '../helpers/task.js';
 
@@ -150,17 +148,9 @@ if (import.meta.url === `file://${process.argv[1]}`) {
         migrate: true
       });
 
-      consola.info('Initializing cache...');
-      const cache = await caching(redisStore, {
-        ttl: 1000 * 60 * 60 * 24 * 7,
-        max: 100000,
-        url: `redis://${env.REDIS_HOST}:${env.REDIS_PORT}/${env.REDIS_CACHE_DB}`,
-        database: env.REDIS_CACHE_DB
-      } satisfies RedisClientOptions & Record<string, any>);
-
       consola.info('Initializing the Github service...');
       const replicaService = new StorageService(
-        new CacheService(new GithubService(githubClient), cache),
+        new CacheService(new GithubService(githubClient), await createCache()),
         new RelationalStorage(db),
         { valid_by: 1 }
       );
