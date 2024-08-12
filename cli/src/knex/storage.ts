@@ -21,7 +21,7 @@ import pluralize from 'pluralize';
 import { Class } from 'type-fest';
 
 /**
- *
+ *  Checks if a string is a valid ISO date.
  */
 function isIsoDate(str: string) {
   if (!/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z/.test(str)) return false;
@@ -30,7 +30,7 @@ function isIsoDate(str: string) {
 }
 
 /**
- * User entity
+ * Generic storage
  */
 class GenericStorage<T extends Entity> implements EntityStorage<T> {
   private readonly tablename;

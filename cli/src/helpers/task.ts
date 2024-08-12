@@ -1,5 +1,8 @@
 import { ObservableLike, Observer, Unsubscribable } from 'type-fest';
 
+/**
+ * Task interface.
+ */
 export interface Task<T = unknown> extends ObservableLike<T> {
   state: 'pending' | 'running' | 'completed' | 'error';
   execute(): Promise<void>;

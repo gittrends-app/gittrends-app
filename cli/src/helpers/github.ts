@@ -2,6 +2,9 @@ import { GithubClient } from '@/core/index.js';
 import fetchRetry from 'fetch-retry';
 import env from './env.js';
 
+/**
+ * Github client.
+ */
 export default new GithubClient(env.GITHUB_API_BASE_URL, {
   apiToken: env.GITHUB_API_TOKEN,
   disableThrottling: env.GITHUB_DISABLE_THROTTLING,

@@ -9,14 +9,14 @@ const gzipAsync = promisify(gzip);
 const gunzipAsync = promisify(gunzip);
 
 /**
- *
+ *  Compresses a text.
  */
 async function compress(text: string): Promise<Buffer> {
   return gzipAsync(text);
 }
 
 /**
- *
+ *  Decompresses a buffer.
  */
 async function decompress(buffer: Buffer): Promise<string> {
   const decompressedBuffer = await gunzipAsync(buffer);
