@@ -1,4 +1,5 @@
 import {
+  Commit,
   GithubService,
   Issue,
   Release,
@@ -37,7 +38,7 @@ type Notification<T extends RepositoryResource | User = any> = { repository: str
  * Task to retrieve all resources from a repository.
  */
 export class RepositoryUpdater extends AbstractTask<Notification> {
-  public static readonly resources: Updatable[] = [Tag, Release, Stargazer, Watcher, Issue, User];
+  public static readonly resources: Updatable[] = [Tag, Release, Stargazer, Watcher, Issue, Commit, User];
 
   private idOrName: string | number;
 
@@ -95,7 +96,10 @@ export class RepositoryUpdater extends AbstractTask<Notification> {
 
               this.notify({ repository: repo._id, resource: User, done: true });
             } else {
-              const it = this.service.resource(Ref as any, { repo, per_page: Ref === Issue ? 25 : 100 });
+              const it = this.service.resource(Ref as any, {
+                repo,
+                per_page: Ref === Issue || Ref === Commit ? 25 : 100
+              });
 
               for await (const response of it) {
                 this.notify({ repository: repo.node_id, resource: Ref, data: response.data, done: false });
@@ -170,6 +174,8 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       };
 
       const interval = setInterval(async () => {
+        if (!resources.includes(User)) return;
+
         const [total, updated] = await Promise.all([
           db(pluralize(snakeCase(User.name)))
             .count({ count: '*' })

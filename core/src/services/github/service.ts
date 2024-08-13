@@ -1,7 +1,17 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import min from 'lodash/min.js';
 import { Class } from 'type-fest';
-import { Issue, PullRequest, Release, Repository, Stargazer, Tag, User, Watcher } from '../../entities/Entity.js';
+import {
+  Commit,
+  Issue,
+  PullRequest,
+  Release,
+  Repository,
+  Stargazer,
+  Tag,
+  User,
+  Watcher
+} from '../../entities/Entity.js';
 import { Iterable, ResourceParams, SearchOptions, Service } from '../service.js';
 import { GithubClient } from './client.js';
 import { request } from './requests/index.js';
@@ -113,6 +123,10 @@ export class GithubService implements Service {
   resource(Entity: Class<Stargazer>, opts: ResourceParams): Iterable<Stargazer>;
   resource(Entity: Class<Watcher>, opts: ResourceParams): Iterable<Watcher>;
   resource(Entity: Class<Issue>, opts: ResourceParams & { since?: Date }): Iterable<Issue, { since?: Date }>;
+  resource(
+    Entity: Class<Commit>,
+    opts: ResourceParams & { since?: Date; until?: Date }
+  ): Iterable<Commit, { since?: Date; until?: Date }>;
   resource(Entity: Class<any>, opts: ResourceParams): Iterable<any> {
     switch (Entity.name) {
       case Stargazer.name:
@@ -126,6 +140,8 @@ export class GithubService implements Service {
       case Issue.name:
       case PullRequest.name:
         return resources.issues(this.client, opts);
+      case Commit.name:
+        return resources.commits(this.client, opts);
       default:
         throw new Error('Method not implemented.');
     }

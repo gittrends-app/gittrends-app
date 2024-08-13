@@ -1,5 +1,5 @@
 import { Class } from 'type-fest';
-import { Entity, Issue, Release, Repository, Stargazer, Tag, User, Watcher } from '../entities/Entity.js';
+import { Commit, Entity, Issue, Release, Repository, Stargazer, Tag, User, Watcher } from '../entities/Entity.js';
 
 export type PageableParams = {
   page?: number | string;
@@ -40,5 +40,9 @@ export interface Service {
   resource(Entity: Class<Release>, opts: ResourceParams): Iterable<Release>;
   resource(Entity: Class<Watcher>, opts: ResourceParams): Iterable<Watcher>;
   resource(Entity: Class<Stargazer>, opts: ResourceParams): Iterable<Stargazer>;
+  resource(
+    Entity: Class<Commit>,
+    opts: ResourceParams & { since?: Date; until?: Date }
+  ): Iterable<Commit, { since?: Date; until?: Date }>;
   resource(Entity: Class<Issue>, opts: ResourceParams & { since?: Date }): Iterable<Issue, { since?: Date }>;
 }

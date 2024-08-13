@@ -1,5 +1,5 @@
 import { Class } from 'type-fest';
-import { Issue, Release, Repository, Stargazer, Tag, User, Watcher } from '../entities/Entity.js';
+import { Commit, Issue, Release, Repository, Stargazer, Tag, User, Watcher } from '../entities/Entity.js';
 import { Iterable, ResourceParams, SearchOptions, Service } from './service.js';
 
 /**
@@ -30,6 +30,10 @@ export class PassThroughService implements Service {
   resource(Entity: Class<Watcher>, opts: ResourceParams): Iterable<Watcher>;
   resource(Entity: Class<Stargazer>, opts: ResourceParams): Iterable<Stargazer>;
   resource(Entity: Class<Issue>, opts: ResourceParams & { since?: Date }): Iterable<Issue, { since?: Date }>;
+  resource(
+    Entity: Class<Commit>,
+    opts: ResourceParams & { since?: Date; until?: Date }
+  ): Iterable<Commit, { since?: Date; until?: Date }>;
   resource(Entity: any, opts: any): any {
     return this.service.resource(Entity, opts);
   }

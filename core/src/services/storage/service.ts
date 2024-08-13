@@ -2,6 +2,7 @@ import dayjs from 'dayjs';
 import pick from 'lodash/pick.js';
 import { Class } from 'type-fest';
 import {
+  Commit,
   Issue,
   Metadata,
   Release,
@@ -111,6 +112,10 @@ export class StorageService extends PassThroughService {
   resource(Entity: Class<Stargazer>, opts: ResourceParams): Iterable<Stargazer>;
   resource(Entity: Class<Watcher>, opts: ResourceParams): Iterable<Watcher>;
   resource(Entity: Class<Issue>, opts: ResourceParams & { since?: Date }): Iterable<Issue, { since?: Date }>;
+  resource(
+    Entity: Class<Commit>,
+    opts: ResourceParams & { since?: Date; until?: Date }
+  ): Iterable<Commit, { since?: Date; until?: Date }>;
   resource(Entity: Class<any>, opts: ResourceParams): Iterable<any> {
     const metadataStorage = this.storage.create(Metadata);
     const resourceStorage = this.storage.create(Entity as Class<RepositoryResource>);
@@ -125,9 +130,16 @@ export class StorageService extends PassThroughService {
         if (!params.page) {
           const meta = await metadataStorage.get({ entity: Entity.name, entity_id: params.repo.node_id });
 
-          const coreMeta = pick(meta, ['page', 'per_page', 'since']);
+          const coreMeta = pick(meta, ['page', 'per_page', 'since', 'until']);
 
-          if (meta && (!meta.updated_at || isUpdated(meta.updated_at) || Entity === Stargazer || Entity === Issue)) {
+          if (
+            meta &&
+            (!meta.updated_at ||
+              isUpdated(meta.updated_at) ||
+              Entity === Stargazer ||
+              Entity === Issue ||
+              Entity === Commit)
+          ) {
             let page = 0;
             const limit = meta.per_page ? Number(meta.per_page) : 100;
 
@@ -147,9 +159,7 @@ export class StorageService extends PassThroughService {
           }
         }
 
-        const it = service.resource(Entity, params);
-
-        for await (const res of it) {
+        for await (const res of service.resource(Entity, params)) {
           if (res.data.length) {
             await resourceStorage.save(res.data);
             await metadataStorage.save(

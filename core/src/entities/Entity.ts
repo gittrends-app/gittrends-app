@@ -5,7 +5,8 @@ import omitBy from 'lodash/omitBy.js';
 import { Class, MergeExclusive } from 'type-fest';
 import { z } from 'zod';
 import { errorMap, fromZodError } from 'zod-validation-error';
-import { zodSanitize } from '../helpers/sanitize.js';
+import sanitize, { zodSanitize } from '../helpers/sanitize.js';
+import commit from './schemas/commit.js';
 import events from './schemas/events.js';
 import issue from './schemas/issue.js';
 import pr from './schemas/pull_request.js';
@@ -32,7 +33,7 @@ export abstract class Entity {
   public static create(data: Record<string, any>) {
     const instance = Object.create(this.prototype);
 
-    const res = this._schema.safeParse(data);
+    const res = this._schema.safeParse(sanitize(data));
     if (!res.success) throw Object.assign(fromZodError(res.error, { includePath: true }), { data });
 
     Object.entries(res.data).forEach(([key, value]) => {
@@ -320,5 +321,17 @@ export class TimelineEvent extends RepositoryResource implements Reactable {
 
   override toJSON() {
     return { ...super.toJSON(), _issue: this._issue };
+  }
+}
+
+/**
+ * Represents a Commit entity.
+ */
+export interface Commit extends z.infer<typeof commit> {}
+export class Commit extends RepositoryResource {
+  protected static override _schema = commit;
+
+  override get _id() {
+    return this.node_id;
   }
 }

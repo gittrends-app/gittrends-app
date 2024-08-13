@@ -1,4 +1,4 @@
-import { Issue, Metadata, Release, Repository, Stargazer, Tag, User, Watcher } from '@/core/index.js';
+import { Commit, Issue, Metadata, Release, Repository, Stargazer, Tag, User, Watcher } from '@/core/index.js';
 import env from '@/helpers/env.js';
 import { connect } from '@/knex/knex.js';
 import { Command, Option, program } from 'commander';
@@ -14,6 +14,7 @@ const PRIORITIES = [
   { Entity: Stargazer, priority: 10 },
   { Entity: Watcher, priority: 10 },
   { Entity: Issue, priority: 20 },
+  { Entity: Commit, priority: 20 },
   { Entity: User, priority: 30 }
 ];
 

@@ -1,6 +1,7 @@
 import { RepositoryResource } from '../../../entities/Entity.js';
 import { Iterable, PageableParams } from '../../service.js';
 import { GithubClient } from '../client.js';
+import commits from './commits.js';
 import issues from './issues.js';
 import releases from './releases.js';
 import stargazers from './stargazers.js';
@@ -15,5 +16,6 @@ export default {
   tags,
   stargazers,
   releases,
-  issues
+  issues,
+  commits
 } satisfies Record<string, (client: GithubClient, opts: ResourcesParams) => Iterable<RepositoryResource>>;

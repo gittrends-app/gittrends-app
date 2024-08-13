@@ -1,5 +1,6 @@
 import { RestEndpointMethodTypes } from '@octokit/rest';
 import {
+  Commit,
   Issue,
   PullRequest,
   Reaction,
@@ -64,6 +65,11 @@ export type IterableEndpoints = {
     result: TimelineEvent;
     params: { repo: number; number: number } & PageableParams;
   };
+  'GET /repositories/:repo/commits': {
+    response: RestEndpointMethodTypes['repos']['listCommits']['response'];
+    result: Commit;
+    params: { repo: number; since?: string } & PageableParams;
+  };
 };
 
 export type ResourceEndpoints = {
@@ -91,5 +97,10 @@ export type ResourceEndpoints = {
     response: RestEndpointMethodTypes['users']['getByUsername']['response'];
     result: User;
     params: { login: string };
+  };
+  'GET /repositories/:repo/commits/:sha': {
+    response: RestEndpointMethodTypes['repos']['getCommit']['response'];
+    result: Commit;
+    params: { repo: number; sha: string };
   };
 };

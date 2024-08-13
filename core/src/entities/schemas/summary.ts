@@ -6,5 +6,6 @@ export default z.object({
   stargazers: z.number().int(),
   watchers: z.number().int(),
   issues: z.number().int(),
-  pull_requests: z.number().int()
+  pull_requests: z.number().int(),
+  commits: z.number().int().default(0)
 });

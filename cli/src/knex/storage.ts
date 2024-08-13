@@ -66,14 +66,16 @@ class GenericStorage<T extends Entity> implements EntityStorage<T> {
     if (!data) return data;
 
     if (this.ClassRef.name === Metadata.name) {
+      const { payload, ...rest } = data;
       return Metadata.create({
-        ...data,
-        ...(mapValues(data.payload, (v) => (isIsoDate(v) ? new Date(v) : v)) || {})
+        ...rest,
+        ...(mapValues(payload, (v) => (isIsoDate(v) ? new Date(v) : v)) || {})
       });
     }
 
     if (this.ClassRef.name === TimelineEvent.name) {
-      return TimelineEvent.create({ ...data, ...(data.payload || {}) });
+      const { payload, ...rest } = data;
+      return TimelineEvent.create({ ...rest, ...(payload || {}) });
     }
 
     return data;
