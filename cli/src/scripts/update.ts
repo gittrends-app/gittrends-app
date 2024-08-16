@@ -1,4 +1,4 @@
-import { GithubService, Issue, Repository, Service, StorageService, User } from '@/core/index.js';
+import { GithubService, Repository, Service, StorageService, User } from '@/core/index.js';
 import { createCache } from '@/helpers/cache.js';
 import env from '@/helpers/env.js';
 import githubClient from '@/helpers/github.js';
@@ -70,7 +70,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 function reposUpdate(service: Service, concurrency: number, progress: MultiBar): Worker {
   const queue = createQueue(Repository);
 
-  const queueBar = progress.create(Infinity, 0, { name: '|>> jobs'.padStart(10), repo: '' });
+  const queueBar = progress.create(Infinity, 0, { name: 'jobs'.padStart(10), repo: '' });
 
   setInterval(async () => {
     const count = await queue
@@ -84,54 +84,56 @@ function reposUpdate(service: Service, concurrency: number, progress: MultiBar):
   const worker = createWorker(
     Repository,
     async (job) => {
-      const knex = await connect(env.DATABASE_URL, {
-        schema: job.data.full_name.replace('/', '@').replace(/[^a-zA-Z0-9_]/g, '_')
-      });
+      const knex = await connect(env.DATABASE_URL, { schema: job.data.full_name });
 
       const task = new RepositoryUpdater(job.data.full_name, {
         service: new StorageService(service, new RelationalStorage(knex), { valid_by: 3 }),
-        resources: [RepositoryUpdater.resources.find((r) => r.name === job.name) as any],
         parallel: true
       });
 
       const taskBar = progress.create(
+        Infinity,
         0,
-        0,
-        { name: job.name.toLowerCase().padStart(10), repo: job.data.full_name },
-        { forceRedraw: true }
+        { name: ''.padStart(10), repo: job.data.full_name, resValue: 0, resTotal: RepositoryUpdater.resources.length },
+        {
+          format: `{name} | {bar} | {percentage}% | {resValue}/{resTotal} | {value}/{total} | {repo}`,
+          forceRedraw: true
+        }
       );
+
+      let finishedResources = 0;
+      let resourcesSum = Infinity;
+
+      const usersUpdateTimeout = setInterval(async () => {
+        const [total, count] = await Promise.all([
+          knex(pluralize(snakeCase(User.name)))
+            .count({ count: '*' })
+            .then(([res]) => res.count as number),
+          knex(pluralize(snakeCase(User.name)))
+            .whereNotNull('updated_at')
+            .count({ count: '*' })
+            .then(([res]) => res.count as number)
+        ]);
+
+        taskBar.setTotal(resourcesSum + total);
+        taskBar.update(resourcesSum + count);
+      }, 10000);
 
       task.subscribe({
         next: async (notification) => {
           if (!notification.resource) {
-            if (job.name !== User.name) {
-              if (job.name === Issue.name) {
-                taskBar.setTotal(
-                  (notification.data._resources_counts?.issues || 0) +
-                    (notification.data._resources_counts?.pull_requests || 0)
-                );
-              } else {
-                taskBar.setTotal(
-                  (notification.data._resources_counts as Record<string, number>)[pluralize(snakeCase(job.name))] || 0
-                );
-              }
-            } else {
-              const [total, count] = await Promise.all([
-                knex(pluralize(snakeCase(User.name)))
-                  .count({ count: '*' })
-                  .then(([res]) => res.count as number),
-                knex(pluralize(snakeCase(User.name)))
-                  .whereNotNull('updated_at')
-                  .count({ count: '*' })
-                  .then(([res]) => res.count as number)
-              ]);
-              taskBar.setTotal(total);
-              taskBar.update(count);
-            }
+            taskBar.setTotal(
+              (resourcesSum = Object.values(notification.data._resources_counts || {}).reduce(
+                (acc, total) => acc + total,
+                0
+              ))
+            );
           } else {
             if (!notification.done) {
-              taskBar.increment(notification.data.length);
+              taskBar.increment(notification.data.length, { name: snakeCase(notification.resource.name).padStart(10) });
               job.updateProgress(taskBar.getProgress() * 100);
+            } else {
+              taskBar.increment(0, { resValue: ++finishedResources });
             }
           }
         }
@@ -145,6 +147,7 @@ function reposUpdate(service: Service, concurrency: number, progress: MultiBar):
           taskBar.stop();
           progress.remove(taskBar);
         })
+        .finally(() => clearInterval(usersUpdateTimeout))
         .finally(() => knex.destroy());
     },
     concurrency
