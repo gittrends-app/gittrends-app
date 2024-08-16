@@ -21,11 +21,14 @@ export default function (client: GithubClient, options: ResourcesParams) {
       );
 
       for await (const { data, params } of it) {
-        for (const release of data) {
-          release._reactions = await _reactions(client, release, options);
-        }
+        const updatedReleases = await Promise.all(
+          data.map(async (release) => {
+            release._reactions = await _reactions(client, release, options);
+            return release;
+          })
+        );
 
-        yield { data, params };
+        yield { data: updatedReleases, params };
       }
     }
   };

@@ -1,20 +1,19 @@
 import { sqliteStore } from '@resolid/cache-manager-sqlite';
 import { caching, MultiCache, multiCaching } from 'cache-manager';
 import { existsSync, mkdirSync } from 'fs';
+import env from './env.js';
 
 /**
  *  Create a cache manager instance.
  */
 export async function createCache(): Promise<MultiCache> {
-  const ttl = 1000 * 60 * 60 * 24 * 7;
-
   if (!existsSync('./.cache')) mkdirSync('./.cache');
 
   const sqliteCache = await caching(
-    sqliteStore({ sqliteFile: './.cache/caching.sqlite', cacheTableName: 'caches', ttl })
+    sqliteStore({ sqliteFile: './.cache/caching.sqlite', cacheTableName: 'caches', ttl: env.CACHE_TTL })
   );
 
-  const memoryCache = await caching('memory', { max: 250000, ttl });
+  const memoryCache = await caching('memory', { max: env.CACHE_SIZE, ttl: env.CACHE_TTL });
 
   return multiCaching([memoryCache, sqliteCache]);
 }

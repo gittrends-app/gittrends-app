@@ -68,31 +68,35 @@ export default function (
       );
 
       for await (const { data, params } of it) {
-        for (let index = 0; index < data.length; index++) {
-          if (data[index].pull_request) {
-            const { reactions } = data[index];
-            data[index] = Object.assign(
-              await pullRequest(client, { repo: options.repo, number: data[index].number }).then(
-                (pr) => pr || Promise.reject(new Error('Pull request not found!'))
-              ),
-              { reactions }
-            );
-          }
-
-          for await (const tl of timeline(client, { repo: options.repo, issue: data[index] })) {
-            for (const event of tl.data) {
-              event._reactions = await _reactions(client, event, options);
+        const detailedIssue = await Promise.all(
+          data.map(async (d) => {
+            if (d.pull_request) {
+              d = Object.assign(
+                await pullRequest(client, { repo: options.repo, number: d.number }).then(
+                  (pr) => pr || Promise.reject(new Error('Pull request not found!'))
+                ),
+                { reactions: d.reactions }
+              );
             }
 
-            data[index]._events = tl.data;
-          }
+            for await (const tl of timeline(client, { repo: options.repo, issue: d })) {
+              d._events = await Promise.all(
+                tl.data.map(async (event) => {
+                  event._reactions = await _reactions(client, event, options);
+                  return event;
+                })
+              );
+            }
 
-          data[index]._reactions = await _reactions(client, data[index], options);
-        }
+            d._reactions = await _reactions(client, d, options);
 
-        since = data.at(data.length - 1)?.updated_at || since;
+            return d;
+          })
+        );
 
-        yield { data, params: { ...params, page: 0, since } };
+        since = detailedIssue.at(detailedIssue.length - 1)?.updated_at || since;
+
+        yield { data: detailedIssue, params: { ...params, page: 0, since } };
       }
     }
   };

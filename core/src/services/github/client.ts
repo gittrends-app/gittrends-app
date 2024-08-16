@@ -18,21 +18,23 @@ export class GithubClient {
   private readonly disableThrottling: boolean = false;
 
   private readonly fetcher: any;
+  private readonly timeout: number;
 
   constructor(
     baseUrl: string,
-    opts?: { apiToken?: string; disableRetry?: boolean; disableThrottling?: boolean; fetcher?: any }
+    opts?: { apiToken?: string; disableRetry?: boolean; disableThrottling?: boolean; fetcher?: any; timeout?: number }
   ) {
     this.baseUrl = baseUrl;
     this.apiToken = opts?.apiToken;
     this.disableRetry = opts?.disableRetry ?? false;
     this.disableThrottling = opts?.disableThrottling ?? false;
     this.fetcher = opts?.fetcher;
+    this.timeout = opts?.timeout ?? 1000 * 15;
   }
 
   get rest(): Octokit {
     return new FullOctokit({
-      request: { fetch: this.fetcher },
+      request: { fetch: this.fetcher, timeout: this.timeout },
       baseUrl: this.baseUrl,
       auth: this.apiToken,
       mediaType: { previews: ['starfox'] },

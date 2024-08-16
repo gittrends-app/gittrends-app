@@ -61,17 +61,19 @@ export default function commits(
         );
 
         for await (const { data, params } of it) {
-          for (let index = 0; index < data.length; index++) {
-            data[index] = await commit(client, { repo: options.repo, sha: data[index].sha }).then((res) => {
-              if (!res) throw new Error('Commit not found');
-              return res;
-            });
-          }
+          const detailedData = await Promise.all(
+            data.map((d) =>
+              commit(client, { repo: options.repo, sha: d.sha }).then((res) => {
+                if (!res) throw new Error('Commit not found');
+                return res;
+              })
+            )
+          );
 
-          since = since || data[0].commit.committer?.date;
-          until = data[data.length - 1].commit.committer?.date || until;
+          since = since || detailedData[0].commit.committer?.date;
+          until = detailedData[detailedData.length - 1].commit.committer?.date || until;
 
-          yield { data, params: { ...params, page: 0, since, until } };
+          yield { data: detailedData, params: { ...params, page: 0, since, until } };
         }
       }
     }
