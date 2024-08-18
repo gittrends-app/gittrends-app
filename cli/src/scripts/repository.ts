@@ -2,6 +2,7 @@ import {
   Commit,
   GithubService,
   Issue,
+  Metadata,
   Release,
   Repository,
   RepositoryResource,
@@ -75,6 +76,7 @@ export class RepositoryUpdater extends AbstractTask<Notification> {
           .add(async () => {
             if (Ref === User) {
               const storage = this.service.storage.create(User);
+              const metaStorage = this.service.storage.create(Metadata);
 
               let users: User[] = [];
 
@@ -82,11 +84,21 @@ export class RepositoryUpdater extends AbstractTask<Notification> {
                 users = await storage.find({ updated_at: undefined });
 
                 if (users.length > 0) {
-                  const updatedUsers = await this.service.user(users.map((u) => u.id));
+                  const updatedUsers = (await this.service.user(users.map((u) => u.id)))
+                    .filter((u) => u !== null)
+                    .filter((u) => u.updated_at);
+
+                  // workaround to mark users as deleted when not found with the same id
+                  await Promise.all(
+                    users
+                      .filter((u) => !updatedUsers.find((uu) => uu._id === u._id))
+                      .map((u) => metaStorage.save(new Metadata({ entity: u, deleted_at: new Date() })))
+                  );
+
                   this.notify({
                     repository: repo._id,
                     resource: User,
-                    data: updatedUsers.filter((u) => u !== null),
+                    data: updatedUsers,
                     done: false
                   });
                 } else if (this.queue.pending > 1) {
@@ -114,10 +126,14 @@ export class RepositoryUpdater extends AbstractTask<Notification> {
           })
       );
 
-      await Promise.allSettled(promises).then((results) => {
-        const errors = results.filter((r) => r.status === 'rejected').map((r) => r.reason);
-        if (errors.length) throw new AggregateError(errors, errors.map((e) => e.message).join(' -- '));
-      });
+      if (this.queue.concurrency > 1) {
+        await Promise.allSettled(promises).then((results) => {
+          const errors = results.filter((r) => r.status === 'rejected').map((r) => r.reason);
+          if (errors.length) throw new AggregateError(errors, errors.map((e) => e.message).join(' -- '));
+        });
+      } else {
+        await Promise.all(promises);
+      }
 
       this.state = 'completed';
     } catch (error) {
@@ -190,7 +206,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
         bars.users.update(updated);
       }, 1000 * 15);
 
-      const task = new RepositoryUpdater(fullName, { service: replicaService, resources, parallel: true });
+      const task = new RepositoryUpdater(fullName, { service: replicaService, resources, parallel: opts.parallel });
 
       task.subscribe({
         next: (notification) => {

@@ -76,7 +76,6 @@ export class StorageService extends PassThroughService {
           await metadataStorage.save(new Metadata({ entity: newUser }), true);
           return newUser;
         } else if (user) {
-          await metadataStorage.save(new Metadata({ entity: user, deleted_at: new Date() }), true);
           return user;
         }
 

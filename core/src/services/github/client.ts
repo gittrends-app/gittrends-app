@@ -3,6 +3,7 @@ import { graphql } from '@octokit/graphql/types';
 import { retry } from '@octokit/plugin-retry';
 import { throttling } from '@octokit/plugin-throttling';
 import { Octokit } from '@octokit/rest';
+import { Fetch } from '@octokit/types';
 import consola from 'consola';
 
 const FullOctokit = Octokit.plugin(throttling).plugin(retry);
@@ -17,19 +18,25 @@ export class GithubClient {
   private readonly disableRetry: boolean = false;
   private readonly disableThrottling: boolean = false;
 
-  private readonly fetcher: any;
-  private readonly timeout: number;
+  private readonly fetcher?: Fetch;
+  private readonly timeout?: number;
 
   constructor(
     baseUrl: string,
-    opts?: { apiToken?: string; disableRetry?: boolean; disableThrottling?: boolean; fetcher?: any; timeout?: number }
+    opts?: {
+      apiToken?: string;
+      disableRetry?: boolean;
+      disableThrottling?: boolean;
+      fetcher?: Fetch;
+      timeout?: number;
+    }
   ) {
     this.baseUrl = baseUrl;
     this.apiToken = opts?.apiToken;
     this.disableRetry = opts?.disableRetry ?? false;
     this.disableThrottling = opts?.disableThrottling ?? false;
     this.fetcher = opts?.fetcher;
-    this.timeout = opts?.timeout ?? 1000 * 15;
+    this.timeout = opts?.timeout;
   }
 
   get rest(): Octokit {
