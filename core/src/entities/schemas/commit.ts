@@ -46,7 +46,7 @@ export default zodSanitize(
     files: z
       .array(
         z.object({
-          sha: z.string(),
+          sha: z.string().optional(),
           filename: z.string(),
           status: z.enum(['added', 'removed', 'modified', 'renamed', 'copied', 'changed', 'unchanged']),
           additions: z.number().int(),
