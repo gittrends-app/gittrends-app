@@ -31,7 +31,7 @@ type Updatable = Class<RepositoryResource | User>;
 
 type Notification<T extends RepositoryResource | User = any> = { repository: string } & (
   | { resource?: undefined; data: Repository }
-  | { resource: Class<T>; data: T[]; done: false }
+  | { resource: Class<T>; data: T[]; total?: number; done: false }
   | { resource: Class<T>; done: true }
 );
 
@@ -80,6 +80,13 @@ export class RepositoryUpdater extends AbstractTask<Notification> {
 
               let users: User[] = [];
 
+              const [notUpdated, all] = await Promise.all([
+                storage.count({ updated_at: undefined }),
+                storage.count({})
+              ]);
+
+              let total = all - notUpdated;
+
               do {
                 users = await storage.find({ updated_at: undefined });
 
@@ -99,6 +106,7 @@ export class RepositoryUpdater extends AbstractTask<Notification> {
                     repository: repo._id,
                     resource: User,
                     data: updatedUsers,
+                    total: (total += updatedUsers.length),
                     done: false
                   });
                 } else if (this.queue.pending > 1) {
@@ -113,8 +121,16 @@ export class RepositoryUpdater extends AbstractTask<Notification> {
                 per_page: Ref === Issue || Ref === Commit ? 25 : 100
               });
 
+              let total = await this.service.storage.create(Ref).count({ _repository: repo._id });
+
               for await (const response of it) {
-                this.notify({ repository: repo.node_id, resource: Ref, data: response.data, done: false });
+                this.notify({
+                  repository: repo.node_id,
+                  resource: Ref,
+                  data: response.data,
+                  total: (total += response.data.length),
+                  done: false
+                });
               }
 
               this.notify({ repository: repo.node_id, resource: Ref, done: true });
@@ -172,7 +188,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       const replicaService = new StorageService(
         new CacheService(new GithubService(githubClient), await createCache()),
         new RelationalStorage(db),
-        { valid_by: 1 }
+        { expiresIn: 1, resume: true }
       );
 
       consola.info('Starting the repository update...');
@@ -192,18 +208,10 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       const interval = setInterval(async () => {
         if (!resources.includes(User)) return;
 
-        const [total, updated] = await Promise.all([
-          db(pluralize(snakeCase(User.name)))
-            .count({ count: '*' })
-            .then(([res]) => res.count as number),
-          db(pluralize(snakeCase(User.name)))
-            .whereNotNull('updated_at')
-            .count({ count: '*' })
-            .then(([res]) => res.count as number)
-        ]);
-
-        bars.users.setTotal(total);
-        bars.users.update(updated);
+        return db(pluralize(snakeCase(User.name)))
+          .count({ count: '*' })
+          .then(([res]) => res.count as number)
+          .then((total) => bars.users.setTotal(total));
       }, 1000 * 15);
 
       const task = new RepositoryUpdater(fullName, { service: replicaService, resources, parallel: opts.parallel });
@@ -225,6 +233,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
           } else {
             const name = pluralize(snakeCase(notification.resource.name));
             if (notification.done) bars[name].stop();
+            else if (notification.total) bars[name].update(notification.total);
             else bars[name].increment(notification.data.length);
           }
         }

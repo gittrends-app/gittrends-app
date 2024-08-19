@@ -26,7 +26,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       const db = await connect(env.DATABASE_URL, { schema: 'public', migrate: true });
 
       consola.info('Initializing the storage service...');
-      const service = new StorageService(new GithubService(githubClient), new RelationalStorage(db), { valid_by: 1 });
+      const service = new StorageService(new GithubService(githubClient), new RelationalStorage(db), { expiresIn: 1 });
 
       const progress = new SingleBar({
         format: '{task}: [{bar}] {percentage}% | {duration_formatted} | {value}/{total}',

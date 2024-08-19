@@ -128,7 +128,6 @@ class GenericStorage<T extends Entity> implements EntityStorage<T> {
     const { tablename, ClassRef } = this;
 
     return this.knex(tablename)
-      .select(`${tablename}.*`)
       .leftJoin('metadata', function () {
         // eslint-disable-next-line no-invalid-this
         this.on('metadata.entity_id', '=', `${tablename}._id`).andOnVal('metadata.entity', ClassRef.name);
@@ -147,16 +146,16 @@ class GenericStorage<T extends Entity> implements EntityStorage<T> {
   async save(data: T | T[], replace?: boolean, trx?: Knex.Transaction) {
     const transaction = trx || (await this.knex.transaction());
 
-    let dataArr = uniqBy(Array.isArray(data) ? data : [data], '_id');
-    if (!dataArr.length) return;
-
-    if (this.ClassRef.name !== User.name) {
-      const { data, users } = extract(dataArr);
-      dataArr = data;
-      await new GenericStorage(this.knex, User).save(users || [], false, transaction);
-    }
-
     try {
+      let dataArr = uniqBy(Array.isArray(data) ? data : [data], '_id');
+      if (!dataArr.length) return;
+
+      if (this.ClassRef.name !== User.name) {
+        const { data, users } = extract(dataArr);
+        dataArr = data;
+        await new GenericStorage(this.knex, User).save(users || [], false, transaction);
+      }
+
       await Promise.all(
         dataArr.map((d) => {
           const op = transaction

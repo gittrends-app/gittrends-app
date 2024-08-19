@@ -87,7 +87,7 @@ function reposUpdate(service: Service, concurrency: number, progress: MultiBar):
       const knex = await connect(env.DATABASE_URL, { schema: job.data.full_name });
 
       const task = new RepositoryUpdater(job.data.full_name, {
-        service: new StorageService(service, new RelationalStorage(knex), { valid_by: 3 }),
+        service: new StorageService(service, new RelationalStorage(knex), { expiresIn: 3, resume: true }),
         parallel: true
       });
 
@@ -104,19 +104,13 @@ function reposUpdate(service: Service, concurrency: number, progress: MultiBar):
       let finishedResources = 0;
       let resourcesSum = Infinity;
 
-      const usersUpdateTimeout = setInterval(async () => {
-        const [total, count] = await Promise.all([
-          knex(pluralize(snakeCase(User.name)))
-            .count({ count: '*' })
-            .then(([res]) => res.count as number),
-          knex(pluralize(snakeCase(User.name)))
-            .whereNotNull('updated_at')
-            .count({ count: '*' })
-            .then(([res]) => res.count as number)
-        ]);
+      const totals: Record<string, number> = {};
 
-        taskBar.setTotal(resourcesSum + total);
-        taskBar.update(resourcesSum + count);
+      const usersUpdateTimeout = setInterval(async () => {
+        return knex(pluralize(snakeCase(User.name)))
+          .count({ count: '*' })
+          .then(([res]) => res.count as number)
+          .then((total) => taskBar.setTotal(resourcesSum + total));
       }, 10000);
 
       task.subscribe({
@@ -130,7 +124,18 @@ function reposUpdate(service: Service, concurrency: number, progress: MultiBar):
             );
           } else {
             if (!notification.done) {
-              taskBar.increment(notification.data.length, { name: snakeCase(notification.resource.name).padStart(10) });
+              if (notification.total) {
+                totals[notification.resource.name] = notification.total || 0;
+                taskBar.update(
+                  Object.values(totals).reduce((sum, v) => sum + v, 0),
+                  { name: snakeCase(notification.resource.name).padStart(10) }
+                );
+              } else {
+                totals[notification.resource.name] = notification.data.length;
+                taskBar.increment(notification.data.length, {
+                  name: snakeCase(notification.resource.name).padStart(10)
+                });
+              }
               job.updateProgress(taskBar.getProgress() * 100);
             } else {
               taskBar.increment(0, { resValue: ++finishedResources });
