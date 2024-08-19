@@ -44,6 +44,10 @@ export function iterator<R extends keyof IterableEndpoints>(
     (requestParams as any).since = requestParams.since.toISOString();
   }
 
+  if (requestParams.until instanceof Date) {
+    (requestParams as any).until = requestParams.until.toISOString();
+  }
+
   return {
     [Symbol.asyncIterator]: async function* () {
       let currentPage = Math.max(Number(page) || 1, 1);

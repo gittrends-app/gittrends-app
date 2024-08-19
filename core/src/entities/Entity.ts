@@ -36,7 +36,7 @@ export abstract class Entity {
     const res = this._schema.safeParse(sanitize(data));
     if (!res.success) throw Object.assign(fromZodError(res.error, { includePath: true }), { data });
 
-    Object.entries(res.data).forEach(([key, value]) => {
+    Object.entries({ ...data, ...res.data }).forEach(([key, value]) => {
       try {
         Object.assign(instance, { [key]: value });
       } catch (error) {

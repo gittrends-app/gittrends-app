@@ -70,7 +70,7 @@ export default function commits(
             )
           );
 
-          since = since || detailedData[0].commit.committer?.date;
+          since = detailedData[0].commit.committer?.date || since;
           until = detailedData[detailedData.length - 1].commit.committer?.date || until;
 
           yield { data: detailedData, params: { ...params, page: 0, since, until } };

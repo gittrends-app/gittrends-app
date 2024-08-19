@@ -120,25 +120,21 @@ export class StorageService extends PassThroughService {
     const resourceStorage = this.storage.create(Entity as Class<RepositoryResource>);
 
     const { service } = this;
-    const isUpdated = this.isUpdated.bind(this);
+
+    const resumable = [Stargazer, Issue, Commit].includes(Entity as any);
 
     return {
       [Symbol.asyncIterator]: async function* () {
         const params = { ...opts };
+
+        const storedIds: string[] = [];
 
         if (!params.page) {
           const meta = await metadataStorage.get({ entity: Entity.name, entity_id: params.repo.node_id });
 
           const coreMeta = pick(meta, ['page', 'per_page', 'since', 'until']);
 
-          if (
-            meta &&
-            (!meta.updated_at ||
-              isUpdated(meta.updated_at) ||
-              Entity === Stargazer ||
-              Entity === Issue ||
-              Entity === Commit)
-          ) {
+          if (meta) {
             let page = 0;
             const limit = meta.per_page ? Number(meta.per_page) : 100;
 
@@ -148,29 +144,37 @@ export class StorageService extends PassThroughService {
                 { limit, offset: page++ * limit }
               );
 
+              storedIds.push(...resources.map((r) => r._id));
+
               if (resources.length) yield { data: resources, params: { has_more: true, ...coreMeta } };
               else break;
             }
-
-            if (!meta.has_more) return;
 
             Object.assign(params, coreMeta);
           }
         }
 
+        if (!resumable) {
+          params.page = 0;
+        }
+
         for await (const res of service.resource(Entity, params)) {
-          if (res.data.length) {
-            await resourceStorage.save(res.data);
-            await metadataStorage.save(
-              new Metadata({
-                entity: Entity,
-                repository: params.repo.node_id,
-                ...res.params,
-                updated_at: res.params.has_more ? undefined : new Date()
-              }),
-              true
-            );
+          await resourceStorage.save(res.data);
+          await metadataStorage.save(
+            new Metadata({
+              entity: Entity,
+              repository: params.repo.node_id,
+              ...res.params,
+              updated_at: res.params.has_more ? undefined : new Date()
+            }),
+            true
+          );
+
+          if (res.data.filter((r) => !storedIds.includes(r._id)).length === 0) {
+            yield { data: [], params: { ...res.params, has_more: false } };
+            break;
           }
+
           yield res;
         }
       }
