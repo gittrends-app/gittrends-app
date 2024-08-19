@@ -121,8 +121,6 @@ export class StorageService extends PassThroughService {
 
     const { service } = this;
 
-    const resumable = [Stargazer, Issue, Commit].includes(Entity as any);
-
     return {
       [Symbol.asyncIterator]: async function* () {
         const params = { ...opts };
@@ -154,7 +152,7 @@ export class StorageService extends PassThroughService {
           }
         }
 
-        if (!resumable) {
+        if (![Stargazer, Issue, Commit].includes(Entity as any)) {
           params.page = 0;
         }
 
