@@ -10,7 +10,9 @@ import {
   User
 } from '@/core/index.js';
 import { extract } from '@/helpers/extract.js';
+import { escape } from '@/helpers/utf8.js';
 import { Knex } from 'knex';
+import cloneDeepWith from 'lodash/cloneDeepWith.js';
 import mapKeys from 'lodash/mapKeys.js';
 import mapValues from 'lodash/mapValues.js';
 import omit from 'lodash/omit.js';
@@ -43,7 +45,7 @@ class GenericStorage<T extends Entity> implements EntityStorage<T> {
   }
 
   private prepare(data: Entity): Record<string, any> {
-    const jsonData = data.toJSON();
+    const jsonData = cloneDeepWith(data.toJSON(), (value) => (typeof value === 'string' ? escape(value) : undefined));
 
     if (data.constructor.name === Metadata.name) {
       const fields = ['_id', 'entity', 'entity_id', 'updated_at'];
