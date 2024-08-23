@@ -145,7 +145,7 @@ export class StorageService extends PassThroughService {
               else break;
             }
 
-            Object.assign(params, coreMeta);
+            Object.assign(params, coreMeta, { per_page: opts.per_page ?? coreMeta.per_page });
           }
         }
 

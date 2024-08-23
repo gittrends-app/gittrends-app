@@ -118,7 +118,7 @@ export class RepositoryUpdater extends AbstractTask<Notification> {
             } else {
               const it = this.service.resource(Ref as any, {
                 repo,
-                per_page: Ref === Issue || Ref === Commit ? 25 : 100
+                per_page: Ref === Issue || Ref === Commit ? 50 : 100
               });
 
               let total = await this.service.storage.create(Ref).count({ _repository: repo._id });
