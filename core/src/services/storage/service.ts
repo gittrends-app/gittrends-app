@@ -3,6 +3,7 @@ import pick from 'lodash/pick.js';
 import { Class } from 'type-fest';
 import {
   Commit,
+  Discussion,
   Issue,
   Metadata,
   Release,
@@ -116,6 +117,7 @@ export class StorageService extends PassThroughService {
     Entity: Class<Commit>,
     opts: ResourceParams & { since?: Date; until?: Date }
   ): Iterable<Commit, { since?: Date; until?: Date }>;
+  resource(Entity: Class<Discussion>, opts: ResourceParams): Iterable<Discussion>;
   resource(Entity: Class<any>, opts: ResourceParams): Iterable<any> {
     const metadataStorage = this.storage.create(Metadata);
     const resourceStorage = this.storage.create(Entity as Class<RepositoryResource>);

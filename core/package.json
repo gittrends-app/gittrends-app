@@ -22,6 +22,7 @@
   "dependencies": {
     "@octokit/core": "^6.1.2",
     "@octokit/graphql": "^8.1.1",
+    "@octokit/graphql-schema": "^15.25.0",
     "@octokit/plugin-retry": "^7.1.1",
     "@octokit/plugin-throttling": "^9.3.0",
     "@octokit/rest": "^21.0.0",

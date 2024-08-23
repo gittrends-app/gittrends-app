@@ -7,6 +7,8 @@ import { z } from 'zod';
 import { errorMap, fromZodError } from 'zod-validation-error';
 import sanitize, { zodSanitize } from '../helpers/sanitize.js';
 import commit from './schemas/commit.js';
+import discussionComment from './schemas/discussion-comment.js';
+import discussion from './schemas/discussion.js';
 import events from './schemas/events.js';
 import issue from './schemas/issue.js';
 import pr from './schemas/pull_request.js';
@@ -330,6 +332,51 @@ export class TimelineEvent extends RepositoryResource implements Reactable {
 export interface Commit extends z.infer<typeof commit> {}
 export class Commit extends RepositoryResource {
   protected static override _schema = commit;
+
+  override get _id() {
+    return this.node_id;
+  }
+}
+
+/**
+ * Represents a Discussion entity.
+ */
+export interface Discussion extends z.infer<typeof discussion> {}
+export class Discussion extends RepositoryResource implements Reactable {
+  protected static override _schema = discussion;
+
+  _comments: DiscussionComment[] = [];
+  _reactions: Reaction[] = [];
+
+  get _hasReactions() {
+    return ((this as any).reactions?.total_count || 0) > 0;
+  }
+
+  override get _id() {
+    return this.node_id;
+  }
+}
+
+/**
+ * Represents a DiscussionComment entity.
+ */
+export interface DiscussionComment extends z.infer<typeof discussionComment> {}
+export class DiscussionComment extends RepositoryResource implements Reactable {
+  protected static override _schema = discussionComment;
+
+  readonly _discussion!: string;
+
+  _reactions: Reaction[] = [];
+
+  get _hasReactions() {
+    return ((this as any).reactions?.total_count || 0) > 0;
+  }
+
+  constructor(data: Record<string, any>, props: { repository: string; discussion: string }) {
+    if (!z.object({ discussion: z.string() }).safeParse(props).success) throw new Error('Invalid props');
+    super(data, props);
+    this._discussion = props.discussion;
+  }
 
   override get _id() {
     return this.node_id;

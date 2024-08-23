@@ -3,6 +3,7 @@ import min from 'lodash/min.js';
 import { Class } from 'type-fest';
 import {
   Commit,
+  Discussion,
   Issue,
   PullRequest,
   Release,
@@ -127,6 +128,7 @@ export class GithubService implements Service {
     Entity: Class<Commit>,
     opts: ResourceParams & { since?: Date; until?: Date }
   ): Iterable<Commit, { since?: Date; until?: Date }>;
+  resource(Entity: Class<Discussion>, opts: ResourceParams): Iterable<Discussion>;
   resource(Entity: Class<any>, opts: ResourceParams): Iterable<any> {
     switch (Entity.name) {
       case Stargazer.name:
@@ -142,6 +144,8 @@ export class GithubService implements Service {
         return resources.issues(this.client, opts);
       case Commit.name:
         return resources.commits(this.client, opts);
+      case Discussion.name:
+        return resources.discussions(this.client, opts);
       default:
         throw new Error('Method not implemented.');
     }
