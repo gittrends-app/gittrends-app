@@ -8,11 +8,11 @@ export async function up(knex: Knex): Promise<void> {
     table.text('_id').primary();
     table.text('_repository').notNullable();
 
-    table.string('sha').notNullable();
-    table.string('node_id').notNullable();
+    table.text('sha').notNullable();
+    table.text('node_id').notNullable();
     table.json('commit').notNullable();
-    table.string('author');
-    table.string('committer');
+    table.text('author');
+    table.text('committer');
     table.json('parents');
     table.json('stats');
     table.json('files');

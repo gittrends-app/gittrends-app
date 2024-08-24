@@ -251,7 +251,7 @@ export default function (
             query discussions($id: ID!, $perPage: Int, $endCursor: String) {
               repository: node(id: $id) {
                 ... on Repository {
-                  discussions(first: $perPage, after: $endCursor) {
+                  discussions(first: $perPage, orderBy: { field: UPDATED_AT, direction: ASC }, after: $endCursor) {
                     totalCount
                     pageInfo { endCursor hasNextPage }
                     nodes {

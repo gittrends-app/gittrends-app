@@ -1,4 +1,6 @@
 import {
+  Discussion,
+  DiscussionComment,
   Entity,
   EntityStorage,
   Issue,
@@ -144,6 +146,8 @@ class GenericStorage<T extends Entity> implements EntityStorage<T> {
   }
 
   async save(data: T | T[], replace?: boolean, trx?: Knex.Transaction) {
+    if (Array.isArray(data) && data.length === 0) return;
+
     const transaction = trx || (await this.knex.transaction());
 
     try {
@@ -172,6 +176,15 @@ class GenericStorage<T extends Entity> implements EntityStorage<T> {
         new GenericStorage(this.knex, TimelineEvent).save(
           dataArr.reduce(
             (memo: TimelineEvent[], entity) => (entity instanceof Issue ? memo.concat(entity._events) : memo),
+            []
+          ),
+          true,
+          transaction
+        ),
+        new GenericStorage(this.knex, DiscussionComment).save(
+          dataArr.reduce(
+            (memo: DiscussionComment[], entity) =>
+              entity instanceof Discussion ? memo.concat(entity._comments) : memo,
             []
           ),
           true,

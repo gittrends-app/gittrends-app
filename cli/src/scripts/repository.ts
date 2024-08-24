@@ -1,5 +1,6 @@
 import {
   Commit,
+  Discussion,
   GithubService,
   Issue,
   Metadata,
@@ -39,7 +40,7 @@ type Notification<T extends RepositoryResource | User = any> = { repository: str
  * Task to retrieve all resources from a repository.
  */
 export class RepositoryUpdater extends AbstractTask<Notification> {
-  public static readonly resources: Updatable[] = [Tag, Release, Stargazer, Watcher, Issue, Commit, User];
+  public static readonly resources: Updatable[] = [Tag, Release, Stargazer, Watcher, Issue, Commit, User, Discussion];
 
   private idOrName: string | number;
 

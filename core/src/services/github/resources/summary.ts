@@ -12,6 +12,7 @@ type Query = {
     releases: { totalCount: number };
     issues: { totalCount: number };
     pullRequests: { totalCount: number };
+    discussions: { totalCount: number };
     defaultBranchRef: { target: { history: { totalCount: number } } };
   };
 };
@@ -36,6 +37,7 @@ export default async function (
           tags: refs(refPrefix: "refs/tags/") { totalCount }
           issues { totalCount }
           pullRequests { totalCount },
+          discussions { totalCount },
           defaultBranchRef { target { ... on Commit { history { totalCount } } } }
         }
       }
@@ -51,6 +53,7 @@ export default async function (
     releases: repository.releases.totalCount,
     issues: repository.issues.totalCount,
     pull_requests: repository.pullRequests.totalCount,
+    discussions: repository.discussions.totalCount,
     commits: repository.defaultBranchRef.target.history.totalCount
   };
 }

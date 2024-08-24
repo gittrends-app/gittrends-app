@@ -151,7 +151,7 @@ export class StorageService extends PassThroughService {
           }
         }
 
-        const resumable = [Stargazer, Issue, Commit].includes(Entity as any);
+        const resumable = [Stargazer, Issue, Commit, Discussion].includes(Entity as any);
 
         if (!resumable) params.page = 0;
 

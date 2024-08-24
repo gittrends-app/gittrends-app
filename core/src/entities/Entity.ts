@@ -381,4 +381,8 @@ export class DiscussionComment extends RepositoryResource implements Reactable {
   override get _id() {
     return this.node_id;
   }
+
+  override toJSON() {
+    return { ...super.toJSON(), _discussion: this._discussion };
+  }
 }
