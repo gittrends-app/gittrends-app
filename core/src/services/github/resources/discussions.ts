@@ -5,8 +5,10 @@ import {
 } from '@octokit/graphql-schema';
 import { MergeExclusive, PartialDeep } from 'type-fest';
 import { Discussion, DiscussionComment, User } from '../../../entities/Entity.js';
+import { toArray } from '../../../helpers/iterable.js';
 import { Iterable, PageableParams } from '../../service.js';
 import { GithubClient } from '../client.js';
+import reactionsV4 from './reactions-v4.js';
 
 /**
  * Transforms the data from the GitHub API into a Stargazer entity.
@@ -204,6 +206,12 @@ function discussionComments(
 
             const replies: DiscussionComment[] = [];
             for await (const reply of it) {
+              reply.data.map(async (comment) => {
+                if (comment._hasReactions) {
+                  comment._reactions = (await toArray(reactionsV4)(client, { entity: comment })).data;
+                }
+              });
+
               replies.push(...reply.data);
             }
 
