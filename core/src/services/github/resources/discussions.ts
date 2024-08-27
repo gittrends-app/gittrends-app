@@ -208,7 +208,7 @@ function discussionComments(
             for await (const reply of it) {
               reply.data.map(async (comment) => {
                 if (comment._hasReactions) {
-                  comment._reactions = (await toArray(reactionsV4)(client, { entity: comment })).data;
+                  comment._reactions = await toArray(reactionsV4)(client, { entity: comment });
                 }
               });
 
@@ -328,7 +328,7 @@ export default function (
             discussion._comments = [];
             for await (const comment of it) {
               discussion._comments.push(...comment.data);
-              discussion._reactions = (await toArray(reactionsV4)(client, { entity: discussion })).data;
+              discussion._reactions = await toArray(reactionsV4)(client, { entity: discussion });
             }
           })
         );
