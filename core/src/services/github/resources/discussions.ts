@@ -328,6 +328,7 @@ export default function (
             discussion._comments = [];
             for await (const comment of it) {
               discussion._comments.push(...comment.data);
+              discussion._reactions = (await toArray(reactionsV4)(client, { entity: discussion })).data;
             }
           })
         );
