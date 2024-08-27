@@ -1,46 +1,8 @@
-import { PartialDeep } from 'type-fest';
+import { Repository as GRepository } from '@octokit/graphql-schema';
 import { Stargazer } from '../../../entities/Entity.js';
 import { Iterable, PageableParams } from '../../service.js';
 import { GithubClient } from '../client.js';
-
-/**
- * Transforms the data from the GitHub API into a Stargazer entity.
- */
-function transform(edge: StargazerEdge): PartialDeep<Stargazer> {
-  return {
-    starred_at: edge.starredAt as any,
-    user: {
-      id: edge.node.databaseId?.valueOf(),
-      login: edge.node.login,
-      node_id: edge.node.id,
-      site_admin: edge.node.isSiteAdmin,
-      type: edge.node.__typename
-    }
-  };
-}
-
-type StargazerEdge = {
-  starredAt: string;
-  node: {
-    id: string;
-    login: string;
-    databaseId: number;
-    __typename: string;
-    isSiteAdmin: boolean;
-  };
-};
-
-type StargazersQuery = {
-  repository: {
-    stargazers: {
-      pageInfo: {
-        endCursor: string;
-        hasNextPage: boolean;
-      };
-      edges: StargazerEdge[];
-    };
-  };
-};
+import users from '../graphql/users.js';
 
 /**
  * Retrieves the stargazers of a repository.
@@ -59,7 +21,7 @@ export default function (
       };
 
       do {
-        const { repository } = await client.graphql<StargazersQuery>({
+        const { repository } = await client.graphql<{ repository: GRepository }>({
           query: `
             query stargazers($id: ID!, $perPage: Int, $endCursor: String) {
               repository: node(id: $id) {
@@ -71,18 +33,14 @@ export default function (
                     }
                     edges {
                       starredAt
-                      node {
-                        id
-                        login
-                        databaseId
-                        __typename
-                        isSiteAdmin
-                      }
+                      node { ...UserFrag }
                     }
                   }
                 }
               }
             }
+
+            ${users.fragment('UserFrag')}
             `,
           id: repo.node_id,
           perPage: perPage || 100,
@@ -90,8 +48,11 @@ export default function (
         });
 
         const stars = (repository.stargazers.edges || [])
-          .map((edge) => edge && transform(edge))
-          .map((data) => new Stargazer(data, { repository: repo.node_id }));
+          .filter((edge) => edge !== null)
+          .map(
+            (edge) =>
+              new Stargazer({ starred_at: edge.starredAt, user: users.parse(edge.node) }, { repository: repo.node_id })
+          );
 
         metadata.endCursor = repository.stargazers.pageInfo.endCursor || metadata.endCursor;
         metadata.hasNextPage = repository.stargazers.pageInfo.hasNextPage || false;
