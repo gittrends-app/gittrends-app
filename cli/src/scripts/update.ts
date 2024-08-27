@@ -86,15 +86,20 @@ function reposUpdate(service: Service, concurrency: number, progress: MultiBar):
     async (job) => {
       const knex = await connect(env.DATABASE_URL, { schema: job.data.full_name });
 
+      const resources = (job.data.resources || [])
+        .map((r) => RepositoryUpdater.resources.find((res) => res.name === r))
+        .filter((r) => r !== undefined);
+
       const task = new RepositoryUpdater(job.data.full_name, {
         service: new StorageService(service, new RelationalStorage(knex), { expiresIn: 3, resume: true }),
+        resources,
         parallel: true
       });
 
       const taskBar = progress.create(
         Infinity,
         0,
-        { name: ''.padStart(10), repo: job.data.full_name, resValue: 0, resTotal: RepositoryUpdater.resources.length },
+        { name: ''.padStart(10), repo: job.data.full_name, resValue: 0, resTotal: resources.length },
         {
           format: `{name} | {bar} | {percentage}% | {resValue}/{resTotal} | {value}/{total} | {repo}`,
           forceRedraw: true
@@ -117,10 +122,9 @@ function reposUpdate(service: Service, concurrency: number, progress: MultiBar):
         next: async (notification) => {
           if (!notification.resource) {
             taskBar.setTotal(
-              (resourcesSum = Object.values(notification.data._resources_counts || {}).reduce(
-                (acc, total) => acc + total,
-                0
-              ))
+              (resourcesSum = resources
+                .map((r) => pluralize(snakeCase(r.name)))
+                .reduce((acc, res) => acc + ((notification.data._resources_counts as any)[res] || 0), 0))
             );
           } else {
             if (!notification.done) {

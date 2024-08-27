@@ -18,12 +18,12 @@ export default {
         createdAt
         updatedAt
       }
-      ... on EnterpriseUserAccount { 
-        avatarUrl
-        name
-        createdAt
-        updatedAt
-      }
+      # ... on EnterpriseUserAccount { 
+      #   avatarUrl
+      #   name
+      #   createdAt
+      #   updatedAt
+      # }
       ... on Organization { 
         databaseId 
         avatarUrl

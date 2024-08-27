@@ -7,6 +7,7 @@ import pick from 'lodash/pick.js';
 import snakeCase from 'lodash/snakeCase.js';
 import pluralize from 'pluralize';
 import { createQueue } from './queue/queues.js';
+import { RepositoryUpdater } from './repository.js';
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   program
@@ -19,6 +20,11 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       })
     )
     .addOption(new Option('-p, --priority <priority>', 'Priority of the resource').argParser(Number))
+    .addOption(
+      new Option('-r, --resource <resource...>', 'Resource to update')
+        .choices(RepositoryUpdater.resources.map((r) => r.name))
+        .default(RepositoryUpdater.resources.map((r) => r.name))
+    )
     .addOption(new Option('--repository <repository>', 'Repository to schedule'))
     .addOption(new Option('-f, --force', 'Force the schedule'))
     .action(async (opts: { resource: string[]; priority?: number; repository?: string; force?: boolean }) => {
@@ -43,12 +49,16 @@ if (import.meta.url === `file://${process.argv[1]}`) {
         consola.debug(`Scheduling repo ${repo.id} (${repo.full_name})...`);
         const id = `github@${repo.full_name}`;
         if (opts.force) await reposQueue.remove(id);
-        await reposQueue.add(repo.full_name, pick(repo, ['id', 'node_id', 'full_name']), {
-          jobId: id,
-          attempts: 10,
-          priority: opts.priority || (meta?.updated_at ? 10 : 5),
-          removeOnComplete: { age: 1000 * 60 * 60 * 24 }
-        });
+        await reposQueue.add(
+          repo.full_name,
+          { ...pick(repo, ['id', 'node_id', 'full_name']), resources: opts.resource },
+          {
+            jobId: id,
+            attempts: 10,
+            priority: opts.priority || (meta?.updated_at ? 10 : 5),
+            removeOnComplete: { age: 1000 * 60 * 60 * 24 }
+          }
+        );
       }
 
       consola.success('Schedule finished successfully!');

@@ -7,7 +7,7 @@ import pluralize from 'pluralize';
 import { Class } from 'type-fest';
 
 type UserJob = { id: number; node_id: string; login: string };
-type RepoJob = { id: number; node_id: string; full_name: string };
+type RepoJob = { id: number; node_id: string; full_name: string; resources: string[] };
 
 /**
  *  Create a new queue for the given entity.
