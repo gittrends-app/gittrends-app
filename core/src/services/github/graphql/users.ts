@@ -1,4 +1,4 @@
-import { User as GUser } from '@octokit/graphql-schema';
+import { Bot, EnterpriseUserAccount, User as GUser, Mannequin, Organization } from '@octokit/graphql-schema';
 import { PartialDeep } from 'type-fest';
 import { User } from '../../../entities/Entity.js';
 
@@ -15,6 +15,12 @@ export default {
       ... on Mannequin { 
         databaseId 
         avatarUrl
+        createdAt
+        updatedAt
+      }
+      ... on EnterpriseUserAccount { 
+        avatarUrl
+        name
         createdAt
         updatedAt
       }
@@ -52,26 +58,31 @@ export default {
       login
     }
   `,
-  parse: (data: GUser): PartialDeep<User> => ({
-    login: data.login,
-    id: data.databaseId || undefined,
-    node_id: data.id,
-    gravatar_id: data.avatarUrl,
-    type: data.__typename,
-    site_admin: data.isSiteAdmin,
-    name: data.name || undefined,
-    company: data.company || undefined,
-    blog: data.websiteUrl || undefined,
-    location: data.location || undefined,
-    email: data.email,
-    hireable: data.isHireable,
-    bio: data.bio || undefined,
-    twitter_username: data.twitterUsername || undefined,
-    public_repos: data.repositories.totalCount,
-    public_gists: data.gists.totalCount,
-    followers: data.followers.totalCount,
-    following: data.following.totalCount,
-    created_at: data.createdAt,
-    updated_at: data.updatedAt
-  })
+  parse: (
+    data?: (Partial<Bot | Mannequin | Organization | GUser | EnterpriseUserAccount> & Record<string, any>) | null
+  ): PartialDeep<User> | undefined =>
+    data
+      ? {
+          login: data.login,
+          id: data.databaseId || undefined,
+          node_id: data.id,
+          gravatar_id: data.avatarUrl,
+          type: data.__typename,
+          site_admin: data.isSiteAdmin || false,
+          name: data.name || undefined,
+          company: data.company || undefined,
+          blog: data.websiteUrl || undefined,
+          location: data.location || undefined,
+          email: data.email,
+          hireable: data.isHireable,
+          bio: data.bio || undefined,
+          twitter_username: data.twitterUsername || undefined,
+          public_repos: data.repositories?.totalCount,
+          public_gists: data.gists?.totalCount,
+          followers: data.followers?.totalCount,
+          following: data.following?.totalCount,
+          created_at: data.createdAt,
+          updated_at: data.updatedAt
+        }
+      : undefined
 };

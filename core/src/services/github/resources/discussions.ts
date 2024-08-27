@@ -4,26 +4,12 @@ import {
   Repository
 } from '@octokit/graphql-schema';
 import { MergeExclusive, PartialDeep } from 'type-fest';
-import { Discussion, DiscussionComment, User } from '../../../entities/Entity.js';
+import { Discussion, DiscussionComment } from '../../../entities/Entity.js';
 import { toArray } from '../../../helpers/iterable.js';
 import { Iterable, PageableParams } from '../../service.js';
 import { GithubClient } from '../client.js';
+import users from '../graphql/users.js';
 import reactionsV4 from './reactions-v4.js';
-
-/**
- * Transforms the data from the GitHub API into a Stargazer entity.
- */
-function transformActor(node?: Record<string, any> | null): PartialDeep<User> | undefined {
-  return !node
-    ? undefined
-    : {
-        id: node.databaseId,
-        login: node.login,
-        node_id: node.id,
-        site_admin: node.isSiteAdmin || false,
-        type: node.__typename
-      };
-}
 
 /**
  *  Transforms the data from the GitHub API into a Discussion schema.
@@ -33,8 +19,8 @@ function transform(node: GDiscussion): PartialDeep<Discussion> {
     lock_reason: node.activeLockReason || undefined,
     answer: node.answer?.id,
     answer_chosen_at: node.answerChosenAt,
-    answer_chosen_by: transformActor(node.answerChosenBy),
-    author: transformActor(node.author),
+    answer_chosen_by: users.parse(node.answerChosenBy),
+    author: users.parse(node.author),
     author_association: node.authorAssociation,
     body: node.body,
     category: node.category?.name,
@@ -44,7 +30,7 @@ function transform(node: GDiscussion): PartialDeep<Discussion> {
     created_at: node.createdAt,
     created_via_email: node.createdViaEmail,
     node_id: node.id,
-    editor: transformActor(node.editor),
+    editor: users.parse(node.editor),
     id: node.databaseId as number,
     includes_created_edit: node.includesCreatedEdit,
     is_awnsered: node.isAnswered || false,
@@ -79,14 +65,14 @@ function transformComment(node: GDiscussionComment): PartialDeep<DiscussionComme
   const data = {
     id: node.databaseId as number,
     node_id: node.id,
-    author: transformActor(node.author),
+    author: users.parse(node.author),
     author_association: node.authorAssociation,
     body: node.body,
     created_at: node.createdAt,
     created_via_email: node.createdViaEmail,
     deleted_at: node.deletedAt,
     discussion: node.discussion?.id,
-    editor: transformActor(node.editor),
+    editor: users.parse(node.editor),
     includes_created_edit: node.includesCreatedEdit,
     is_awnser: node.isAnswer || false,
     is_minimized: node.isMinimized,
@@ -149,15 +135,7 @@ function discussionComments(
               }
             }
 
-            fragment ActorFrag on Actor {
-              ... on Node { id }
-              ... on Bot { databaseId }
-              ... on Mannequin { databaseId }
-              ... on Organization { databaseId }
-              ... on User { databaseId isSiteAdmin }
-              __typename
-              login
-            }
+            ${users.fragment('ActorFrag')}
 
             fragment CommentFrag on DiscussionComment {
               author { ...ActorFrag }
