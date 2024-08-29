@@ -6,15 +6,13 @@ import { QueryLookup } from '../Query.js';
 /**
  *  A lookup to get a user by ID.
  */
-export class RepositoryLookup implements QueryLookup {
-  readonly alias: string;
-  readonly fragments = [new RepositoryFragment('RepoFrag')];
-
+export class RepositoryLookup extends QueryLookup<z.infer<typeof repository>, { byName?: boolean }> {
   constructor(
     private id: string,
     private props?: { alias?: string; byName?: boolean }
   ) {
-    this.alias = props?.alias || id.replace(/[^a-zA-Z0-9]/g, '');
+    super(props?.alias || id.replace(/[^a-zA-Z0-9]/g, ''), { id, byName: props?.byName });
+    this.fragments.push(new RepositoryFragment('RepoFrag', true));
   }
 
   toString(): string {
@@ -26,7 +24,10 @@ export class RepositoryLookup implements QueryLookup {
     }
   }
 
-  transform(data: any): z.infer<typeof repository> {
-    return this.fragments[0].transform(data[this.alias] || data);
+  parse(data: any) {
+    return {
+      data: data && this.fragments[0].parse(data[this.alias] || data),
+      params: this.params
+    };
   }
 }

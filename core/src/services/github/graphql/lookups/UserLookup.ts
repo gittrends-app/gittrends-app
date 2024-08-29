@@ -6,15 +6,14 @@ import { QueryLookup } from '../Query.js';
 /**
  *  A lookup to get a user by ID.
  */
-export class UserLookup implements QueryLookup {
-  readonly alias: string;
-  readonly fragments = [new ActorFragment('UserFrag', true)];
-
+export class UserLookup extends QueryLookup<z.infer<typeof actor>, { byLogin?: boolean }> {
   constructor(
     private id: string,
     private props?: { alias?: string; byLogin?: boolean }
   ) {
-    this.alias = props?.alias || id.replace(/[^a-zA-Z0-9]/g, '');
+    const { byLogin } = props || {};
+    super(props?.alias || id.replace(/[^a-zA-Z0-9]/g, ''), { id, byLogin });
+    this.fragments.push(new ActorFragment('UserFrag', true));
   }
 
   toString(): string {
@@ -23,7 +22,10 @@ export class UserLookup implements QueryLookup {
       : `${this.alias}:node(id: "${this.id}") { ...UserFrag }`;
   }
 
-  transform(data: any): z.infer<typeof actor> {
-    return this.fragments[0].transform(data[this.alias] || data);
+  parse(data: any) {
+    return {
+      data: data && this.fragments[0].parse(data[this.alias] || data),
+      params: this.params
+    };
   }
 }

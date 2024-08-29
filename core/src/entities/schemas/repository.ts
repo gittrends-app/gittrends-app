@@ -5,12 +5,12 @@ import actor from './actor.js';
 const baseRepository = z.object({
   id: z.string(),
   database_id: z.number().int(),
-  description: z.string(),
+  description: z.string().optional(),
   name: z.string(),
   name_with_owner: z.string(),
   open_graph_image_url: z.string(),
   owner: z.union([z.string(), actor]),
-  primary_language: z.string()
+  primary_language: z.string().optional()
 });
 
 const extendedRepository = z

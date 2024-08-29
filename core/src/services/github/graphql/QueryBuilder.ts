@@ -9,6 +9,17 @@ function resolveFragment(fragment: Fragment): Fragment[] {
 }
 
 /**
+ *
+ */
+class FakeQueryLookup extends QueryLookup {
+  constructor() {
+    super('', {});
+  }
+  toString = () => '';
+  parse = () => ({ data: null, params: {} });
+}
+
+/**
  * GraphqlQuery is a wrapper around the GraphqlClient.query method.
  */
 export class QueryBuilder {
@@ -45,7 +56,37 @@ export class QueryBuilder {
   }
 
   async fetch() {
-    const response = await this.client.graphql<Record<string, any>>(this.toString(), {});
-    return this.lookups.map((lookup) => lookup.transform(response[lookup.alias]));
+    const response = await this.client.graphql<Record<string, any>>(this.toString(), {}).catch((error) => {
+      const onlyNotFound = (error.response.errors as Array<{ type: string }>).every((err) => err.type === 'NOT_FOUND');
+      if (onlyNotFound) return error.data;
+      throw error;
+    });
+
+    return this.lookups.map((lookup) =>
+      lookup instanceof FakeQueryLookup ? null : lookup.parse(response[lookup.alias])
+    );
+  }
+
+  iterator(): AsyncIterable<Awaited<ReturnType<QueryBuilder['fetch']>>> {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    let self: QueryBuilder = this;
+
+    return {
+      [Symbol.asyncIterator]: async function* () {
+        do {
+          const response = await self.fetch();
+
+          yield response;
+
+          const pendingLookups = response.map((lookup) => lookup?.next).filter((lookup) => lookup !== undefined);
+          if (pendingLookups.length === 0) break;
+
+          self = response.reduce(
+            (builder, lookup) => builder.add(lookup?.next || new FakeQueryLookup()),
+            QueryBuilder.create(self.client)
+          );
+        } while (true);
+      }
+    };
   }
 }

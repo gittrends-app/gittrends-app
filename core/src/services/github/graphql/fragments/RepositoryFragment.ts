@@ -10,10 +10,14 @@ import { ActorFragment } from './ActorFragment.js';
 export class RepositoryFragment implements Fragment {
   readonly fragments = [new ActorFragment('ActorFrag', false)];
 
-  constructor(public alias = 'RepositoryFrag') {}
+  constructor(
+    public alias = 'RepositoryFrag',
+    private full = false
+  ) {}
 
   toString(): string {
-    return `
+    return this.full
+      ? `
     fragment ${this.alias} on Repository {
       allowUpdateBranch
       archivedAt
@@ -89,10 +93,21 @@ export class RepositoryFragment implements Fragment {
       vulnerabilityAlerts { totalCount }
       watchers { totalCount }
       webCommitSignoffRequired
+    }`
+      : `fragment ${this.alias} on Repository {
+      databaseId
+      description
+      id
+      name
+      nameWithOwner
+      openGraphImageUrl
+      owner { ...ActorFrag }
+      primaryLanguage { name }
+      stargazerCount
     }`;
   }
 
-  transform(data: Repository): z.infer<typeof repository> {
+  parse(data: Repository): z.infer<typeof repository> {
     return repository.parse({
       id: data.id,
       database_id: data.databaseId!,
@@ -100,8 +115,8 @@ export class RepositoryFragment implements Fragment {
       name: data.name,
       name_with_owner: data.nameWithOwner,
       open_graph_image_url: data.openGraphImageUrl,
-      owner: this.fragments[0].transform(data.owner),
-      primary_language: data.primaryLanguage!.name,
+      owner: this.fragments[0].parse(data.owner),
+      primary_language: data.primaryLanguage?.name,
 
       allow_update_branch: data.allowUpdateBranch,
       archived_at: data.archivedAt,
@@ -113,7 +128,7 @@ export class RepositoryFragment implements Fragment {
       delete_branch_on_merge: data.deleteBranchOnMerge,
       disk_usage: data.diskUsage || undefined,
       forking_allowed: data.forkingAllowed,
-      funding_links: data.fundingLinks.map(({ platform, url }) => ({ platform, url })),
+      funding_links: data.fundingLinks?.map(({ platform, url }) => ({ platform, url })),
       has_discussions_enabled: data.hasDiscussionsEnabled,
       has_issues_enabled: data.hasIssuesEnabled,
       has_projects_enabled: data.hasProjectsEnabled,
@@ -151,23 +166,23 @@ export class RepositoryFragment implements Fragment {
       visibility: data.visibility,
       web_commit_signoff_required: data.webCommitSignoffRequired,
 
-      assignable_users_count: data.assignableUsers.totalCount,
-      deployments_count: data.deployments.totalCount,
-      discussions_count: data.discussions.totalCount,
-      environments_count: data.environments.totalCount,
-      issues_count: data.issues.totalCount,
+      assignable_users_count: data.assignableUsers?.totalCount,
+      deployments_count: data.deployments?.totalCount,
+      discussions_count: data.discussions?.totalCount,
+      environments_count: data.environments?.totalCount,
+      issues_count: data.issues?.totalCount,
       milestones_count: data.milestones?.totalCount,
-      pull_requests_count: data.pullRequests.totalCount,
-      branches_count: (data as any).branches.totalCount,
+      pull_requests_count: data.pullRequests?.totalCount,
+      branches_count: (data as any).branches?.totalCount,
       fork_count: data.forkCount,
-      packages_count: data.packages.totalCount,
-      releases_count: data.releases.totalCount,
-      tags_count: (data as any).tags.totalCount,
+      packages_count: data.packages?.totalCount,
+      releases_count: data.releases?.totalCount,
+      tags_count: (data as any).tags?.totalCount,
       rulesets_count: data.rulesets?.totalCount,
       stargazer_count: data.stargazerCount,
-      submodules_count: data.submodules.totalCount,
+      submodules_count: data.submodules?.totalCount,
       vulnerability_alerts_count: data.vulnerabilityAlerts?.totalCount,
-      watchers_count: data.watchers.totalCount
+      watchers_count: data.watchers?.totalCount
     });
   }
 }
