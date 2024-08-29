@@ -5,7 +5,7 @@ import { GithubClient } from '../client.js';
 import { UserLookup } from '../graphql/lookups/UserLookup.js';
 import { QueryBuilder } from '../graphql/QueryBuilder.js';
 
-type Params = { client: GithubClient; isLogin?: boolean };
+type Params = { client: GithubClient; byLogin?: boolean };
 
 /**
  *  Retrieves users by their ID.
@@ -17,7 +17,7 @@ export default async function (id: string | string[], params: Params): Promise<a
 
   const result = await idsArr
     .reduce(
-      (builder, id) => builder.add(new UserLookup(id, { byLogin: params.isLogin })),
+      (builder, id) => builder.add(new UserLookup(id, { byLogin: params.byLogin })),
       QueryBuilder.create(params.client)
     )
     .fetch();

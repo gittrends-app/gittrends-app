@@ -1,3 +1,3 @@
 import { z } from 'zod';
 
-export default z.object({ node_id: z.string() });
+export default z.object({ id: z.string() });

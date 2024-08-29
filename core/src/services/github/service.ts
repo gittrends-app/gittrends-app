@@ -1,23 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import min from 'lodash/min.js';
-import { Class } from 'type-fest';
-import {
-  Commit,
-  Discussion,
-  Issue,
-  PullRequest,
-  Release,
-  Repository,
-  Stargazer,
-  Tag,
-  User,
-  Watcher
-} from '../../entities/Entity.js';
-import { Iterable, ResourceParams, SearchOptions, Service } from '../service.js';
+import { Actor, Iterable, Repository, Service } from '../service.js';
 import { GithubClient } from './client.js';
-import { request } from './requests/index.js';
-import resources from './resources/index.js';
-import summary from './resources/summary.js';
+import { QueryBuilder } from './graphql/QueryBuilder.js';
+import { SearchLookup } from './graphql/lookups/SearchLookup.js';
+import repos from './resources/repos.js';
+import users from './resources/users.js';
 
 /**
  * A service that interacts with the Github API.
@@ -29,125 +16,32 @@ export class GithubService implements Service {
     this.client = client;
   }
 
-  search(
-    total: number,
-    opts?: SearchOptions
-  ): Iterable<Repository, { page: number; per_page: number } & SearchOptions> {
-    const { language } = opts || {};
-
-    let page = 1;
-    let count = 0;
-
-    let maxStargazers = Math.max(opts?.maxStargazers || Infinity, 1);
-    let maxStargazersRepos: Repository[] = [];
-
-    const minStargazers = Math.max(opts?.minStargazers || 1, 1);
-
-    const { rest } = this.client;
+  search(total: number): Iterable<Repository> {
+    const it = QueryBuilder.create(this.client)
+      .add(new SearchLookup({ limit: total }))
+      .iterator();
 
     return {
       [Symbol.asyncIterator]: async function* () {
-        do {
-          let query = `stars:${minStargazers}..${maxStargazers === Infinity ? '*' : maxStargazers}`;
-          if (language) query += ` language:${language}`;
+        for await (const [searchRes] of it) {
+          if (!searchRes) return;
 
-          const it = rest.paginate.iterator(rest.search.repos, {
-            q: query,
-            sort: 'stars',
-            order: 'desc',
-            per_page: 100,
-            page: 1
-          });
-
-          for await (const response of it) {
-            const _repos = response.data
-              .map((data) => new Repository(data))
-              .filter((repo) => maxStargazersRepos.every((r) => r._id !== repo._id))
-              .slice(0, total - count);
-
-            count += _repos.length;
-            maxStargazers = min(_repos.map((repo) => repo.stargazers_count)) || Infinity;
-            maxStargazersRepos = _repos.filter((repo) => repo.stargazers_count === maxStargazers);
-
-            yield {
-              data: _repos,
-              params: {
-                has_more: _repos.length === 100,
-                page: page++,
-                per_page: 100,
-                minStargazers,
-                maxStargazers
-              }
-            };
-
-            if (count >= total) return;
-          }
-        } while (true);
+          yield {
+            data: searchRes.data,
+            params: { has_more: !!searchRes.next, ...searchRes.params }
+          };
+        }
       }
     };
   }
 
-  async user(loginOrId: string | number): Promise<User | null>;
-  async user(loginOrId: string[] | number[]): Promise<(User | null)[]>;
-  async user(id: any): Promise<any> {
-    const arr = Array.isArray(id) ? id : [id];
-
-    const res = arr.map(async (loginOrId) => {
-      const [url, args] =
-        typeof loginOrId === 'number'
-          ? [`GET /user/:id` as const, { id: loginOrId }]
-          : [`GET /users/:login` as const, { login: loginOrId }];
-
-      return request({ client: this.client, url, Entity: User }, args as any)
-        .then((user) => user || null)
-        .catch((error) => (error.status === 404 ? null : Promise.reject(error)));
-    });
-
-    return Array.isArray(id) ? res : res[0];
+  async user(id: string, opts?: { byLogin: boolean }): Promise<Actor | null>;
+  async user(id: string[], opts?: { byLogin: boolean }): Promise<(Actor | null)[]>;
+  async user(id: any, opts?: { byLogin: boolean }): Promise<any> {
+    return users(id, { client: this.client, byLogin: opts?.byLogin });
   }
 
-  async repository(ownerOrId: string | number, name?: string): Promise<Repository | null> {
-    const [url, args] =
-      typeof ownerOrId === 'number'
-        ? ['GET /repositories/:repo' as const, { repo: ownerOrId }]
-        : ['GET /repos/:owner/:name' as const, { owner: ownerOrId, name: name }];
-
-    return request({ client: this.client, url, Entity: Repository }, args as any).then(async (repo) => {
-      if (!repo) return null;
-      const res = await summary(this.client, { repo });
-      return res ? new Repository(repo, { counts: res }) : repo;
-    });
-  }
-
-  resource(Entity: Class<Tag>, opts: ResourceParams): Iterable<Tag>;
-  resource(Entity: Class<Release>, opts: ResourceParams): Iterable<Release>;
-  resource(Entity: Class<Stargazer>, opts: ResourceParams): Iterable<Stargazer>;
-  resource(Entity: Class<Watcher>, opts: ResourceParams): Iterable<Watcher>;
-  resource(Entity: Class<Issue>, opts: ResourceParams & { since?: Date }): Iterable<Issue, { since?: Date }>;
-  resource(
-    Entity: Class<Commit>,
-    opts: ResourceParams & { since?: Date; until?: Date }
-  ): Iterable<Commit, { since?: Date; until?: Date }>;
-  resource(Entity: Class<Discussion>, opts: ResourceParams): Iterable<Discussion>;
-  resource(Entity: Class<any>, opts: ResourceParams): Iterable<any> {
-    switch (Entity.name) {
-      case Stargazer.name:
-        return resources.stargazers(this.client, opts);
-      case Watcher.name:
-        return resources.watchers(this.client, opts);
-      case Tag.name:
-        return resources.tags(this.client, opts);
-      case Release.name:
-        return resources.releases(this.client, opts);
-      case Issue.name:
-      case PullRequest.name:
-        return resources.issues(this.client, opts);
-      case Commit.name:
-        return resources.commits(this.client, opts);
-      case Discussion.name:
-        return resources.discussions(this.client, opts);
-      default:
-        throw new Error('Method not implemented.');
-    }
+  async repository(owner: string, name?: string): Promise<Repository | null> {
+    return repos(name ? `${owner}/${name}` : owner, { client: this.client, byName: !!name });
   }
 }

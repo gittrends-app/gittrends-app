@@ -1,39 +1,32 @@
-import { Entity, Repository, User } from '../entities/Entity.js';
+import { z } from 'zod';
+import actor from '../entities/schemas/actor.js';
+import node from '../entities/schemas/node.js';
+import repository from '../entities/schemas/repository.js';
 
 export type PageableParams = {
-  page?: number | string;
-  per_page?: number;
+  cursor?: string;
+  limit?: number;
   [key: string]: unknown;
 };
 
-export type Iterable<T extends Entity, P extends object = object> = AsyncIterable<{
+export type Iterable<T extends z.infer<typeof node>, P extends object = object> = AsyncIterable<{
   data: T[];
   params: { has_more: boolean } & PageableParams & P;
 }>;
 
-export type SearchOptions = {
-  language?: string;
-  minStargazers?: number;
-  maxStargazers?: number;
-};
-
-export type ResourceParams = PageableParams & {
-  repo: { id: number; node_id: string };
-};
+export type Repository = z.infer<typeof repository>;
+export type Actor = z.infer<typeof actor>;
 
 /**
  * Service interface to be implemented by all services.
  */
 export interface Service {
-  search(
-    total: number,
-    params?: SearchOptions
-  ): Iterable<Repository, { page: number; per_page: number } & SearchOptions>;
+  search(total: number): Iterable<Repository>;
 
-  user(loginOrId: string | number): Promise<User | null>;
-  user(loginOrId: string[] | number[]): Promise<(User | null)[]>;
+  user(id: string, opts?: { byLogin: boolean }): Promise<Actor | null>;
+  user(id: string[], opts?: { byLogin: boolean }): Promise<(Actor | null)[]>;
 
-  repository(ownerOrId: string | number, name?: string): Promise<Repository | null>;
+  repository(ownerOrId: string, name?: string): Promise<Repository | null>;
 
   // resource(Entity: Class<Tag>, opts: ResourceParams): Iterable<Tag>;
   // resource(Entity: Class<Release>, opts: ResourceParams): Iterable<Release>;
