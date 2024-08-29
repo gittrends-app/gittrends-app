@@ -57,8 +57,12 @@ export class QueryBuilder {
 
   async fetch() {
     const response = await this.client.graphql<Record<string, any>>(this.toString(), {}).catch((error) => {
-      const onlyNotFound = (error.response.errors as Array<{ type: string }>).every((err) => err.type === 'NOT_FOUND');
-      if (onlyNotFound) return error.data;
+      if (error.response.status === 200) {
+        const onlyNotFound = (error.response.errors as Array<{ type: string }>).every(
+          (err) => err.type === 'NOT_FOUND'
+        );
+        if (onlyNotFound) return error.data;
+      }
       throw error;
     });
 

@@ -18,7 +18,7 @@ export class GithubService implements Service {
 
   search(total: number): Iterable<Repository> {
     const it = QueryBuilder.create(this.client)
-      .add(new SearchLookup({ limit: total }))
+      .add(new SearchLookup({ limit: Math.min(total, 100) }))
       .iterator();
 
     return {

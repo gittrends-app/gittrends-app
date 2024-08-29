@@ -8,12 +8,14 @@ import { ActorFragment } from './ActorFragment.js';
  *
  */
 export class RepositoryFragment implements Fragment {
-  readonly fragments = [new ActorFragment('ActorFrag', false)];
+  readonly fragments;
 
   constructor(
     public alias = 'RepositoryFrag',
     private full = false
-  ) {}
+  ) {
+    this.fragments = [new ActorFragment('ActorFrag', full)];
+  }
 
   toString(): string {
     return this.full

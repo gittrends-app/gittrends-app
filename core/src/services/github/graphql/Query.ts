@@ -14,13 +14,13 @@ export interface Fragment<R = any> {
 export type QueryLookupParams = {
   id?: string;
   cursor?: string;
-  limit?: number;
+  first?: number;
 };
 
 /**
  *
  */
-export abstract class QueryLookup<R = any, P = object> {
+export abstract class QueryLookup<R = any, P = Record<string, any>> {
   readonly alias: string;
   readonly fragments: Fragment[];
   readonly params: QueryLookupParams & P;
