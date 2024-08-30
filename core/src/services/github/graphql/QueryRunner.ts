@@ -48,6 +48,15 @@ export class QueryRunner {
     return lookup.parse(response[lookup.alias]);
   }
 
+  public async fetchAll<R, P>(lookup: QueryLookup<R, P>) {
+    const it = this.iterator(lookup);
+
+    const responses: ReturnType<(typeof lookup)['parse']>[] = [];
+    for await (const res of it) responses.push(res);
+
+    return { data: responses.map((res) => res.data).flat(), params: responses.at(-1)!.params };
+  }
+
   iterator<R, P>(lookup: QueryLookup<R, P>) {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self: QueryRunner = this;
