@@ -49,7 +49,7 @@ export class DiscussionsLookup extends QueryLookup<z.infer<typeof discussion>[],
             locked
             number
             publishedAt
-            reactionGroups { content reactors { totalCount } }
+            reactions { totalCount }
             stateReason
             title
             updatedAt
@@ -74,7 +74,7 @@ export class DiscussionsLookup extends QueryLookup<z.infer<typeof discussion>[],
           })
         : undefined,
       data: (_data.nodes || []).map((data) => {
-        const tData = {
+        return discussion.parse({
           id: data!.id,
           database_id: data!.databaseId!,
           active_lock_reason: data!.activeLockReason,
@@ -98,28 +98,12 @@ export class DiscussionsLookup extends QueryLookup<z.infer<typeof discussion>[],
           locked: data!.locked,
           number: data!.number,
           published_at: data!.publishedAt,
-          reaction_groups: data!.reactionGroups?.reduce(
-            (mem: Record<string, number>, group) =>
-              Object.assign(
-                mem,
-                group.reactors.totalCount ? { [group.content.toLowerCase()]: group.reactors.totalCount } : {}
-              ),
-            {}
-          ),
+          reactions_count: data!.reactions.totalCount,
           state_reason: data!.stateReason,
           title: data!.title,
           updated_at: data!.updatedAt,
           upvote_count: data!.upvoteCount
-        };
-
-        if (tData.reaction_groups) {
-          tData.reaction_groups = {
-            total_count: Object.values(tData.reaction_groups).reduce((a, b) => a + b, 0),
-            ...tData.reaction_groups
-          };
-        }
-
-        return discussion.parse(tData);
+        });
       }),
       params: { ...this.params, cursor: _data.pageInfo.endCursor || this.params.cursor }
     };

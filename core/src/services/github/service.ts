@@ -1,11 +1,21 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Actor, Iterable, Repository, Service, ServiceResourceParams, Stargazer, Watcher } from '../service.js';
+import {
+  Actor,
+  Discussion,
+  Iterable,
+  Repository,
+  Service,
+  ServiceResourceParams,
+  Stargazer,
+  Watcher
+} from '../service.js';
 import { GithubClient } from './client.js';
 import { QueryLookup } from './graphql/Query.js';
 import { QueryRunner } from './graphql/QueryRunner.js';
 import { SearchLookup } from './graphql/lookups/SearchLookup.js';
 import { StargazersLookup } from './graphql/lookups/StargazersLookup.js';
 import { WatchersLookup } from './graphql/lookups/WatchersLookup.js';
+import discussions from './resources/discussions.js';
 import repos from './resources/repos.js';
 import users from './resources/users.js';
 
@@ -46,7 +56,10 @@ export class GithubService implements Service {
 
   resource(name: 'stargazers', opts: ServiceResourceParams): Iterable<Stargazer>;
   resource(name: 'watchers', opts: ServiceResourceParams): Iterable<Watcher>;
+  resource(name: 'discussions', opts: ServiceResourceParams): Iterable<Discussion>;
   resource(name: string, opts: ServiceResourceParams): Iterable<any> {
+    if (name === 'discussions') return discussions(this.client, opts);
+
     const { client } = this;
 
     let lookup: QueryLookup;

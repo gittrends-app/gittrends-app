@@ -1,5 +1,7 @@
 import { z } from 'zod';
 import actor from '../entities/schemas/actor.js';
+import discussionComment from '../entities/schemas/discussion-comment.js';
+import discussion from '../entities/schemas/discussion.js';
 import repository from '../entities/schemas/repository.js';
 import stargazer from '../entities/schemas/stargazer.js';
 import watcher from '../entities/schemas/watcher.js';
@@ -19,6 +21,8 @@ export type Repository = z.infer<typeof repository>;
 export type Actor = z.infer<typeof actor>;
 export type Stargazer = z.infer<typeof stargazer>;
 export type Watcher = z.infer<typeof watcher>;
+export type Discussion = z.infer<typeof discussion>;
+export type DiscussionComment = z.infer<typeof discussionComment>;
 
 export type ServiceResourceParams = {
   repo: string;
@@ -38,8 +42,9 @@ export interface Service {
 
   repository(ownerOrId: string, name?: string): Promise<Repository | null>;
 
-  resource(name: 'stargazers', opts: ServiceResourceParams): Iterable<Stargazer>;
   resource(name: 'watchers', opts: ServiceResourceParams): Iterable<Watcher>;
+  resource(name: 'stargazers', opts: ServiceResourceParams): Iterable<Stargazer>;
+  resource(name: 'discussions', opts: ServiceResourceParams): Iterable<Discussion>;
 
   // resource(Entity: Class<Tag>, opts: ResourceParams): Iterable<Tag>;
   // resource(Entity: Class<Release>, opts: ResourceParams): Iterable<Release>;

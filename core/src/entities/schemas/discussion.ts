@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { zodSanitize } from '../../helpers/sanitize.js';
 import actor from './actor.js';
 import discussionComment from './discussion-comment.js';
-import reactable from './reactable.js';
+import reaction from './reaction.js';
 
 export default zodSanitize(
   z.object({
@@ -29,10 +29,13 @@ export default zodSanitize(
     locked: z.boolean(),
     number: z.number(),
     published_at: z.coerce.date().optional(),
-    reaction_groups: reactable.optional(),
+    reactions_count: z.number().int(),
     state_reason: z.string().optional(),
     title: z.string(),
     updated_at: z.coerce.date().optional(),
-    upvote_count: z.number()
+    upvote_count: z.number(),
+
+    comments: z.array(discussionComment).optional(),
+    reactions: z.array(reaction).optional()
   })
 );
