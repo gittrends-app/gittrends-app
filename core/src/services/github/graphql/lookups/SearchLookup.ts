@@ -1,17 +1,17 @@
 import { Repository } from '@octokit/graphql-schema';
 import { z } from 'zod';
 import repository from '../../../../entities/schemas/repository.js';
-import { RepositoryFragment } from '../fragments/RepositoryFragment.js';
+import { PartialRepositoryFragment, RepositoryFragment } from '../fragments/RepositoryFragment.js';
 import { QueryLookup } from '../Query.js';
 
 /**
  *  A lookup to get a user by ID.
  */
-export class SearchLookup extends QueryLookup<z.infer<typeof repository>[], { limit: number }> {
-  constructor(props: { limit: number; cursor?: string; first?: number; alias?: string }) {
+export class SearchLookup extends QueryLookup<z.infer<typeof repository>[], { limit: number; full?: boolean }> {
+  constructor(props: { limit: number; cursor?: string; first?: number; alias?: string; full?: boolean }) {
     const { alias, ...rest } = props;
     super(alias || 'search', rest);
-    this.fragments.push(new RepositoryFragment('RepoFrag', false));
+    this.fragments.push(this.params.full ? RepositoryFragment : PartialRepositoryFragment);
   }
 
   toString(): string {
@@ -25,7 +25,7 @@ export class SearchLookup extends QueryLookup<z.infer<typeof repository>[], { li
     return `
     ${this.alias}:search(${params.join(', ')}) {
       pageInfo { hasNextPage endCursor }
-      nodes { ...RepoFrag }
+      nodes { ...${(this.params.full ? RepositoryFragment : PartialRepositoryFragment).alias} }
     }
     `;
   }

@@ -7,7 +7,7 @@ import { Fragment } from '../Query.js';
 /**
  * A fragment to select the common fields for an actor.
  */
-export class ActorFragment implements Fragment {
+class _ActorFragment implements Fragment {
   readonly fragments = [];
 
   constructor(
@@ -238,3 +238,6 @@ export class ActorFragment implements Fragment {
     }
   }
 }
+
+export const ActorFragment = new _ActorFragment('ActorFragment', true);
+export const PartialActorFragment = new _ActorFragment('PartialActorFragment', false);

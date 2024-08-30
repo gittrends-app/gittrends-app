@@ -12,21 +12,21 @@ export class RepositoryLookup extends QueryLookup<z.infer<typeof repository>, { 
     private props?: { alias?: string; byName?: boolean }
   ) {
     super(props?.alias || id.replace(/[^a-zA-Z0-9]/g, ''), { id, byName: props?.byName });
-    this.fragments.push(new RepositoryFragment('RepoFrag', true));
+    this.fragments.push(RepositoryFragment);
   }
 
   toString(): string {
     if (this.props?.byName) {
       const [owner, name] = this.id.split('/');
-      return `${this.alias}:repository(owner: "${owner}", name: "${name}") { ...RepoFrag }`;
+      return `${this.alias}:repository(owner: "${owner}", name: "${name}") { ...${RepositoryFragment.alias} }`;
     } else {
-      return `${this.alias}:node(id: "${this.id}") { ...RepoFrag }`;
+      return `${this.alias}:node(id: "${this.id}") { ...${RepositoryFragment.alias} }`;
     }
   }
 
   parse(data: any) {
     return {
-      data: data && this.fragments[0].parse(data[this.alias] || data),
+      data: data && RepositoryFragment.parse(data[this.alias] || data),
       params: this.params
     };
   }

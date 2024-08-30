@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import actor from '../entities/schemas/actor.js';
-import node from '../entities/schemas/node.js';
 import repository from '../entities/schemas/repository.js';
+import stargazer from '../entities/schemas/stargazer.js';
 
 export type PageableParams = {
   cursor?: string;
@@ -9,13 +9,21 @@ export type PageableParams = {
   [key: string]: unknown;
 };
 
-export type Iterable<T extends z.infer<typeof node>, P extends object = object> = AsyncIterable<{
+export type Iterable<T = any, P extends object = object> = AsyncIterable<{
   data: T[];
   params: { has_more: boolean } & PageableParams & P;
 }>;
 
 export type Repository = z.infer<typeof repository>;
 export type Actor = z.infer<typeof actor>;
+export type Stargazer = z.infer<typeof stargazer>;
+
+export type ServiceResourceParams = {
+  repo: string;
+  cursor?: string;
+  first?: number;
+  full?: boolean;
+};
 
 /**
  * Service interface to be implemented by all services.
@@ -27,6 +35,8 @@ export interface Service {
   user(id: string[], opts?: { byLogin: boolean }): Promise<(Actor | null)[]>;
 
   repository(ownerOrId: string, name?: string): Promise<Repository | null>;
+
+  resource(name: 'stargazers', opts: ServiceResourceParams): Iterable<Stargazer>;
 
   // resource(Entity: Class<Tag>, opts: ResourceParams): Iterable<Tag>;
   // resource(Entity: Class<Release>, opts: ResourceParams): Iterable<Release>;
