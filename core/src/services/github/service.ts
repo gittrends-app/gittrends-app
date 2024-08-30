@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Actor, Iterable, Repository, Service, ServiceResourceParams, Stargazer } from '../service.js';
 import { GithubClient } from './client.js';
-import { QueryBuilder } from './graphql/QueryBuilder.js';
+import { QueryRunner } from './graphql/QueryRunner.js';
 import { SearchLookup } from './graphql/lookups/SearchLookup.js';
 import { StargazersLookup } from './graphql/lookups/StargazersLookup.js';
 import repos from './resources/repos.js';
@@ -18,15 +18,11 @@ export class GithubService implements Service {
   }
 
   search(total: number): Iterable<Repository> {
-    const it = QueryBuilder.create(this.client)
-      .add(new SearchLookup({ limit: Math.min(total, 100) }))
-      .iterator();
+    const it = QueryRunner.create(this.client).iterator(new SearchLookup({ limit: Math.min(total, 100) }));
 
     return {
       [Symbol.asyncIterator]: async function* () {
-        for await (const [searchRes] of it) {
-          if (!searchRes) return;
-
+        for await (const searchRes of it) {
           yield {
             data: searchRes.data,
             params: { has_more: !!searchRes.next, ...searchRes.params }
@@ -47,15 +43,13 @@ export class GithubService implements Service {
   }
 
   resource(name: 'stargazers', opts: ServiceResourceParams): Iterable<Stargazer> {
-    const it = QueryBuilder.create(this.client)
-      .add(new StargazersLookup({ id: opts.repo, cursor: opts.cursor, first: opts.first, full: opts.full }))
-      .iterator();
+    const it = QueryRunner.create(this.client).iterator(
+      new StargazersLookup({ id: opts.repo, cursor: opts.cursor, first: opts.first, full: opts.full })
+    );
 
     return {
       [Symbol.asyncIterator]: async function* () {
-        for await (const [searchRes] of it) {
-          if (!searchRes) return;
-
+        for await (const searchRes of it) {
           yield {
             data: searchRes.data,
             params: { has_more: !!searchRes.next, ...searchRes.params }
