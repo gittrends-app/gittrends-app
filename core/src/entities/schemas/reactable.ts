@@ -1,21 +1,16 @@
-import isPlainObject from 'lodash/isPlainObject.js';
-import pickBy from 'lodash/pickBy.js';
 import { z } from 'zod';
+import { zodSanitize } from '../../helpers/sanitize.js';
 
-export default z.preprocess(
-  (v: any) => (isPlainObject(v) ? pickBy(v, (value) => (typeof value === 'number' ? value > 0 : true)) : v),
-  z
-    .object({
-      total_count: z.number().int().default(0),
-      '+1': z.number().int(),
-      '-1': z.number().int(),
-      laugh: z.number().int(),
-      confused: z.number().int(),
-      heart: z.number().int(),
-      hooray: z.number().int(),
-      eyes: z.number().int(),
-      rocket: z.number().int()
-    })
-    .partial()
-    .required({ total_count: true })
+export default zodSanitize(
+  z.object({
+    total_count: z.number().int().default(0),
+    thumbs_up: z.number().int().optional(),
+    thumbs_down: z.number().int().optional(),
+    laugh: z.number().int().optional(),
+    confused: z.number().int().optional(),
+    heart: z.number().int().optional(),
+    hooray: z.number().int().optional(),
+    eyes: z.number().int().optional(),
+    rocket: z.number().int().optional()
+  })
 );

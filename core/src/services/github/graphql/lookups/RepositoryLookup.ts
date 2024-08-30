@@ -6,7 +6,7 @@ import { QueryLookup } from '../Query.js';
 /**
  *  A lookup to get a user by ID.
  */
-export class RepositoryLookup extends QueryLookup<z.infer<typeof repository>, { byName?: boolean }> {
+export class RepositoryLookup extends QueryLookup<z.infer<typeof repository> | null, { byName?: boolean }> {
   constructor(
     private id: string,
     private props?: { alias?: string; byName?: boolean }
@@ -26,7 +26,7 @@ export class RepositoryLookup extends QueryLookup<z.infer<typeof repository>, { 
 
   parse(data: any) {
     return {
-      data: data && RepositoryFragment.parse(data[this.alias] || data),
+      data: data ? RepositoryFragment.parse(data[this.alias] || data) : null,
       params: this.params
     };
   }
