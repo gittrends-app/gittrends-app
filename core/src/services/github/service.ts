@@ -1,9 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Actor, Iterable, Repository, Service, ServiceResourceParams, Stargazer } from '../service.js';
+import { Actor, Iterable, Repository, Service, ServiceResourceParams, Stargazer, Watcher } from '../service.js';
 import { GithubClient } from './client.js';
+import { QueryLookup } from './graphql/Query.js';
 import { QueryRunner } from './graphql/QueryRunner.js';
 import { SearchLookup } from './graphql/lookups/SearchLookup.js';
 import { StargazersLookup } from './graphql/lookups/StargazersLookup.js';
+import { WatchersLookup } from './graphql/lookups/WatchersLookup.js';
 import repos from './resources/repos.js';
 import users from './resources/users.js';
 
@@ -42,14 +44,21 @@ export class GithubService implements Service {
     return repos(name ? `${owner}/${name}` : owner, { client: this.client, byName: !!name });
   }
 
-  resource(name: 'stargazers', opts: ServiceResourceParams): Iterable<Stargazer> {
-    const it = QueryRunner.create(this.client).iterator(
-      new StargazersLookup({ id: opts.repo, cursor: opts.cursor, first: opts.first, full: opts.full })
-    );
+  resource(name: 'stargazers', opts: ServiceResourceParams): Iterable<Stargazer>;
+  resource(name: 'watchers', opts: ServiceResourceParams): Iterable<Watcher>;
+  resource(name: string, opts: ServiceResourceParams): Iterable<any> {
+    const { client } = this;
+
+    let lookup: QueryLookup;
+    const params = { id: opts.repo, cursor: opts.cursor, first: opts.first, full: opts.full };
+
+    if (name === 'stargazers') lookup = new StargazersLookup(params);
+    else if (name === 'watchers') lookup = new WatchersLookup(params);
+    else throw new Error(`Resource ${name} not supported`);
 
     return {
       [Symbol.asyncIterator]: async function* () {
-        for await (const searchRes of it) {
+        for await (const searchRes of QueryRunner.create(client).iterator(lookup)) {
           yield {
             data: searchRes.data,
             params: { has_more: !!searchRes.next, ...searchRes.params }

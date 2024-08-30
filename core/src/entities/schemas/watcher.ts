@@ -1,12 +1,11 @@
 import { z } from 'zod';
 import { zodSanitize } from '../../helpers/sanitize.js';
-import userSchema from './user.js';
+import actor from './actor.js';
+import repository from './repository.js';
 
 export default zodSanitize(
-  z.preprocess(
-    (data: any) => (data.user ? data : { user: data }),
-    z.object({
-      user: z.union([userSchema, z.string()])
-    })
-  )
+  z.object({
+    user: z.union([z.string(), actor]),
+    repository: z.union([z.string(), repository])
+  })
 );
