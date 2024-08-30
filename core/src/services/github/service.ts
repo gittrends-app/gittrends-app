@@ -58,26 +58,33 @@ export class GithubService implements Service {
   resource(name: 'watchers', opts: ServiceResourceParams): Iterable<Watcher>;
   resource(name: 'discussions', opts: ServiceResourceParams): Iterable<Discussion>;
   resource(name: string, opts: ServiceResourceParams): Iterable<any> {
-    if (name === 'discussions') return discussions(this.client, opts);
-
-    const { client } = this;
-
-    let lookup: QueryLookup;
     const params = { id: opts.repo, cursor: opts.cursor, first: opts.first, full: opts.full };
 
-    if (name === 'stargazers') lookup = new StargazersLookup(params);
-    else if (name === 'watchers') lookup = new WatchersLookup(params);
-    else throw new Error(`Resource ${name} not supported`);
-
-    return {
-      [Symbol.asyncIterator]: async function* () {
-        for await (const searchRes of QueryRunner.create(client).iterator(lookup)) {
-          yield {
-            data: searchRes.data,
-            params: { has_more: !!searchRes.next, ...searchRes.params }
-          };
-        }
-      }
-    };
+    switch (name) {
+      case 'discussions':
+        return discussions(this.client, opts);
+      case 'stargazers':
+        return genericIterator(this.client, new StargazersLookup(params));
+      case 'watchers':
+        return genericIterator(this.client, new WatchersLookup(params));
+      default:
+        throw new Error(`Resource ${name} not supported`);
+    }
   }
+}
+
+/**
+ *
+ */
+function genericIterator<R, T>(client: GithubClient, lookup: QueryLookup<R[], T>): Iterable<R> {
+  return {
+    [Symbol.asyncIterator]: async function* () {
+      for await (const searchRes of QueryRunner.create(client).iterator(lookup)) {
+        yield {
+          data: searchRes.data,
+          params: { has_more: !!searchRes.next, ...searchRes.params }
+        };
+      }
+    }
+  };
 }

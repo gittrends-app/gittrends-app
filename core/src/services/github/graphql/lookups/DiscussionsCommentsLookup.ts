@@ -66,10 +66,12 @@ export class DiscussionsCommentsLookup extends QueryLookup<
 
   parse(data: any) {
     const _data: DiscussionCommentConnection = (data[this.alias] || data).comments;
+    if (!_data) throw Object.assign(new Error('Invalid data'), { data, query: this.toString() });
     return {
       next: _data.pageInfo.hasNextPage
         ? new DiscussionsCommentsLookup({
             alias: this.alias,
+            isComment: this.params.isComment,
             id: this.params.id as string,
             cursor: _data.pageInfo.endCursor || this.params.cursor,
             first: this.params.first,

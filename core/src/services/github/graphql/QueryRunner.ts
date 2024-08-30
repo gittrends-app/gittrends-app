@@ -36,7 +36,7 @@ export class QueryRunner {
 
   public async fetch<R, P>(lookup: QueryLookup<R, P>) {
     const response = await this.client.graphql<Record<string, any>>(QueryRunner.toString(lookup), {}).catch((error) => {
-      if (error.response.status === 200) {
+      if (error.response?.status === 200) {
         const onlyNotFound = (error.response.errors as Array<{ type: string }>).every(
           (err) => err.type === 'NOT_FOUND'
         );
