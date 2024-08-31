@@ -3,6 +3,7 @@ import {
   Actor,
   Discussion,
   Iterable,
+  Release,
   Repository,
   Service,
   ServiceResourceParams,
@@ -18,6 +19,7 @@ import { StargazersLookup } from './graphql/lookups/StargazersLookup.js';
 import { TagsLookup } from './graphql/lookups/TagsLookup.js';
 import { WatchersLookup } from './graphql/lookups/WatchersLookup.js';
 import discussions from './resources/discussions.js';
+import releases from './resources/releases.js';
 import repos from './resources/repos.js';
 import users from './resources/users.js';
 
@@ -60,12 +62,15 @@ export class GithubService implements Service {
   resource(name: 'watchers', opts: ServiceResourceParams): Iterable<Watcher>;
   resource(name: 'discussions', opts: ServiceResourceParams): Iterable<Discussion>;
   resource(name: 'tags', opts: ServiceResourceParams): Iterable<Tag>;
+  resource(name: 'releases', opts: ServiceResourceParams): Iterable<Release>;
   resource(name: string, opts: ServiceResourceParams): Iterable<any> {
     const params = { id: opts.repo, cursor: opts.cursor, first: opts.first, full: opts.full };
 
     switch (name) {
       case 'discussions':
         return discussions(this.client, opts);
+      case 'releases':
+        return releases(this.client, opts);
       case 'stargazers':
         return genericIterator(this.client, new StargazersLookup(params));
       case 'watchers':

@@ -1,24 +1,27 @@
 import { z } from 'zod';
 import { zodSanitize } from '../../helpers/sanitize.js';
-import assetSchema from './asset.js';
-import reactableSchema from './reactable.js';
-import userSchema from './user.js';
+import actor from './actor.js';
+import commit from './commit.js';
+import reaction from './reaction.js';
+import tag from './tag.js';
 
 export default zodSanitize(
   z.object({
-    id: z.number().int(),
-    node_id: z.string(),
-    tag_name: z.string(),
-    target_commitish: z.string(),
-    name: z.string().optional(),
-    body: z.string().optional(),
-    draft: z.boolean(),
-    prerelease: z.boolean(),
+    author: actor.optional(),
     created_at: z.coerce.date(),
+    database_id: z.number().int().optional(),
+    id: z.string(),
+    is_draft: z.boolean(),
+    is_prerelease: z.boolean(),
+    name: z.string().optional(),
     published_at: z.coerce.date().optional(),
-    author: z.union([userSchema, z.string()]),
-    assets: z.array(assetSchema).optional(),
-    mentions_count: z.number().int().optional(),
-    reactions: reactableSchema.optional()
+    reactions_count: z.number().int(),
+    repository: z.string(),
+    tag: tag.optional(),
+    tag_commit: commit.optional(),
+    tag_name: z.string(),
+    updated_at: z.coerce.date(),
+
+    reactions: z.array(reaction).optional()
   })
 );

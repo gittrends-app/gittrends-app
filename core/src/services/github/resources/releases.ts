@@ -1,35 +1,34 @@
-import { Release } from '../../../entities/Entity.js';
+import { Iterable, Release, ServiceResourceParams } from '../../service.js';
 import { GithubClient } from '../client.js';
-import { iterator } from '../requests/index.js';
-import { ResourcesParams } from './index.js';
-import _reactions from './reactions.js';
+import { ReactionsLookup } from '../graphql/lookups/ReactionsLookup.js';
+import { ReleasesLookup } from '../graphql/lookups/ReleasesLookup.js';
+import { QueryRunner } from '../graphql/QueryRunner.js';
 
 /**
  * Get the releases of a repository by its id
  */
-export default function (client: GithubClient, options: ResourcesParams) {
+export default function (client: GithubClient, options: ServiceResourceParams): Iterable<Release> {
+  const { repo, ...opts } = options;
+
   return {
     [Symbol.asyncIterator]: async function* () {
-      const it = iterator(
-        {
-          client,
-          url: 'GET /repositories/:repo/releases',
-          Entity: Release,
-          metadata: { repository: options.repo.node_id }
-        },
-        { ...options, repo: options.repo.id }
-      );
+      const it = QueryRunner.create(client).iterator(new ReleasesLookup({ ...opts, id: repo }));
 
-      for await (const { data, params } of it) {
-        const updatedReleases = await Promise.all(
-          data.map(async (release) => {
-            release._reactions = await _reactions(client, release, options);
-            return release;
+      for await (const res of it) {
+        await Promise.all(
+          res.data.map(async (release) => {
+            if (release.reactions_count) {
+              release.reactions = await QueryRunner.create(client)
+                .fetchAll(new ReactionsLookup({ ...opts, id: release.id }))
+                .then(({ data }) => data);
+            }
           })
         );
 
-        yield { data: updatedReleases, params };
+        yield { data: res.data, params: { ...res.params, has_more: !!res.next } };
       }
+
+      return;
     }
   };
 }
