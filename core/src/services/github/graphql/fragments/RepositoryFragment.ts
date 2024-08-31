@@ -5,7 +5,7 @@ import { Fragment } from '../Query.js';
 import { ActorFragment, PartialActorFragment } from './ActorFragment.js';
 
 /**
- *
+ *  A fragment to get a repository.
  */
 class _RepositoryFragment implements Fragment {
   private readonly actorFrag;

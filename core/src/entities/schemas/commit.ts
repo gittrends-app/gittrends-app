@@ -1,61 +1,34 @@
 import { z } from 'zod';
 import { zodSanitize } from '../../helpers/sanitize.js';
-import userSchema from './user.js';
+import actor from './actor.js';
+
+export const gitActor = z.object({
+  date: z.coerce.date().optional(),
+  email: z.string().optional(),
+  name: z.string().optional(),
+  user: actor.optional()
+});
 
 export default zodSanitize(
   z.object({
-    sha: z.string(),
-    node_id: z.string(),
-    commit: z.object({
-      author: z
-        .object({
-          name: z.string().optional(),
-          email: z.string().optional(),
-          date: z.coerce.date().optional()
-        })
-        .optional(),
-      committer: z
-        .object({
-          name: z.string().optional(),
-          email: z.string().optional(),
-          date: z.coerce.date().optional()
-        })
-        .optional(),
-      message: z.string(),
-      comment_count: z.number().int(),
-      tree: z.union([z.object({ sha: z.string() }).transform((v) => v.sha), z.string()]),
-      verification: z
-        .object({
-          verified: z.boolean(),
-          reason: z.string(),
-          payload: z.string().optional(),
-          signature: z.string().optional()
-        })
-        .optional()
-    }),
-    author: z.union([userSchema, z.string()]).optional(),
-    committer: z.union([userSchema, z.string()]).optional(),
-    parents: z.union([z.array(z.object({ sha: z.string() }).transform((v) => v.sha)), z.array(z.string())]).optional(),
-    stats: z
-      .object({
-        additions: z.number().int().optional(),
-        deletions: z.number().int().optional(),
-        total: z.number().int().optional()
-      })
-      .optional(),
-    files: z
-      .array(
-        z.object({
-          sha: z.string().optional(),
-          filename: z.string(),
-          status: z.enum(['added', 'removed', 'modified', 'renamed', 'copied', 'changed', 'unchanged']),
-          additions: z.number().int(),
-          deletions: z.number().int(),
-          changes: z.number().int(),
-          patch: z.string().optional(),
-          previous_filename: z.string().optional()
-        })
-      )
-      .optional()
+    additions: z.number().int(),
+    author: gitActor.optional(),
+    authored_by_committer: z.boolean(),
+    authored_date: z.coerce.date().optional(),
+    changed_files_if_available: z.number().int().optional(),
+    comments_count: z.number().int(),
+    committed_date: z.coerce.date().optional(),
+    committed_via_web: z.boolean(),
+    committer: gitActor.optional(),
+    deletions: z.number().int(),
+    deployments_count: z.number().int(),
+    id: z.string(),
+    message: z.string().optional(),
+    message_body: z.string().optional(),
+    message_headline: z.string().optional(),
+    oid: z.string(),
+    parents: z.array(z.string()).optional(),
+    repository: z.string(),
+    status: z.string().optional()
   })
 );
