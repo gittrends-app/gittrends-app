@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import actor from '../entities/schemas/actor.js';
+import commit from '../entities/schemas/commit.js';
 import discussionComment from '../entities/schemas/discussion-comment.js';
 import discussion from '../entities/schemas/discussion.js';
 import release from '../entities/schemas/release.js';
@@ -27,6 +28,7 @@ export type Discussion = z.infer<typeof discussion>;
 export type DiscussionComment = z.infer<typeof discussionComment>;
 export type Tag = z.infer<typeof tag>;
 export type Release = z.infer<typeof release>;
+export type Commit = z.infer<typeof commit>;
 
 export type ServiceResourceParams = {
   repo: string;
@@ -34,6 +36,8 @@ export type ServiceResourceParams = {
   first?: number;
   full?: boolean;
 };
+
+export type ServiceCommitsParams = ServiceResourceParams & { since?: Date; until?: Date };
 
 /**
  * Service interface to be implemented by all services.
@@ -51,6 +55,7 @@ export interface Service {
   resource(name: 'discussions', opts: ServiceResourceParams): Iterable<Discussion>;
   resource(name: 'tags', opts: ServiceResourceParams): Iterable<Tag>;
   resource(name: 'releases', opts: ServiceResourceParams): Iterable<Release>;
+  resource(name: 'commits', opts: ServiceCommitsParams): Iterable<Commit>;
 
   // resource(Entity: Class<Tag>, opts: ResourceParams): Iterable<Tag>;
   // resource(Entity: Class<Release>, opts: ResourceParams): Iterable<Release>;

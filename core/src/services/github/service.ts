@@ -1,11 +1,13 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   Actor,
+  Commit,
   Discussion,
   Iterable,
   Release,
   Repository,
   Service,
+  ServiceCommitsParams,
   ServiceResourceParams,
   Stargazer,
   Tag,
@@ -18,6 +20,7 @@ import { SearchLookup } from './graphql/lookups/SearchLookup.js';
 import { StargazersLookup } from './graphql/lookups/StargazersLookup.js';
 import { TagsLookup } from './graphql/lookups/TagsLookup.js';
 import { WatchersLookup } from './graphql/lookups/WatchersLookup.js';
+import commits from './resources/commits.js';
 import discussions from './resources/discussions.js';
 import releases from './resources/releases.js';
 import repos from './resources/repos.js';
@@ -63,7 +66,8 @@ export class GithubService implements Service {
   resource(name: 'discussions', opts: ServiceResourceParams): Iterable<Discussion>;
   resource(name: 'tags', opts: ServiceResourceParams): Iterable<Tag>;
   resource(name: 'releases', opts: ServiceResourceParams): Iterable<Release>;
-  resource(name: string, opts: ServiceResourceParams): Iterable<any> {
+  resource(name: 'commits', opts: ServiceCommitsParams): Iterable<Commit>;
+  resource<P extends ServiceResourceParams>(name: string, opts: P): Iterable<any> {
     const params = { id: opts.repo, cursor: opts.cursor, first: opts.first, full: opts.full };
 
     switch (name) {
@@ -71,6 +75,8 @@ export class GithubService implements Service {
         return discussions(this.client, opts);
       case 'releases':
         return releases(this.client, opts);
+      case 'commits':
+        return commits(this.client, opts);
       case 'stargazers':
         return genericIterator(this.client, new StargazersLookup(params));
       case 'watchers':
