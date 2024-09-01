@@ -2,21 +2,21 @@ import { Bot, EnterpriseUserAccount, Mannequin, Organization, User } from '@octo
 import snakeCase from 'lodash/snakeCase.js';
 import { z } from 'zod';
 import actor from '../../../../entities/schemas/actor.js';
-import { Fragment } from '../Query.js';
+import { Fragment } from './Fragment.js';
 
 /**
  * A fragment to select the common fields for an actor.
  */
-class _ActorFragment implements Fragment {
+export class ActorFragment implements Fragment {
   readonly fragments = [];
 
   constructor(
     public alias = 'ActorFragment',
-    private full = false
+    private opts?: { full?: boolean }
   ) {}
 
   toString(): string {
-    return this.full
+    return this.opts?.full
       ? `
     fragment ${this.alias}_User on User {
       bio
@@ -238,6 +238,3 @@ class _ActorFragment implements Fragment {
     }
   }
 }
-
-export const ActorFragment = new _ActorFragment('ActorFragment', true);
-export const PartialActorFragment = new _ActorFragment('PartialActorFragment', false);

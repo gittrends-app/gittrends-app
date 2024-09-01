@@ -1,27 +1,24 @@
 import { Repository } from '@octokit/graphql-schema';
 import { z } from 'zod';
 import repository from '../../../../entities/schemas/repository.js';
-import { Fragment } from '../Query.js';
-import { ActorFragment, PartialActorFragment } from './ActorFragment.js';
+import { ActorFragment } from './ActorFragment.js';
+import { Fragment, PartialFragmentFactory } from './Fragment.js';
 
 /**
  *  A fragment to get a repository.
  */
-class _RepositoryFragment implements Fragment {
-  private readonly actorFrag;
-
+export class RepositoryFragment implements Fragment {
   readonly fragments: Fragment[];
 
   constructor(
     public alias = 'RepositoryFrag',
-    private full = false
+    private opts: { factory: PartialFragmentFactory; full?: boolean }
   ) {
-    this.actorFrag = full ? ActorFragment : PartialActorFragment;
-    this.fragments = [this.actorFrag];
+    this.fragments = [this.opts.factory.create(ActorFragment)];
   }
 
   toString(): string {
-    return this.full
+    return this.opts.full
       ? `
     fragment ${this.alias} on Repository {
       allowUpdateBranch
@@ -71,7 +68,7 @@ class _RepositoryFragment implements Fragment {
       name
       nameWithOwner
       openGraphImageUrl
-      owner { ...${this.actorFrag.alias} }
+      owner { ...${this.fragments[0].alias} }
       packages { totalCount }
       parent { id nameWithOwner }
       primaryLanguage { name }
@@ -106,7 +103,7 @@ class _RepositoryFragment implements Fragment {
       name
       nameWithOwner
       openGraphImageUrl
-      owner { ...${this.actorFrag.alias} }
+      owner { ...${this.fragments[0].alias} }
       primaryLanguage { name }
       stargazerCount
     }`;
@@ -191,6 +188,3 @@ class _RepositoryFragment implements Fragment {
     });
   }
 }
-
-export const RepositoryFragment = new _RepositoryFragment('RepositoryFragment', true);
-export const PartialRepositoryFragment = new _RepositoryFragment('PartialRepositoryFragment', false);

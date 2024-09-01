@@ -11,7 +11,7 @@ import watcher from '../entities/schemas/watcher.js';
 
 export type PageableParams = {
   cursor?: string;
-  limit?: number;
+  first?: number;
   [key: string]: unknown;
 };
 
@@ -34,7 +34,6 @@ export type ServiceResourceParams = {
   repo: string;
   cursor?: string;
   first?: number;
-  full?: boolean;
 };
 
 export type ServiceCommitsParams = ServiceResourceParams & { since?: Date; until?: Date };

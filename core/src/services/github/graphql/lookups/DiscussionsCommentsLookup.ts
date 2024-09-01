@@ -1,31 +1,13 @@
 import { DiscussionCommentConnection } from '@octokit/graphql-schema';
 import { z } from 'zod';
-import discussionComment from '../../../../entities/schemas/discussion-comment.js';
-import { ActorFragment, PartialActorFragment } from '../fragments/ActorFragment.js';
-import { QueryLookup } from '../Query.js';
+import comment from '../../../../entities/schemas/discussion-comment.js';
+import { ActorFragment } from '../fragments/ActorFragment.js';
+import { QueryLookup } from './Lookup.js';
 
 /**
  *  A lookup to get repository discussions comments.
  */
-export class DiscussionsCommentsLookup extends QueryLookup<
-  z.infer<typeof discussionComment>[],
-  { isComment?: boolean; full?: boolean }
-> {
-  private uFrag;
-
-  constructor(props: {
-    id: string;
-    isComment?: boolean;
-    cursor?: string;
-    first?: number;
-    alias?: string;
-    full?: boolean;
-  }) {
-    const { alias, ...rest } = props;
-    super(alias || '_discussions_comments_', rest);
-    this.fragments.push((this.uFrag = props.full ? ActorFragment : PartialActorFragment));
-  }
-
+export class DiscussionsCommentsLookup extends QueryLookup<z.infer<typeof comment>[], { isComment?: boolean }> {
   toString(): string {
     const params = [`first: ${this.params.first || 100}`];
     if (this.params.cursor) params.push(`after: "${this.params.cursor}"`);
@@ -36,7 +18,7 @@ export class DiscussionsCommentsLookup extends QueryLookup<
         comments:${this.params.isComment ? 'replies' : 'comments'}(${params.join(', ')}) {
           pageInfo { hasNextPage endCursor }  
           nodes {
-            author { ...${this.uFrag.alias} }
+            author { ...${this.fragments[0].alias} }
             authorAssociation
             body
             createdAt
@@ -44,7 +26,7 @@ export class DiscussionsCommentsLookup extends QueryLookup<
             databaseId
             deletedAt
             discussion { id }
-            editor { ...${this.uFrag.alias} }
+            editor { ...${this.fragments[0].alias} }
             id
             includesCreatedEdit
             isAnswer
@@ -70,17 +52,13 @@ export class DiscussionsCommentsLookup extends QueryLookup<
     return {
       next: _data.pageInfo.hasNextPage
         ? new DiscussionsCommentsLookup({
-            alias: this.alias,
-            isComment: this.params.isComment,
-            id: this.params.id as string,
-            cursor: _data.pageInfo.endCursor || this.params.cursor,
-            first: this.params.first,
-            full: this.params.full
+            ...this.params,
+            cursor: _data.pageInfo.endCursor || this.params.cursor
           })
         : undefined,
       data: (_data.nodes || []).map((data) => {
-        return discussionComment.parse({
-          author: data!.author && this.uFrag.parse(data!.author),
+        return comment.parse({
+          author: data!.author && this.fragments[0].parse(data!.author),
           author_association: data!.authorAssociation,
           body: data!.body,
           created_at: data!.createdAt,
@@ -88,7 +66,7 @@ export class DiscussionsCommentsLookup extends QueryLookup<
           database_id: data!.databaseId,
           deleted_at: data!.deletedAt,
           discussion: data!.discussion!.id,
-          editor: data!.editor && this.uFrag.parse(data!.editor),
+          editor: data!.editor && this.fragments[0].parse(data!.editor),
           id: data!.id,
           includes_created_edit: data!.includesCreatedEdit,
           is_awnser: data!.isAnswer,
@@ -105,5 +83,9 @@ export class DiscussionsCommentsLookup extends QueryLookup<
       }),
       params: { ...this.params, cursor: _data.pageInfo.endCursor || this.params.cursor }
     };
+  }
+
+  get fragments() {
+    return [this.params.factory.create(ActorFragment)];
   }
 }

@@ -1,5 +1,6 @@
 import { Commit, Iterable, ServiceCommitsParams } from '../../service.js';
 import { GithubClient } from '../client.js';
+import { FragmentFactory } from '../graphql/fragments/Fragment.js';
 import { CommitsLookup } from '../graphql/lookups/CommitsLookup.js';
 import { QueryRunner } from '../graphql/QueryRunner.js';
 
@@ -9,7 +10,10 @@ type IterableCommit = Iterable<Commit, { since?: Date; until?: Date }>;
  * Get the commits of a repository by its id
  *
  */
-export default function commits(client: GithubClient, options: ServiceCommitsParams): IterableCommit {
+export default function commits(
+  client: GithubClient,
+  options: ServiceCommitsParams & { factory: FragmentFactory }
+): IterableCommit {
   return {
     [Symbol.asyncIterator]: async function* () {
       let { since, until } = options;
@@ -26,7 +30,7 @@ export default function commits(client: GithubClient, options: ServiceCommitsPar
               has_more: true,
               since: (since = new Date(Math.max(response.params.since!.getTime(), since?.getTime() || 0))),
               until: (until = response.params.until),
-              limit: options.first
+              first: options.first
             }
           };
         }
@@ -44,7 +48,7 @@ export default function commits(client: GithubClient, options: ServiceCommitsPar
               has_more: !!response.next,
               since: new Date(Math.max(response.params.since?.getDate() || 0, since.getTime())),
               until,
-              limit: options.first
+              first: options.first
             }
           };
         }

@@ -1,23 +1,15 @@
 import { ReleaseConnection } from '@octokit/graphql-schema';
 import { z } from 'zod';
 import release from '../../../../entities/schemas/release.js';
-import { ActorFragment, PartialActorFragment } from '../fragments/ActorFragment.js';
-import { CommitFragment, PartialCommitFragment } from '../fragments/CommitFragment.js';
-import { PartialTagFragment, TagFragment } from '../fragments/TagFragment.js';
-import { QueryLookup } from '../Query.js';
+import { ActorFragment } from '../fragments/ActorFragment.js';
+import { CommitFragment } from '../fragments/CommitFragment.js';
+import { TagFragment } from '../fragments/TagFragment.js';
+import { QueryLookup } from './Lookup.js';
 
 /**
  *  A lookup to get repository releases.
  */
-export class ReleasesLookup extends QueryLookup<z.infer<typeof release>[], { full?: boolean }> {
-  constructor(props: { id: string; cursor?: string; first?: number; alias?: string; full?: boolean }) {
-    const { alias, ...rest } = props;
-    super(alias || '_tags_', rest);
-    this.fragments.push(this.params.full ? ActorFragment : PartialActorFragment);
-    this.fragments.push(this.params.full ? TagFragment : PartialTagFragment);
-    this.fragments.push(this.params.full ? CommitFragment : PartialCommitFragment);
-  }
-
+export class ReleasesLookup extends QueryLookup<z.infer<typeof release>[]> {
   toString(): string {
     const params = [`first: ${this.params.first || 100}`, 'orderBy: { field: CREATED_AT direction: ASC }'];
     if (this.params.cursor) params.push(`after: "${this.params.cursor}"`);
@@ -65,11 +57,8 @@ export class ReleasesLookup extends QueryLookup<z.infer<typeof release>[], { ful
     return {
       next: _data.pageInfo.hasNextPage
         ? new ReleasesLookup({
-            alias: this.alias,
-            id: this.params.id as string,
-            cursor: _data.pageInfo.endCursor || this.params.cursor,
-            first: this.params.first,
-            full: this.params.full
+            ...this.params,
+            cursor: _data.pageInfo.endCursor || this.params.cursor
           })
         : undefined,
       data: (_data.nodes || []).map((data) => {
@@ -93,5 +82,13 @@ export class ReleasesLookup extends QueryLookup<z.infer<typeof release>[], { ful
       }),
       params: { ...this.params, cursor: _data.pageInfo.endCursor || this.params.cursor }
     };
+  }
+
+  get fragments() {
+    return [
+      this.params.factory.create(ActorFragment),
+      this.params.factory.create(TagFragment),
+      this.params.factory.create(CommitFragment)
+    ];
   }
 }

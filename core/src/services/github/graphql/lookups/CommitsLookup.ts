@@ -1,11 +1,11 @@
 import { CommitHistoryConnection } from '@octokit/graphql-schema';
 import { z } from 'zod';
 import commit from '../../../../entities/schemas/commit.js';
-import { CommitFragment, PartialCommitFragment } from '../fragments/CommitFragment.js';
-import { QueryLookup, QueryLookupParams } from '../Query.js';
+import { CommitFragment } from '../fragments/CommitFragment.js';
+import { QueryLookup } from './Lookup.js';
 
 /**
- *
+ *  Add seconds to a date.
  */
 function add(date: Date, seconds: number): Date {
   return new Date(new Date(date).getTime() + seconds * 1000);
@@ -14,17 +14,7 @@ function add(date: Date, seconds: number): Date {
 /**
  *  A lookup to get repository commits.
  */
-export class CommitsLookup extends QueryLookup<
-  z.infer<typeof commit>[],
-  { since?: Date; until?: Date; full?: boolean }
-> {
-  constructor(props: QueryLookupParams & { alias?: string; since?: Date; until?: Date; full?: boolean }) {
-    const { alias, ...rest } = props;
-    if (props.since && props.until && props.since >= props.until) throw new Error('Invalid date range.');
-    super(alias || '_commits_', { ...rest, until: props.until || new Date() });
-    this.fragments.push(this.params.full ? CommitFragment : PartialCommitFragment);
-  }
-
+export class CommitsLookup extends QueryLookup<z.infer<typeof commit>[], { since?: Date; until?: Date }> {
   toString(): string {
     const params = [`first: ${this.params.first || 100}`];
     if (this.params.cursor) params.push(`after: "${this.params.cursor}"`);
@@ -56,20 +46,15 @@ export class CommitsLookup extends QueryLookup<
     const _data: CommitHistoryConnection = (data[this.alias] || data).defaultBranchRef.target.history;
     if (!_data) throw Object.assign(new Error('Failed to parse tags.'), { data, query: this.toString() });
 
-    const parsedData: ReturnType<(typeof CommitFragment)['parse']>[] = (_data.nodes || []).map((data) =>
+    const parsedData: ReturnType<CommitFragment['parse']>[] = (_data.nodes || []).map((data) =>
       this.fragments[0].parse(data)
     );
 
     return {
       next: _data.pageInfo.hasNextPage
         ? new CommitsLookup({
-            alias: this.alias,
-            id: this.params.id as string,
-            cursor: _data.pageInfo.endCursor || this.params.cursor,
-            first: this.params.first,
-            full: this.params.full,
-            since: this.params.since,
-            until: this.params.until
+            ...this.params,
+            cursor: _data.pageInfo.endCursor || this.params.cursor
           })
         : undefined,
       data: parsedData,
@@ -80,5 +65,9 @@ export class CommitsLookup extends QueryLookup<
         until: parsedData.at(-1)?.committed_date || this.params.until
       }
     };
+  }
+
+  get fragments() {
+    return [this.params.factory.create(CommitFragment)];
   }
 }

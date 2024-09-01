@@ -2,10 +2,11 @@
 import { z } from 'zod';
 import repository from '../../../entities/schemas/repository.js';
 import { GithubClient } from '../client.js';
+import { FragmentFactory } from '../graphql/fragments/Fragment.js';
 import { RepositoryLookup } from '../graphql/lookups/RepositoryLookup.js';
 import { QueryBuilder } from '../graphql/QueryBuilder.js';
 
-type Params = { client: GithubClient; byName?: boolean };
+type Params = { factory: FragmentFactory; client: GithubClient; byName?: boolean };
 
 /**
  *  Retrieves repositories by their ID.
@@ -17,7 +18,7 @@ export default async function (id: string | string[], params: Params): Promise<a
 
   const result = await idsArr
     .reduce(
-      (builder, id) => builder.add(new RepositoryLookup(id, { byName: params.byName })),
+      (builder, id) => builder.add(new RepositoryLookup({ id, byName: params.byName, factory: params.factory })),
       QueryBuilder.create(params.client)
     )
     .fetch();

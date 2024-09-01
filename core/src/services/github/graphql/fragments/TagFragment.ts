@@ -1,22 +1,22 @@
 import { Tag } from '@octokit/graphql-schema';
 import { z } from 'zod';
 import tag from '../../../../entities/schemas/tag.js';
-import { Fragment } from '../Query.js';
-import { ActorFragment, PartialActorFragment } from './ActorFragment.js';
-import { CommitFragment, PartialCommitFragment } from './CommitFragment.js';
+import { ActorFragment } from './ActorFragment.js';
+import { CommitFragment } from './CommitFragment.js';
+import { Fragment, PartialFragmentFactory } from './Fragment.js';
 
 /**
  *  A fragment to get a tag.
  */
-class _TagFragment implements Fragment {
+export class TagFragment implements Fragment {
   readonly fragments: Fragment[] = [];
 
   constructor(
     public alias = 'TagFrag',
-    full = false
+    opts: { factory: PartialFragmentFactory }
   ) {
-    this.fragments.push(full ? ActorFragment : PartialActorFragment);
-    this.fragments.push(full ? CommitFragment : PartialCommitFragment);
+    this.fragments.push(opts.factory.create(ActorFragment));
+    this.fragments.push(opts.factory.create(CommitFragment));
   }
 
   toString(): string {
@@ -53,6 +53,3 @@ class _TagFragment implements Fragment {
     });
   }
 }
-
-export const TagFragment = new _TagFragment('TagFragment', true);
-export const PartialTagFragment = new _TagFragment('PartialTagFragment', false);

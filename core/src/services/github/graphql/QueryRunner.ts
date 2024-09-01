@@ -1,5 +1,6 @@
 import { GithubClient } from '../client.js';
-import { Fragment, QueryLookup } from './Query.js';
+import { Fragment } from './fragments/Fragment.js';
+import { QueryLookup } from './lookups/Lookup.js';
 
 /**
  *  Recursively resolve fragments.

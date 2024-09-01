@@ -1,20 +1,20 @@
 import { Commit } from '@octokit/graphql-schema';
 import { z } from 'zod';
 import commit from '../../../../entities/schemas/commit.js';
-import { Fragment } from '../Query.js';
-import { ActorFragment, PartialActorFragment } from './ActorFragment.js';
+import { ActorFragment } from './ActorFragment.js';
+import { Fragment, PartialFragmentFactory } from './Fragment.js';
 
 /**
  *  A fragment to get a commit.
  */
-class _CommitFragment implements Fragment {
+export class CommitFragment implements Fragment {
   readonly fragments: Fragment[] = [];
 
   constructor(
     public alias = 'CommitFrag',
-    full = false
+    opts: { factory: PartialFragmentFactory }
   ) {
-    this.fragments.push(full ? ActorFragment : PartialActorFragment);
+    this.fragments.push(opts.factory.create(ActorFragment));
   }
 
   toString(): string {
@@ -83,6 +83,3 @@ class _CommitFragment implements Fragment {
     });
   }
 }
-
-export const CommitFragment = new _CommitFragment('CommitFragment', true);
-export const PartialCommitFragment = new _CommitFragment('PartialCommitFragment', false);

@@ -1,5 +1,6 @@
 import { Iterable, Release, ServiceResourceParams } from '../../service.js';
 import { GithubClient } from '../client.js';
+import { FragmentFactory } from '../graphql/fragments/Fragment.js';
 import { ReactionsLookup } from '../graphql/lookups/ReactionsLookup.js';
 import { ReleasesLookup } from '../graphql/lookups/ReleasesLookup.js';
 import { QueryRunner } from '../graphql/QueryRunner.js';
@@ -7,7 +8,10 @@ import { QueryRunner } from '../graphql/QueryRunner.js';
 /**
  * Get the releases of a repository by its id
  */
-export default function (client: GithubClient, options: ServiceResourceParams): Iterable<Release> {
+export default function (
+  client: GithubClient,
+  options: ServiceResourceParams & { factory: FragmentFactory }
+): Iterable<Release> {
   const { repo, ...opts } = options;
 
   return {
@@ -25,7 +29,8 @@ export default function (client: GithubClient, options: ServiceResourceParams): 
           })
         );
 
-        yield { data: res.data, params: { ...res.params, has_more: !!res.next } };
+        const { cursor, first } = res.params;
+        yield { data: res.data, params: { has_more: !!res.next, first, cursor } };
       }
 
       return;

@@ -1,5 +1,6 @@
 import { GithubClient } from '../client.js';
-import { Fragment, QueryLookup } from './Query.js';
+import { Fragment } from './fragments/Fragment.js';
+import { QueryLookup } from './lookups/Lookup.js';
 
 /**
  *  Recursively resolve fragments.
@@ -13,10 +14,11 @@ function resolveFragment(fragment: Fragment): Fragment[] {
  */
 class FakeQueryLookup extends QueryLookup {
   constructor() {
-    super('', {});
+    super({} as any);
   }
+  fragments = [];
   toString = () => '';
-  parse = () => ({ data: null, params: {} });
+  parse = () => ({ data: null, params: {} as any });
 }
 
 /**

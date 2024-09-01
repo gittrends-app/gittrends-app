@@ -1,6 +1,7 @@
 import { MergeExclusive } from 'type-fest';
 import { Discussion, DiscussionComment, Iterable, ServiceResourceParams } from '../../service.js';
 import { GithubClient } from '../client.js';
+import { FragmentFactory } from '../graphql/fragments/Fragment.js';
 import { DiscussionsCommentsLookup } from '../graphql/lookups/DiscussionsCommentsLookup.js';
 import { DiscussionsLookup } from '../graphql/lookups/DiscussionsLookup.js';
 import { ReactionsLookup } from '../graphql/lookups/ReactionsLookup.js';
@@ -11,7 +12,10 @@ import { QueryRunner } from '../graphql/QueryRunner.js';
  */
 async function discussionComments(
   client: GithubClient,
-  opts: ServiceResourceParams & MergeExclusive<{ discussion: string }, { comment: string }>
+  opts: ServiceResourceParams & { factory: FragmentFactory } & MergeExclusive<
+      { discussion: string },
+      { comment: string }
+    >
 ): Promise<DiscussionComment[]> {
   const { discussion, comment, ...rest } = opts;
 
@@ -39,7 +43,10 @@ async function discussionComments(
 /**
  * Retrieves the stargazers of a repository.
  */
-export default function (client: GithubClient, opts: ServiceResourceParams): Iterable<Discussion> {
+export default function (
+  client: GithubClient,
+  opts: ServiceResourceParams & { factory: FragmentFactory }
+): Iterable<Discussion> {
   return {
     [Symbol.asyncIterator]: async function* () {
       const { repo, ...rest } = opts;
@@ -50,7 +57,7 @@ export default function (client: GithubClient, opts: ServiceResourceParams): Ite
         for (const discussion of data) {
           if (discussion.reactions_count) {
             const reactions = await QueryRunner.create(client).fetchAll(
-              new ReactionsLookup({ id: discussion.id, first: opts.first, full: opts.full })
+              new ReactionsLookup({ factory: opts.factory, id: discussion.id, first: opts.first })
             );
 
             discussion.reactions = reactions.data;
@@ -61,9 +68,11 @@ export default function (client: GithubClient, opts: ServiceResourceParams): Ite
           }
         }
 
+        const { cursor, first } = searchRes.params;
+
         yield {
           data: searchRes.data,
-          params: { has_more: !!searchRes.next, ...searchRes.params }
+          params: { has_more: !!searchRes.next, cursor, first }
         };
       }
     }

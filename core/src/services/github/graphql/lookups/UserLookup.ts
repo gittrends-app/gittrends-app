@@ -1,31 +1,26 @@
 import { z } from 'zod';
 import actor from '../../../../entities/schemas/actor.js';
 import { ActorFragment } from '../fragments/ActorFragment.js';
-import { QueryLookup } from '../Query.js';
+import { QueryLookup } from './Lookup.js';
 
 /**
  *  A lookup to get a user by ID.
  */
 export class UserLookup extends QueryLookup<z.infer<typeof actor>, { byLogin?: boolean }> {
-  constructor(
-    private id: string,
-    private props?: { alias?: string; byLogin?: boolean }
-  ) {
-    const { byLogin } = props || {};
-    super(props?.alias || id.replace(/[^a-zA-Z0-9]/g, ''), { id, byLogin });
-    this.fragments.push(ActorFragment);
-  }
-
   toString(): string {
-    return this.props?.byLogin
-      ? `${this.alias}:repositoryOwner(login: "${this.id}") { ...${ActorFragment.alias} }`
-      : `${this.alias}:node(id: "${this.id}") { ...${ActorFragment.alias} }`;
+    return this.params.byLogin
+      ? `${this.alias}:repositoryOwner(login: "${this.params.id}") { ...${this.fragments[0].alias} }`
+      : `${this.alias}:node(id: "${this.params.id}") { ...${this.fragments[0].alias} }`;
   }
 
   parse(data: any) {
     return {
-      data: data && ActorFragment.parse(data[this.alias] || data),
+      data: data && this.fragments[0].parse(data[this.alias] || data),
       params: this.params
     };
+  }
+
+  get fragments() {
+    return [this.params.factory.create(ActorFragment)];
   }
 }

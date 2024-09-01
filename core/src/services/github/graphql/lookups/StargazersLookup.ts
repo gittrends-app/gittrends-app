@@ -1,19 +1,13 @@
 import { StargazerConnection } from '@octokit/graphql-schema';
 import { z } from 'zod';
 import stargazer from '../../../../entities/schemas/stargazer.js';
-import { ActorFragment, PartialActorFragment } from '../fragments/ActorFragment.js';
-import { QueryLookup } from '../Query.js';
+import { ActorFragment } from '../fragments/ActorFragment.js';
+import { QueryLookup } from './Lookup.js';
 
 /**
  *  A lookup to get repository stargazers.
  */
-export class StargazersLookup extends QueryLookup<z.infer<typeof stargazer>[], { full?: boolean }> {
-  constructor(props: { id: string; cursor?: string; first?: number; alias?: string; full?: boolean }) {
-    const { alias, ...rest } = props;
-    super(alias || '_stargazers_', rest);
-    this.fragments.push(this.params.full ? ActorFragment : PartialActorFragment);
-  }
-
+export class StargazersLookup extends QueryLookup<z.infer<typeof stargazer>[]> {
   toString(): string {
     const params = [`first: ${this.params.first || 100}`, 'orderBy: { field: STARRED_AT, direction: ASC}'];
     if (this.params.cursor) params.push(`after: "${this.params.cursor}"`);
@@ -25,7 +19,7 @@ export class StargazersLookup extends QueryLookup<z.infer<typeof stargazer>[], {
           pageInfo { hasNextPage endCursor }
           edges {
             starredAt
-            node { ...${(this.params.full ? ActorFragment : PartialActorFragment).alias} }
+            node { ...${this.fragments[0].alias} }
           }
         }
       }
@@ -38,11 +32,8 @@ export class StargazersLookup extends QueryLookup<z.infer<typeof stargazer>[], {
     return {
       next: _data.pageInfo.hasNextPage
         ? new StargazersLookup({
-            alias: this.alias,
-            id: this.params.id as string,
-            cursor: _data.pageInfo.endCursor || this.params.cursor,
-            first: this.params.first,
-            full: this.params.full
+            ...this.params,
+            cursor: _data.pageInfo.endCursor || this.params.cursor
           })
         : undefined,
       data: (_data.edges || []).map((data) =>
@@ -54,5 +45,9 @@ export class StargazersLookup extends QueryLookup<z.infer<typeof stargazer>[], {
       ),
       params: { ...this.params, cursor: _data.pageInfo.endCursor || this.params.cursor }
     };
+  }
+
+  get fragments() {
+    return [this.params.factory.create(ActorFragment)];
   }
 }
