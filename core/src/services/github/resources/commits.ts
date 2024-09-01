@@ -22,7 +22,12 @@ export default function commits(client: GithubClient, options: ServiceCommitsPar
         for await (const response of untilIt) {
           yield {
             data: response.data,
-            params: { has_more: true, since, until: (until = response.params.until), limit: options.first }
+            params: {
+              has_more: true,
+              since: (since = new Date(Math.max(response.params.since!.getTime(), since?.getTime() || 0))),
+              until: (until = response.params.until),
+              limit: options.first
+            }
           };
         }
       }
