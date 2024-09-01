@@ -2,7 +2,7 @@ import { Commit } from '@octokit/graphql-schema';
 import { z } from 'zod';
 import commit from '../../../../entities/schemas/commit.js';
 import { ActorFragment } from './ActorFragment.js';
-import { Fragment, PartialFragmentFactory } from './Fragment.js';
+import { Fragment, FragmentFactory } from './Fragment.js';
 
 /**
  *  A fragment to get a commit.
@@ -12,7 +12,7 @@ export class CommitFragment implements Fragment {
 
   constructor(
     public alias = 'CommitFrag',
-    opts: { factory: PartialFragmentFactory }
+    opts: { factory: FragmentFactory }
   ) {
     this.fragments.push(opts.factory.create(ActorFragment));
   }

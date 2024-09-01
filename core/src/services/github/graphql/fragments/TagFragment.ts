@@ -3,7 +3,7 @@ import { z } from 'zod';
 import tag from '../../../../entities/schemas/tag.js';
 import { ActorFragment } from './ActorFragment.js';
 import { CommitFragment } from './CommitFragment.js';
-import { Fragment, PartialFragmentFactory } from './Fragment.js';
+import { Fragment, FragmentFactory } from './Fragment.js';
 
 /**
  *  A fragment to get a tag.
@@ -13,7 +13,7 @@ export class TagFragment implements Fragment {
 
   constructor(
     public alias = 'TagFrag',
-    opts: { factory: PartialFragmentFactory }
+    opts: { factory: FragmentFactory }
   ) {
     this.fragments.push(opts.factory.create(ActorFragment));
     this.fragments.push(opts.factory.create(CommitFragment));

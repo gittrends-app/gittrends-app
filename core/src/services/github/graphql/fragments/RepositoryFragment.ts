@@ -2,7 +2,7 @@ import { Repository } from '@octokit/graphql-schema';
 import { z } from 'zod';
 import repository from '../../../../entities/schemas/repository.js';
 import { ActorFragment } from './ActorFragment.js';
-import { Fragment, PartialFragmentFactory } from './Fragment.js';
+import { Fragment, FragmentFactory } from './Fragment.js';
 
 /**
  *  A fragment to get a repository.
@@ -12,7 +12,7 @@ export class RepositoryFragment implements Fragment {
 
   constructor(
     public alias = 'RepositoryFrag',
-    private opts: { factory: PartialFragmentFactory; full?: boolean }
+    private opts: { factory: FragmentFactory; full?: boolean }
   ) {
     this.fragments = [this.opts.factory.create(ActorFragment)];
   }
