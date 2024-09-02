@@ -139,7 +139,6 @@ const MarkedAsDuplicateEvent = z.object({
   actor: z.union([z.string(), actor]).optional(),
   canonical: z.object({ id: z.string(), __typename: z.string() }).optional(),
   created_at: z.coerce.date(),
-  duplicate: z.object({ id: z.string(), __typename: z.string() }).optional(),
   id: z.string(),
   is_cross_repository: z.boolean()
 });
@@ -260,7 +259,6 @@ const UnmarkedAsDuplicateEvent = z.object({
   actor: z.union([z.string(), actor]).optional(),
   canonical: z.object({ id: z.string(), __typename: z.string() }).optional(),
   created_at: z.coerce.date(),
-  duplicate: z.object({ id: z.string(), __typename: z.string() }).optional(),
   id: z.string(),
   is_cross_repository: z.boolean()
 });
@@ -321,6 +319,6 @@ const list = z.discriminatedUnion('__typename', [
   UserBlockedEvent
 ]);
 
-export const events = zodSanitize(
+export default zodSanitize(
   list as z.ZodType<z.output<typeof list>, ZodDiscriminatedUnionDef<'__typename'>, z.input<typeof list>>
 );
