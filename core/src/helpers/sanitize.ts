@@ -5,24 +5,31 @@ import omitBy from 'lodash/omitBy.js';
 import { PartialDeep } from 'type-fest';
 import { z, ZodType } from 'zod';
 
+const defaultRemotionCriteria = (v: any) =>
+  v === null ||
+  v === undefined ||
+  (Array.isArray(v) && v.length === 0) ||
+  (isPlainObject(v) && Object.keys(v).length === 0);
+
 /**
  * Function to sanitize data by removing null values, empty objects and empty arrays.
  */
-export default function sanitize<T extends object>(data: T): PartialDeep<T> {
+export default function sanitize<T extends object>(
+  data: T,
+  criteria: (v: any) => boolean = defaultRemotionCriteria,
+  applyOnArrays = false
+): PartialDeep<T> {
   return cloneDeepWith(data, (value) => {
-    return isPlainObject(value)
-      ? mapValues(
-          omitBy(
-            value,
-            (v) =>
-              v === null ||
-              z === undefined ||
-              (Array.isArray(v) && v.length === 0) ||
-              (isPlainObject(v) && Object.keys(v).length === 0)
-          ),
-          sanitize
-        )
-      : undefined;
+    if (isPlainObject(value)) {
+      return mapValues(
+        omitBy(value, (v) => criteria(v)),
+        (v) => sanitize(v, criteria, applyOnArrays)
+      );
+    } else if (Array.isArray(value) && applyOnArrays) {
+      return value.filter((v) => criteria(v) === false).map((v) => sanitize(v, criteria, applyOnArrays));
+    } else {
+      return undefined;
+    }
   });
 }
 

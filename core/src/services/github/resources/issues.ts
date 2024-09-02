@@ -2,6 +2,7 @@ import { Issue, Iterable, ServiceResourceParams } from '../../service.js';
 import { GithubClient } from '../client.js';
 import { FragmentFactory } from '../graphql/fragments/Fragment.js';
 import { IssuesLookup } from '../graphql/lookups/IssuesLookup.js';
+import { IssuesTimelineItemsLookup } from '../graphql/lookups/IssuesTimelineItemsLookup.js';
 import { ReactionsLookup } from '../graphql/lookups/ReactionsLookup.js';
 import { QueryRunner } from '../graphql/QueryRunner.js';
 
@@ -25,6 +26,24 @@ export default function (
               issue.reactions = await QueryRunner.create(client)
                 .fetchAll(new ReactionsLookup({ ...opts, id: issue.id }))
                 .then(({ data }) => data);
+            }
+
+            if (issue.timeline_items_count) {
+              issue.timeline_items = await QueryRunner.create(client)
+                .fetchAll(new IssuesTimelineItemsLookup({ ...opts, id: issue.id }))
+                .then(({ data }) => data);
+
+              await Promise.all(
+                issue
+                  .timeline_items!.filter((item) => item.__typename === 'IssueComment')
+                  .map(async (comment) => {
+                    if (comment.reactions_count) {
+                      comment.reactions = await QueryRunner.create(client)
+                        .fetchAll(new ReactionsLookup({ ...opts, id: comment.id }))
+                        .then(({ data }) => data);
+                    }
+                  })
+              );
             }
           })
         );

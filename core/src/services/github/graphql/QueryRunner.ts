@@ -1,3 +1,5 @@
+import { GraphqlResponseError } from '@octokit/graphql';
+import sanitize from '../../../helpers/sanitize.js';
 import { GithubClient } from '../client.js';
 import { Fragment } from './fragments/Fragment.js';
 import { QueryLookup } from './lookups/Lookup.js';
@@ -37,13 +39,18 @@ export class QueryRunner {
 
   public async fetch<R, P>(lookup: QueryLookup<R, P>) {
     const response = await this.client.graphql<Record<string, any>>(QueryRunner.toString(lookup), {}).catch((error) => {
-      if (error.response?.status === 200) {
+      if (error.response?.status === 200 || error instanceof GraphqlResponseError) {
         const onlyNotFound = (error.response.errors as Array<{ type: string }>).every(
           (err) => err.type === 'NOT_FOUND'
         );
         if (onlyNotFound) return error.data;
+
+        const onlyForbidden = (error.response.errors as Array<{ type: string }>).every(
+          (err) => err.type === 'FORBIDDEN'
+        );
+        if (onlyForbidden) return sanitize(error.data, (v) => v === null, true);
       }
-      throw error;
+      throw Object.assign(error, { lookup });
     });
 
     return lookup.parse(response[lookup.alias]);

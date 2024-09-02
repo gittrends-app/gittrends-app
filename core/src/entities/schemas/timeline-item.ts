@@ -227,7 +227,7 @@ const TransferredEvent = z.object({
   __typename: z.literal('TransferredEvent'),
   actor: z.union([z.string(), actor]).optional(),
   created_at: z.coerce.date(),
-  from_repository: z.string(),
+  from_repository: z.string().optional(),
   id: z.string()
 });
 
@@ -280,7 +280,7 @@ const UnsubscribedEvent = z.object({
 const UserBlockedEvent = z.object({
   __typename: z.literal('UserBlockedEvent'),
   actor: z.union([z.string(), actor]).optional(),
-  block_duration: z.coerce.date(),
+  block_duration: z.string(),
   created_at: z.coerce.date(),
   id: z.string()
 });

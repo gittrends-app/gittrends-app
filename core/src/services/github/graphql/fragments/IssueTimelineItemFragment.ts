@@ -36,7 +36,7 @@ export class IssueTimelineItemFragment implements Fragment {
 
       fragment ${this.alias}_ClosedEvent on ClosedEvent {
         actor { ...${this.fragments[0].alias} }
-        closer { ...Node }
+        closer { ...${this.alias}_Node }
         createdAt
         stateReason
       }
@@ -52,7 +52,7 @@ export class IssueTimelineItemFragment implements Fragment {
         actor { ...${this.fragments[0].alias} }
         createdAt
         isCrossRepository
-        source { ...Node }
+        source { ...${this.alias}_Node }
       }
 
       fragment ${this.alias}_ConvertedNoteToIssueEvent on ConvertedNoteToIssueEvent {
@@ -75,7 +75,7 @@ export class IssueTimelineItemFragment implements Fragment {
         createdAt
         isCrossRepository
         referencedAt
-        source { ...Node }
+        source { ...${this.alias}_Node }
         willCloseTarget
       }
 
@@ -89,7 +89,7 @@ export class IssueTimelineItemFragment implements Fragment {
         actor { ...${this.fragments[0].alias} }
         createdAt
         isCrossRepository
-        source { ...Node }
+        source { ...${this.alias}_Node }
       }
 
       fragment ${this.alias}_IssueComment on IssueComment {
@@ -124,7 +124,7 @@ export class IssueTimelineItemFragment implements Fragment {
 
       fragment ${this.alias}_MarkedAsDuplicateEvent on MarkedAsDuplicateEvent {
         actor { ...${this.fragments[0].alias} }
-        canonical { ...Node }
+        canonical { ...${this.alias}_Node }
         createdAt
         isCrossRepository
       }
@@ -217,7 +217,7 @@ export class IssueTimelineItemFragment implements Fragment {
 
       fragment ${this.alias}_UnmarkedAsDuplicateEvent on UnmarkedAsDuplicateEvent {
         actor { ...${this.fragments[0].alias} }
-        canonical { ...Node }
+        canonical { ...${this.alias}_Node }
         createdAt
         isCrossRepository
       }
@@ -309,7 +309,7 @@ export class IssueTimelineItemFragment implements Fragment {
         _data = {
           ..._data,
           actor: data.actor && this.fragments[0].parse(data.actor),
-          closer: data.closer && this.fragments[0].parse(data.closer),
+          closer: data.closer && { id: data.closer.id, __typename: data.closer.__typename },
           created_at: data.createdAt,
           state_reason: data.stateReason
         };

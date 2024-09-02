@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { zodSanitize } from '../../helpers/sanitize.js';
 import actor from './actor.js';
 import reaction from './reaction.js';
+import timelineItem from './timeline-item.js';
 
 export default zodSanitize(
   z.object({
@@ -11,7 +12,7 @@ export default zodSanitize(
     author_association: z.string().optional(),
     body: z.string().optional(),
     closed: z.boolean(),
-    closed_at: z.string().optional(),
+    closed_at: z.coerce.date().optional(),
     comments_count: z.number().int(),
     created_at: z.coerce.date(),
     created_via_email: z.boolean().optional(),
@@ -28,7 +29,7 @@ export default zodSanitize(
     milestone: z.string().optional(),
     number: z.number().int(),
     participants_count: z.number().int(),
-    published_at: z.string().optional(),
+    published_at: z.coerce.date().optional(),
     reactions_count: z.number().int(),
     repository: z.string(),
     state: z.string(),
@@ -38,6 +39,7 @@ export default zodSanitize(
     updated_at: z.coerce.date(),
     __typename: z.literal('Issue'),
 
-    reactions: z.array(reaction).optional()
+    reactions: z.array(reaction).optional(),
+    timeline_items: z.array(timelineItem).optional()
   })
 );

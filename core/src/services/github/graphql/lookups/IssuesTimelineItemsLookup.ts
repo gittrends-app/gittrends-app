@@ -1,0 +1,45 @@
+import { IssueTimelineItemsConnection } from '@octokit/graphql-schema';
+import { z } from 'zod';
+import timelineItem from '../../../../entities/schemas/timeline-item.js';
+import { IssueTimelineItemFragment } from '../fragments/IssueTimelineItemFragment.js';
+import { QueryLookup } from './Lookup.js';
+
+/**
+ *  A lookup to get repository issues.
+ */
+export class IssuesTimelineItemsLookup extends QueryLookup<z.infer<typeof timelineItem>[]> {
+  toString(): string {
+    const params = [`first: ${this.params.first || 100}`];
+    if (this.params.cursor) params.push(`after: "${this.params.cursor}"`);
+
+    return `
+    ${this.alias}:node(id: "${this.params.id}") {
+      ... on Issue {
+        timelineItems(${params.join(', ')}) {
+          pageInfo { hasNextPage endCursor }
+          nodes { ...${this.fragments[0].alias} }
+        }
+      }
+    }
+    `;
+  }
+
+  parse(data: any) {
+    const _data: IssueTimelineItemsConnection = (data[this.alias] || data).timelineItems;
+    if (!_data) throw Object.assign(new Error('Failed to parse tags.'), { data, query: this.toString() });
+    return {
+      next: _data.pageInfo.hasNextPage
+        ? new IssuesTimelineItemsLookup({
+            ...this.params,
+            cursor: _data.pageInfo.endCursor || this.params.cursor
+          })
+        : undefined,
+      data: (_data.nodes || []).map((data) => this.fragments[0].parse(data!)),
+      params: { ...this.params, cursor: _data.pageInfo.endCursor || this.params.cursor }
+    };
+  }
+
+  get fragments(): [IssueTimelineItemFragment] {
+    return [this.params.factory.create(IssueTimelineItemFragment)];
+  }
+}
