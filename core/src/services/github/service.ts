@@ -3,6 +3,7 @@ import {
   Actor,
   Commit,
   Discussion,
+  Issue,
   Iterable,
   Release,
   Repository,
@@ -23,6 +24,7 @@ import { WatchersLookup } from './graphql/lookups/WatchersLookup.js';
 import { QueryRunner } from './graphql/QueryRunner.js';
 import commits from './resources/commits.js';
 import discussions from './resources/discussions.js';
+import issues from './resources/issues.js';
 import releases from './resources/releases.js';
 import repos from './resources/repos.js';
 import users from './resources/users.js';
@@ -72,6 +74,7 @@ export class GithubService implements Service {
   resource(name: 'tags', opts: ServiceResourceParams): Iterable<Tag>;
   resource(name: 'releases', opts: ServiceResourceParams): Iterable<Release>;
   resource(name: 'commits', opts: ServiceCommitsParams): Iterable<Commit>;
+  resource(name: 'issues', opts: ServiceCommitsParams): Iterable<Issue>;
   resource<P extends ServiceResourceParams>(name: string, opts: P): Iterable<any> {
     const params = { id: opts.repo, cursor: opts.cursor, first: opts.first };
 
@@ -82,6 +85,8 @@ export class GithubService implements Service {
         return releases(this.client, { factory: this.factory, ...opts });
       case 'commits':
         return commits(this.client, { factory: this.factory, ...opts });
+      case 'issues':
+        return issues(this.client, { factory: this.factory, ...opts });
       case 'stargazers':
         return genericIterator(this.client, new StargazersLookup({ factory: this.factory, ...params }));
       case 'watchers':

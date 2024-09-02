@@ -1,76 +1,43 @@
 import { z } from 'zod';
 import { zodSanitize } from '../../helpers/sanitize.js';
-import milestoneSchema from './milestone.js';
-import reactableSchema from './reactable.js';
-import userSchema from './user.js';
+import actor from './actor.js';
+import reaction from './reaction.js';
 
 export default zodSanitize(
   z.object({
-    id: z.number().int(),
-    node_id: z.string(),
-    number: z.number().int(),
-    state: z.enum(['open', 'closed']),
-    state_reason: z.enum(['completed', 'reopened', 'not_planned']).optional(),
-    title: z.string(),
-    body: z.string().optional(),
-    user: z.union([userSchema, z.string()]).optional(),
-    labels: z
-      .array(
-        z.union([
-          z
-            .object({
-              id: z.number().int().optional(),
-              node_id: z.string().optional(),
-              url: z.string().url().optional(),
-              name: z.string().optional(),
-              description: z.string().optional(),
-              color: z.string().optional(),
-              default: z.boolean().optional()
-            })
-            .transform((v) => v.name),
-          z.string()
-        ])
-      )
-      .optional(),
-    assignee: z.union([userSchema, z.string()]).optional(),
-    assignees: z.union([z.array(userSchema), z.array(z.string())]).optional(),
-    milestone: z.union([milestoneSchema.transform((m) => m.title), z.string()]).optional(),
-    locked: z.boolean(),
     active_lock_reason: z.string().optional(),
-    comments: z.number().int(),
-    pull_request: z
-      .union([
-        z
-          .object({
-            merged_at: z.coerce.date().optional(),
-            url: z.string().url().optional()
-          })
-          .transform((v) => v.url !== undefined),
-        z.boolean()
-      ])
-      .optional(),
-    closed_at: z.coerce.date().optional(),
+    assignees: z.union([z.array(actor), z.array(z.string())]).optional(),
+    author: z.union([actor, z.string()]).optional(),
+    author_association: z.string().optional(),
+    body: z.string().optional(),
+    closed: z.boolean(),
+    closed_at: z.string().optional(),
+    comments_count: z.number().int(),
     created_at: z.coerce.date(),
+    created_via_email: z.boolean().optional(),
+    database_id: z.number().int(),
+    editor: z.union([actor, z.string()]).optional(),
+    full_database_id: z.coerce.number().int().optional(),
+    id: z.string(),
+    includes_created_edit: z.boolean().optional(),
+    is_pinned: z.boolean().optional(),
+    labels: z.array(z.string()).optional(),
+    last_edited_at: z.coerce.date().optional(),
+    linked_branches: z.array(z.string()).optional(),
+    locked: z.boolean(),
+    milestone: z.string().optional(),
+    number: z.number().int(),
+    participants_count: z.number().int(),
+    published_at: z.string().optional(),
+    reactions_count: z.number().int(),
+    repository: z.string(),
+    state: z.string(),
+    state_reason: z.string().optional(),
+    timeline_items_count: z.number().int(),
+    title: z.string(),
     updated_at: z.coerce.date(),
-    draft: z.boolean().optional(),
-    closed_by: z.union([userSchema, z.string()]).optional(),
-    performed_via_github_app: z
-      .object({
-        id: z.number().int(),
-        slug: z.string().optional(),
-        name: z.string()
-      })
-      .optional(),
-    author_association: z.enum([
-      'COLLABORATOR',
-      'CONTRIBUTOR',
-      'FIRST_TIMER',
-      'FIRST_TIME_CONTRIBUTOR',
-      'MANNEQUIN',
-      'MEMBER',
-      'NONE',
-      'OWNER'
-    ]),
-    reactions: reactableSchema.optional()
+    __typename: z.literal('Issue'),
+
+    reactions: z.array(reaction).optional()
   })
 );
