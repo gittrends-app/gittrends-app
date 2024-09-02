@@ -20,7 +20,7 @@ export class IssueTimelineItemFragment implements Fragment {
   toString(): string {
     return `
       fragment ${this.alias}_AddedToProjectEvent on AddedToProjectEvent {
-        actor { login }
+        actor { ...${this.fragments[0].alias} }
         createdAt
         databaseId
         project { id }
@@ -29,34 +29,34 @@ export class IssueTimelineItemFragment implements Fragment {
       }
 
       fragment ${this.alias}_AssignedEvent on AssignedEvent {
-        actor { login }
-        assignee { __typename }
+        actor { ...${this.fragments[0].alias} }
+        assignee { ...${this.fragments[0].alias} }
         createdAt
       }
 
       fragment ${this.alias}_ClosedEvent on ClosedEvent {
-        actor { login }
+        actor { ...${this.fragments[0].alias} }
         closer { ...Node }
         createdAt
         stateReason
       }
 
       fragment ${this.alias}_CommentDeletedEvent on CommentDeletedEvent {
-        actor { login }
+        actor { ...${this.fragments[0].alias} }
         createdAt
         databaseId
-        deletedCommentAuthor { login }
+        deletedCommentAuthor { ...${this.fragments[0].alias} }
       }
 
       fragment ${this.alias}_ConnectedEvent on ConnectedEvent {
-        actor { login }
+        actor { ...${this.fragments[0].alias} }
         createdAt
         isCrossRepository
         source { ...Node }
       }
 
       fragment ${this.alias}_ConvertedNoteToIssueEvent on ConvertedNoteToIssueEvent {
-        actor { login }
+        actor { ...${this.fragments[0].alias} }
         createdAt
         databaseId
         project { id }
@@ -65,13 +65,13 @@ export class IssueTimelineItemFragment implements Fragment {
       }
 
       fragment ${this.alias}_ConvertedToDiscussionEvent on ConvertedToDiscussionEvent {
-        actor { login }
+        actor { ...${this.fragments[0].alias} }
         createdAt
         discussion { id }
       }
 
       fragment ${this.alias}_CrossReferencedEvent on CrossReferencedEvent {
-        actor { login }
+        actor { ...${this.fragments[0].alias} }
         createdAt
         isCrossRepository
         referencedAt
@@ -80,26 +80,26 @@ export class IssueTimelineItemFragment implements Fragment {
       }
 
       fragment ${this.alias}_DemilestonedEvent on DemilestonedEvent {
-        actor { login }
+        actor { ...${this.fragments[0].alias} }
         createdAt
         milestoneTitle
       }
 
       fragment ${this.alias}_DisconnectedEvent on DisconnectedEvent {
-        actor { login }
+        actor { ...${this.fragments[0].alias} }
         createdAt
         isCrossRepository
         source { ...Node }
       }
 
       fragment ${this.alias}_IssueComment on IssueComment {
-        author { login }
+        author { ...${this.fragments[0].alias} }
         authorAssociation
         body
         createdAt
         createdViaEmail
         databaseId
-        editor { login }
+        editor { ...${this.fragments[0].alias} }
         fullDatabaseId
         includesCreatedEdit
         isMinimized
@@ -111,39 +111,39 @@ export class IssueTimelineItemFragment implements Fragment {
       }
 
       fragment ${this.alias}_LabeledEvent on LabeledEvent {
-        actor { login }
+        actor { ...${this.fragments[0].alias} }
         createdAt
         label { name }
       }
 
       fragment ${this.alias}_LockedEvent on LockedEvent {
-        actor { login }
+        actor { ...${this.fragments[0].alias} }
         createdAt
         lockReason
       }
 
       fragment ${this.alias}_MarkedAsDuplicateEvent on MarkedAsDuplicateEvent {
-        actor { login }
+        actor { ...${this.fragments[0].alias} }
         canonical { ...Node }
         createdAt
         isCrossRepository
       }
 
       fragment ${this.alias}_MentionedEvent on MentionedEvent {
-        actor { login }
+        actor { ...${this.fragments[0].alias} }
         createdAt
         databaseId	
       }
 
       fragment ${this.alias}_MilestonedEvent on MilestonedEvent {
-        actor { login }
+        actor { ...${this.fragments[0].alias} }
         createdAt
         milestoneTitle
       }
 
 
       fragment ${this.alias}_MovedColumnsInProjectEvent on MovedColumnsInProjectEvent {
-        actor { login }
+        actor { ...${this.fragments[0].alias} }
         createdAt
         databaseId
         previousProjectColumnName
@@ -153,12 +153,12 @@ export class IssueTimelineItemFragment implements Fragment {
       }
 
       fragment ${this.alias}_PinnedEvent on PinnedEvent {
-        actor { login }
+        actor { ...${this.fragments[0].alias} }
         createdAt
       }
 
       fragment ${this.alias}_ReferencedEvent on ReferencedEvent {
-        actor { login }
+        actor { ...${this.fragments[0].alias} }
         commit { id }
         commitRepository { id }
         createdAt
@@ -167,7 +167,7 @@ export class IssueTimelineItemFragment implements Fragment {
       }
 
       fragment ${this.alias}_RemovedFromProjectEvent on RemovedFromProjectEvent {
-        actor { login }
+        actor { ...${this.fragments[0].alias} }
         createdAt
         databaseId
         project { id }
@@ -175,65 +175,65 @@ export class IssueTimelineItemFragment implements Fragment {
       }
 
       fragment ${this.alias}_RenamedTitleEvent on RenamedTitleEvent {
-        actor { login }
+        actor { ...${this.fragments[0].alias} }
         createdAt
         currentTitle
         previousTitle
       }
 
       fragment ${this.alias}_ReopenedEvent on ReopenedEvent {
-        actor { login }
+        actor { ...${this.fragments[0].alias} }
         createdAt
         stateReason
       }
 
       fragment ${this.alias}_SubscribedEvent on SubscribedEvent {
-        actor { login }
+        actor { ...${this.fragments[0].alias} }
         createdAt
       }
 
       fragment ${this.alias}_TransferredEvent on TransferredEvent {
-        actor { login }
+        actor { ...${this.fragments[0].alias} }
         createdAt
         fromRepository { id }
       }
 
       fragment ${this.alias}_UnassignedEvent on UnassignedEvent {
-        actor { login }
-        assignee { __typename }
+        actor { ...${this.fragments[0].alias} }
+        assignee { ...${this.fragments[0].alias} }
         createdAt
       }
 
       fragment ${this.alias}_UnlabeledEvent on UnlabeledEvent {
-        actor { login }
+        actor { ...${this.fragments[0].alias} }
         createdAt
         label { name }
       }
 
       fragment ${this.alias}_UnlockedEvent on UnlockedEvent {
-        actor { login }
+        actor { ...${this.fragments[0].alias} }
         createdAt
       }
 
       fragment ${this.alias}_UnmarkedAsDuplicateEvent on UnmarkedAsDuplicateEvent {
-        actor { login }
+        actor { ...${this.fragments[0].alias} }
         canonical { ...Node }
         createdAt
         isCrossRepository
       }
 
       fragment ${this.alias}_UnpinnedEvent on UnpinnedEvent {
-        actor { login }
+        actor { ...${this.fragments[0].alias} }
         createdAt
       }
 
       fragment ${this.alias}_UnsubscribedEvent on UnsubscribedEvent {
-        actor { login }
+        actor { ...${this.fragments[0].alias} }
         createdAt
       }
 
       fragment ${this.alias}_UserBlockedEvent on UserBlockedEvent {
-        actor { login }
+        actor { ...${this.fragments[0].alias} }
         blockDuration
         createdAt
       }
