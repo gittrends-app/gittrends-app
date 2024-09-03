@@ -12,10 +12,10 @@ const AddedToProjectEvent = Node.extend({
   __typename: z.literal('AddedToProjectEvent'),
   actor: z.union([z.string(), actor]).optional(),
   created_at: z.coerce.date(),
-  database_id: z.number().int(),
+  database_id: z.number().int().optional(),
   project: z.string().optional(),
   project_card: z.string().optional(),
-  project_column_name: z.string().optional()
+  project_column_name: z.string()
 });
 
 const AssignedEvent = Node.extend({
@@ -46,17 +46,17 @@ const ConnectedEvent = Node.extend({
   actor: z.union([z.string(), actor]).optional(),
   created_at: z.coerce.date(),
   is_cross_repository: z.boolean(),
-  source: z.object({ id: z.string(), __typename: z.enum(['Issue', 'PullRequest']) }).optional()
+  source: z.object({ id: z.string(), __typename: z.enum(['Issue', 'PullRequest']) })
 });
 
 const ConvertedNoteToIssueEvent = Node.extend({
   __typename: z.literal('ConvertedNoteToIssueEvent'),
   actor: z.union([z.string(), actor]).optional(),
   created_at: z.coerce.date(),
-  database_id: z.number().int(),
+  database_id: z.number().int().optional(),
   project: z.string().optional(),
   project_card: z.string().optional(),
-  project_column_name: z.string().optional()
+  project_column_name: z.string()
 });
 
 const ConvertedToDiscussionEvent = Node.extend({
@@ -88,7 +88,7 @@ const DisconnectedEvent = Node.extend({
   actor: z.union([z.string(), actor]).optional(),
   created_at: z.coerce.date(),
   is_cross_repository: z.boolean(),
-  source: z.object({ id: z.string(), __typename: z.enum(['Issue', 'PullRequest']) }).optional()
+  source: z.object({ id: z.string(), __typename: z.enum(['Issue', 'PullRequest']) })
 });
 
 const Comment = Node.extend({
@@ -127,7 +127,7 @@ const LabeledEvent = Node.extend({
   __typename: z.literal('LabeledEvent'),
   actor: z.union([z.string(), actor]).optional(),
   created_at: z.coerce.date(),
-  label: z.string().optional()
+  label: z.string()
 });
 
 const LockedEvent = Node.extend({
@@ -163,11 +163,11 @@ const MovedColumnsInProjectEvent = Node.extend({
   __typename: z.literal('MovedColumnsInProjectEvent'),
   actor: z.union([z.string(), actor]).optional(),
   created_at: z.coerce.date(),
-  database_id: z.number().int(),
-  previous_project_column_name: z.string().optional(),
+  database_id: z.number().int().optional(),
+  previous_project_column_name: z.string(),
   project: z.string().optional(),
   project_card: z.string().optional(),
-  project_column_name: z.string().optional()
+  project_column_name: z.string()
 });
 
 const PinnedEvent = Node.extend({
@@ -180,7 +180,7 @@ const ReferencedEvent = Node.extend({
   __typename: z.literal('ReferencedEvent'),
   actor: z.union([z.string(), actor]).optional(),
   commit: z.string().optional(),
-  commit_repository: z.string().optional(),
+  commit_repository: z.string(),
   created_at: z.coerce.date(),
   is_cross_repository: z.boolean(),
   is_direct_reference: z.boolean()
@@ -192,7 +192,7 @@ const RemovedFromProjectEvent = Node.extend({
   created_at: z.coerce.date(),
   database_id: z.number().int().optional(),
   project: z.string().optional(),
-  project_column_name: z.string().optional()
+  project_column_name: z.string()
 });
 
 const RenamedTitleEvent = Node.extend({
@@ -234,7 +234,7 @@ const UnlabeledEvent = Node.extend({
   __typename: z.literal('UnlabeledEvent'),
   actor: z.union([z.string(), actor]).optional(),
   created_at: z.coerce.date(),
-  label: z.string().optional()
+  label: z.string()
 });
 
 const UnlockedEvent = Node.extend({
@@ -398,12 +398,12 @@ const MergedEvent = Node.extend({
   actor: z.union([z.string(), actor]).optional(),
   commit: z.string().optional(),
   created_at: z.coerce.date(),
-  merge_ref_name: z.string().optional()
+  merge_ref_name: z.string()
 });
 
 const PullRequestCommit = Node.extend({
   __typename: z.literal('PullRequestCommit'),
-  commit: z.string().optional()
+  commit: z.string()
 });
 
 const CommitComment = Node.merge(Comment)
@@ -457,24 +457,24 @@ const PullRequestReview = Node.merge(Comment)
     commit: z.string().optional(),
     full_database_id: z.number().int().optional(),
     state: z.string(),
-    submitted_at: z.coerce.date()
+    submitted_at: z.coerce.date().optional()
   });
 
 const PullRequestReviewThread = Node.extend({
   __typename: z.literal('PullRequestReviewThread'),
   comments: z.array(PullRequestReviewComment),
-  diff_side: z.string().optional(),
+  diff_side: z.string(),
   is_collapsed: z.boolean(),
   is_outdated: z.boolean(),
   is_resolved: z.boolean(),
   line: z.number().int().optional(),
   original_line: z.number().int().optional(),
   original_start_line: z.number().int().optional(),
-  path: z.string().optional(),
+  path: z.string(),
   resolved_by: z.union([z.string(), actor]).optional(),
   start_diff_side: z.string().optional(),
   start_line: z.number().int().optional(),
-  subject_type: z.string().optional()
+  subject_type: z.string()
 });
 
 // const PullRequestRevisionMarker = node.extend({

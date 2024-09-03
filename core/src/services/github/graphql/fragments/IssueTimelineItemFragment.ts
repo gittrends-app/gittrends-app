@@ -389,7 +389,6 @@ export class IssueTimelineItemFragment implements Fragment {
           }
         }
         commit { oid }
-        id
         path
         position
       }
