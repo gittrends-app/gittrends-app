@@ -1,4 +1,4 @@
-import { IssueTimelineItems } from '@octokit/graphql-schema';
+import { IssueTimelineItems, PullRequestTimelineItems } from '@octokit/graphql-schema';
 import { z } from 'zod';
 import timelineItem from '../../../../entities/schemas/timeline-item.js';
 import { ActorFragment } from './ActorFragment.js';
@@ -10,15 +10,20 @@ import { Fragment, FragmentFactory } from './Fragment.js';
 export class IssueTimelineItemFragment implements Fragment {
   readonly fragments: Fragment[] = [];
 
+  private readonly pullRequest: boolean;
+
   constructor(
     public alias = 'IssueTimelineItemFrag',
-    opts: { factory: FragmentFactory }
+    opts: { factory: FragmentFactory; pullRequest?: boolean }
   ) {
     this.fragments.push(opts.factory.create(ActorFragment));
+    this.pullRequest = opts.pullRequest || false;
   }
 
   toString(): string {
     return `
+      fragment ${this.alias}_Node on Node { __typename id }
+
       fragment ${this.alias}_AddedToProjectEvent on AddedToProjectEvent {
         actor { ...${this.fragments[0].alias} }
         createdAt
@@ -141,7 +146,6 @@ export class IssueTimelineItemFragment implements Fragment {
         milestoneTitle
       }
 
-
       fragment ${this.alias}_MovedColumnsInProjectEvent on MovedColumnsInProjectEvent {
         actor { ...${this.fragments[0].alias} }
         createdAt
@@ -159,7 +163,7 @@ export class IssueTimelineItemFragment implements Fragment {
 
       fragment ${this.alias}_ReferencedEvent on ReferencedEvent {
         actor { ...${this.fragments[0].alias} }
-        commit { id }
+        commit { oid }
         commitRepository { id }
         createdAt
         isCrossRepository
@@ -238,9 +242,268 @@ export class IssueTimelineItemFragment implements Fragment {
         createdAt
       }
 
-      fragment ${this.alias}_Node on Node {
-        __typename
+      ${
+        this.pullRequest
+          ? `
+      fragment ${this.alias}_AddedToMergeQueueEvent on AddedToMergeQueueEvent {
+        actor { ...${this.fragments[0].alias} }
+        createdAt
+        enqueuer { ...${this.fragments[0].alias} }
+        mergeQueue { id }
+      }
+
+      fragment ${this.alias}_AutoMergeDisabledEvent on AutoMergeDisabledEvent {
+        actor { ...${this.fragments[0].alias} }
+        createdAt
+        disabler { ...${this.fragments[0].alias} }
+        reason
+        reasonCode
+      }
+
+      fragment ${this.alias}_AutoMergeEnabledEvent on AutoMergeEnabledEvent {
+        actor { ...${this.fragments[0].alias} }
+        createdAt
+        enabler { ...${this.fragments[0].alias} }
+      }
+
+      fragment ${this.alias}_AutoRebaseEnabledEvent on AutoRebaseEnabledEvent {
+        actor { ...${this.fragments[0].alias} }
+        createdAt
+        enabler { ...${this.fragments[0].alias} }
+      }
+
+      fragment ${this.alias}_AutoSquashEnabledEvent on AutoSquashEnabledEvent{
+        actor { ...${this.fragments[0].alias} }
+        createdAt
+        enabler { ...${this.fragments[0].alias} }
+      }
+
+      fragment ${this.alias}_AutomaticBaseChangeFailedEvent on AutomaticBaseChangeFailedEvent {
+        actor { ...${this.fragments[0].alias} }
+        createdAt
+        newBase
+        oldBase
+      }
+
+      fragment  ${this.alias}_AutomaticBaseChangeSucceededEvent on  AutomaticBaseChangeSucceededEvent {
+        actor { ...${this.fragments[0].alias} }
+        createdAt
+        newBase
+        oldBase
+      }
+
+      fragment  ${this.alias}_BaseRefChangedEvent on  BaseRefChangedEvent {
+        actor { ...${this.fragments[0].alias} }
+        createdAt
+        currentRefName
+        databaseId
+        previousRefName
+      }
+
+      fragment ${this.alias}_BaseRefDeletedEvent on BaseRefDeletedEvent {
+        actor { ...${this.fragments[0].alias} }
+        createdAt
+        baseRefName
+      }
+
+      fragment ${this.alias}_BaseRefForcePushedEvent on BaseRefForcePushedEvent {
+        actor { ...${this.fragments[0].alias} }
+        afterCommit { oid }
+        beforeCommit { oid }
+        createdAt
+        ref { name }
+      }
+
+      fragment ${this.alias}_ConvertToDraftEvent on ConvertToDraftEvent {
+        actor { ...${this.fragments[0].alias} }
+        createdAt
+      }
+
+      fragment ${this.alias}_DeployedEvent on DeployedEvent {
+        actor { ...${this.fragments[0].alias} }
+        createdAt
+        databaseId
+        deployment { id }
+        ref { name }
+      }
+
+
+      fragment ${this.alias}_DeploymentEnvironmentChangedEvent on DeploymentEnvironmentChangedEvent {
+        actor { ...${this.fragments[0].alias} }
+        createdAt
+        deploymentStatus { state }
+      }
+
+
+      fragment ${this.alias}_HeadRefDeletedEvent on HeadRefDeletedEvent {
+        actor { ...${this.fragments[0].alias} }
+        createdAt
+        headRefName
+      }
+
+      fragment ${this.alias}_HeadRefRestoredEvent on HeadRefRestoredEvent {
+        actor { ...${this.fragments[0].alias} }
+        createdAt
+      }
+
+      fragment ${this.alias}_HeadRefForcePushedEvent on HeadRefForcePushedEvent {
+        actor { ...${this.fragments[0].alias} }
+        afterCommit { oid }
+        beforeCommit { oid }
+        createdAt
+        ref { name }
+      }
+
+      fragment ${this.alias}_MergedEvent on MergedEvent {
+        actor { ...${this.fragments[0].alias} }
+        commit { oid }
+        createdAt
+        mergeRefName
+      }
+
+      fragment ${this.alias}_PullRequestCommit on PullRequestCommit {
+        commit { oid }
+      }
+
+      fragment ${this.alias}_PullRequestCommitCommentThread on PullRequestCommitCommentThread {
+        comments(first: 100) {
+          nodes {
+            ...${this.alias}_Node
+            author { ...${this.fragments[0].alias} }
+            authorAssociation
+            body
+            commit { oid }
+            createdAt
+            createdViaEmail
+            databaseId
+            editor { ...${this.fragments[0].alias} }
+            includesCreatedEdit
+            isMinimized
+            lastEditedAt
+            minimizedReason
+            path
+            position
+            publishedAt
+            reactions { totalCount }
+            updatedAt
+          }
+        }
+        commit { oid }
         id
+        path
+        position
+      }
+
+      fragment ${this.alias}_Comment on Comment {
+        author { ...${this.fragments[0].alias} }
+        authorAssociation
+        body
+        createdAt
+        createdViaEmail
+        editor { ...${this.fragments[0].alias} }
+        includesCreatedEdit
+        lastEditedAt
+        publishedAt
+        updatedAt
+      }
+
+      fragment ${this.alias}_PullRequestReview on PullRequestReview {
+        ...${this.alias}_Comment
+        authorCanPushToRepository
+        comments(first: 100) { nodes { ...${this.alias}_PullRequestReviewCommentFragment }  }
+        commit { oid }
+        fullDatabaseId
+        isMinimized
+        minimizedReason
+        reactions { totalCount }
+        state
+        submittedAt
+      }
+
+      fragment ${this.alias}_PullRequestReviewThread on PullRequestReviewThread {
+        comments(first: 100) { nodes { ...${this.alias}_PullRequestReviewCommentFragment }  }
+        diffSide
+        isCollapsed
+        isOutdated
+        isResolved
+        line
+        originalLine
+        originalStartLine
+        path
+        resolvedBy { ...${this.fragments[0].alias} }
+        startDiffSide
+        startLine
+        subjectType
+      }
+
+      fragment ${this.alias}_PullRequestRevisionMarker on PullRequestTimelineItems {
+        ... on PullRequestRevisionMarker {
+      	  createdAt
+      	  lastSeenCommit { oid }
+        }
+      }
+
+      fragment ${this.alias}_ReadyForReviewEvent on ReadyForReviewEvent {
+        actor { ...${this.fragments[0].alias} }
+        createdAt
+      }
+
+      fragment ${this.alias}_RemovedFromMergeQueueEvent on RemovedFromMergeQueueEvent {
+        actor { ...${this.fragments[0].alias} }
+        beforeCommit { oid }
+        createdAt
+        enqueuer { ...${this.fragments[0].alias} }
+        mergeQueue { id }
+        reason
+      }
+
+      fragment ${this.alias}_ReviewDismissedEvent on ReviewDismissedEvent {
+        actor { ...${this.fragments[0].alias} }
+        createdAt
+        databaseId
+        dismissalMessage
+        previousReviewState
+        pullRequestCommit { commit { oid } }
+        review { id }
+      }
+
+      fragment ${this.alias}_ReviewRequestRemovedEvent on ReviewRequestRemovedEvent {
+        actor { ...${this.fragments[0].alias} }
+        createdAt
+        requestedReviewer { ...${this.fragments[0].alias} }
+      }
+
+      fragment ${this.alias}_ReviewRequestedEvent on ReviewRequestedEvent {
+        actor { ...${this.fragments[0].alias} }
+        createdAt
+        requestedReviewer { ...${this.fragments[0].alias} }
+      }
+
+      fragment ${this.alias}_PullRequestReviewCommentFragment on PullRequestReviewComment  {
+        ...${this.alias}_Node
+        ...${this.alias}_Comment
+
+        commit { oid }
+        diffHunk
+        draftedAt
+        fullDatabaseId
+        isMinimized
+        line
+        minimizedReason
+        originalCommit { oid }
+        originalLine
+        originalStartLine
+        outdated
+        path
+        pullRequestReview { id }
+        reactions { totalCount }
+        replyTo { id }
+        startLine
+        state
+        subjectType
+      }
+      `
+          : ''
       }
 
       fragment ${this.alias} on Node {
@@ -276,12 +539,47 @@ export class IssueTimelineItemFragment implements Fragment {
         ...${this.alias}_UnpinnedEvent
         ...${this.alias}_UnsubscribedEvent
         ...${this.alias}_UserBlockedEvent
+
+        ${
+          this.pullRequest
+            ? `
+        ...${this.alias}_AddedToMergeQueueEvent
+        ...${this.alias}_AutoMergeDisabledEvent
+        ...${this.alias}_AutoMergeEnabledEvent
+        ...${this.alias}_AutoRebaseEnabledEvent 
+        ...${this.alias}_AutoSquashEnabledEvent
+        ...${this.alias}_AutomaticBaseChangeFailedEvent
+        ...${this.alias}_AutomaticBaseChangeSucceededEvent
+        ...${this.alias}_BaseRefChangedEvent
+        ...${this.alias}_BaseRefDeletedEvent
+        ...${this.alias}_BaseRefForcePushedEvent
+        ...${this.alias}_ConvertToDraftEvent
+        ...${this.alias}_DeployedEvent
+        ...${this.alias}_DeploymentEnvironmentChangedEvent
+        ...${this.alias}_HeadRefDeletedEvent
+        ...${this.alias}_HeadRefRestoredEvent
+        ...${this.alias}_HeadRefForcePushedEvent
+        ...${this.alias}_MergedEvent
+        ...${this.alias}_PullRequestCommit
+        ...${this.alias}_PullRequestCommitCommentThread
+        ...${this.alias}_PullRequestReview
+        ...${this.alias}_PullRequestReviewThread
+        ...${this.alias}_PullRequestRevisionMarker
+        ...${this.alias}_ReadyForReviewEvent
+        ...${this.alias}_RemovedFromMergeQueueEvent 
+        ...${this.alias}_ReviewDismissedEvent
+        ...${this.alias}_ReviewRequestRemovedEvent
+        ...${this.alias}_ReviewRequestedEvent
+        ...${this.alias}_PullRequestReviewCommentFragment
+              `
+            : ''
+        }
       }
     `;
   }
 
-  parse(data: IssueTimelineItems): z.infer<typeof timelineItem> {
-    let _data: Record<string, any> = { __typename: data.__typename, id: data.id };
+  parse(data: IssueTimelineItems | PullRequestTimelineItems): z.infer<typeof timelineItem> {
+    let _data: Record<string, any> = { __typename: data.__typename, id: (data as any).id };
 
     switch (data.__typename) {
       case 'AddedToProjectEvent':
@@ -493,6 +791,305 @@ export class IssueTimelineItemFragment implements Fragment {
           from_repository: data.fromRepository?.id
         };
         break;
+
+      case 'AddedToMergeQueueEvent':
+        _data = {
+          ..._data,
+          actor: data.actor && this.fragments[0].parse(data.actor),
+          created_at: data.createdAt,
+          enqueuer: data.enqueuer && this.fragments[0].parse(data.enqueuer),
+          merge_queue: data.mergeQueue?.id
+        };
+        break;
+      case 'AutoMergeDisabledEvent':
+        _data = {
+          ..._data,
+          actor: data.actor && this.fragments[0].parse(data.actor),
+          created_at: data.createdAt,
+          disabler: data.disabler && this.fragments[0].parse(data.disabler),
+          reason: data.reason,
+          reason_code: data.reasonCode
+        };
+        break;
+      case 'AutoMergeEnabledEvent':
+      case 'AutoRebaseEnabledEvent':
+      case 'AutoSquashEnabledEvent':
+        _data = {
+          ..._data,
+          actor: data.actor && this.fragments[0].parse(data.actor),
+          created_at: data.createdAt,
+          enabler: data.enabler && this.fragments[0].parse(data.enabler)
+        };
+        break;
+      case 'AutomaticBaseChangeFailedEvent':
+      case 'AutomaticBaseChangeSucceededEvent':
+        _data = {
+          ..._data,
+          actor: data.actor && this.fragments[0].parse(data.actor),
+          created_at: data.createdAt,
+          new_base: data.newBase,
+          old_base: data.oldBase
+        };
+        break;
+      case 'BaseRefChangedEvent':
+        _data = {
+          ..._data,
+          actor: data.actor && this.fragments[0].parse(data.actor),
+          created_at: data.createdAt,
+          current_ref_name: data.currentRefName,
+          database_id: data.databaseId,
+          previous_ref_name: data.previousRefName
+        };
+        break;
+      case 'BaseRefDeletedEvent':
+        _data = {
+          ..._data,
+          actor: data.actor && this.fragments[0].parse(data.actor),
+          created_at: data.createdAt,
+          base_ref_name: data.baseRefName
+        };
+        break;
+      case 'BaseRefForcePushedEvent':
+      case 'HeadRefForcePushedEvent':
+        _data = {
+          ..._data,
+          actor: data.actor && this.fragments[0].parse(data.actor),
+          after_commit: data.afterCommit?.oid,
+          before_commit: data.beforeCommit?.oid,
+          created_at: data.createdAt,
+          ref: data.ref?.name
+        };
+        break;
+      case 'ConvertToDraftEvent':
+        _data = {
+          ..._data,
+          actor: data.actor && this.fragments[0].parse(data.actor),
+          created_at: data.createdAt
+        };
+        break;
+      case 'DeployedEvent':
+        _data = {
+          ..._data,
+          actor: data.actor && this.fragments[0].parse(data.actor),
+          created_at: data.createdAt,
+          database_id: data.databaseId,
+          deployment: data.deployment?.id,
+          ref: data.ref?.name
+        };
+        break;
+      case 'DeploymentEnvironmentChangedEvent':
+        _data = {
+          ..._data,
+          actor: data.actor && this.fragments[0].parse(data.actor),
+          created_at: data.createdAt,
+          deployment_status: data.deploymentStatus?.state
+        };
+        break;
+      case 'HeadRefDeletedEvent':
+        _data = {
+          ..._data,
+          actor: data.actor && this.fragments[0].parse(data.actor),
+          created_at: data.createdAt,
+          head_ref_name: data.headRefName
+        };
+        break;
+      case 'HeadRefRestoredEvent':
+        _data = {
+          ..._data,
+          actor: data.actor && this.fragments[0].parse(data.actor),
+          created_at: data.createdAt
+        };
+        break;
+      case 'MergedEvent':
+        _data = {
+          ..._data,
+          actor: data.actor && this.fragments[0].parse(data.actor),
+          commit: data.commit?.oid,
+          created_at: data.createdAt,
+          merge_ref_name: data.mergeRefName
+        };
+        break;
+      case 'PullRequestCommit':
+        _data = {
+          ..._data,
+          commit: data.commit?.oid
+        };
+        break;
+      case 'PullRequestCommitCommentThread':
+        _data = {
+          ..._data,
+          comments: data.comments?.nodes?.map((node) => ({
+            author: node!.author && this.fragments[0].parse(node!.author),
+            author_association: node!.authorAssociation,
+            body: node!.body,
+            created_at: node!.createdAt,
+            created_via_email: node!.createdViaEmail,
+            editor: node!.editor && this.fragments[0].parse(node!.editor),
+            includes_created_edit: node!.includesCreatedEdit,
+            last_edited_at: node!.lastEditedAt,
+            minimized_reason: node!.minimizedReason,
+            published_at: node!.publishedAt,
+            updated_at: node!.updatedAt,
+            commit: node!.commit?.oid,
+            database_id: node!.databaseId,
+            id: node!.id,
+            is_minimized: node!.isMinimized,
+            path: node!.path,
+            position: node!.position,
+            reactions_count: node!.reactions?.totalCount,
+            __typename: node!.__typename
+          })),
+          commit: data.commit?.oid,
+          path: data.path,
+          position: data.position
+        };
+        break;
+      case 'PullRequestReview':
+        _data = {
+          ..._data,
+          comments: data.comments?.nodes?.map((node) => ({
+            author: node!.author && this.fragments[0].parse(node!.author),
+            author_association: node!.authorAssociation,
+            body: node!.body,
+            created_at: node!.createdAt,
+            created_via_email: node!.createdViaEmail,
+            editor: node!.editor && this.fragments[0].parse(node!.editor),
+            includes_created_edit: node!.includesCreatedEdit,
+            last_edited_at: node!.lastEditedAt,
+            published_at: node!.publishedAt,
+            updated_at: node!.updatedAt,
+
+            commit: node!.commit?.oid,
+            diff_hunk: node!.diffHunk,
+            drafted_at: node!.draftedAt,
+            full_database_id: node!.fullDatabaseId,
+            line: node!.line,
+            minimized_reason: node!.minimizedReason,
+            original_commit: node!.originalCommit?.oid,
+            original_line: node!.originalLine,
+            original_start_line: node!.originalStartLine,
+            outdated: node!.outdated,
+            path: node!.path,
+            pull_request_review: node!.pullRequestReview?.id,
+            reactions_count: node!.reactions?.totalCount,
+            reply_to: node!.replyTo?.id,
+            start_line: node!.startLine,
+            state: node!.state,
+            subject_type: node!.subjectType,
+            __typename: node!.__typename
+          })),
+          commit: data.commit?.oid,
+          full_database_id: data.fullDatabaseId,
+          reactions_count: data.reactions?.totalCount,
+          state: data.state,
+          submitted_at: data.submittedAt,
+
+          author: data.author && this.fragments[0].parse(data.author),
+          author_association: data.authorAssociation,
+          body: data.body,
+          created_at: data.createdAt,
+          created_via_email: data.createdViaEmail,
+          editor: data.editor && this.fragments[0].parse(data.editor),
+          includes_created_edit: data.includesCreatedEdit,
+          last_edited_at: data.lastEditedAt,
+          published_at: data.publishedAt,
+          updated_at: data.updatedAt
+        };
+        break;
+      case 'PullRequestReviewThread':
+        _data = {
+          ..._data,
+          comments: data.comments?.nodes?.map((node) => ({
+            author: node!.author && this.fragments[0].parse(node!.author),
+            author_association: node!.authorAssociation,
+            body: node!.body,
+            created_at: node!.createdAt,
+            created_via_email: node!.createdViaEmail,
+            editor: node!.editor && this.fragments[0].parse(node!.editor),
+            includes_created_edit: node!.includesCreatedEdit,
+            last_edited_at: node!.lastEditedAt,
+            published_at: node!.publishedAt,
+            updated_at: node!.updatedAt,
+
+            commit: node!.commit?.oid,
+            diff_hunk: node!.diffHunk,
+            drafted_at: node!.draftedAt,
+            full_database_id: node!.fullDatabaseId,
+            line: node!.line,
+            minimized_reason: node!.minimizedReason,
+            original_commit: node!.originalCommit?.oid,
+            original_line: node!.originalLine,
+            original_start_line: node!.originalStartLine,
+            outdated: node!.outdated,
+            path: node!.path,
+            pull_request_review: node!.pullRequestReview?.id,
+            reactions_count: node!.reactions?.totalCount,
+            reply_to: node!.replyTo?.id,
+            start_line: node!.startLine,
+            state: node!.state,
+            subject_type: node!.subjectType,
+            __typename: node!.__typename
+          })),
+          diff_side: data.diffSide,
+          is_collapsed: data.isCollapsed,
+          is_outdated: data.isOutdated,
+          is_resolved: data.isResolved,
+          line: data.line,
+          original_line: data.originalLine,
+          original_start_line: data.originalStartLine,
+          path: data.path,
+          resolved_by: data.resolvedBy && this.fragments[0].parse(data.resolvedBy),
+          start_diff_side: data.startDiffSide,
+          start_line: data.startLine,
+          subject_type: data.subjectType
+        };
+        break;
+      case 'PullRequestRevisionMarker':
+        _data = {
+          ..._data,
+          created_at: data.createdAt,
+          last_seen_commit: data.lastSeenCommit?.oid
+        };
+        break;
+      case 'ReadyForReviewEvent':
+        _data = {
+          ..._data,
+          actor: data.actor && this.fragments[0].parse(data.actor),
+          created_at: data.createdAt
+        };
+        break;
+      case 'RemovedFromMergeQueueEvent':
+        _data = {
+          ..._data,
+          actor: data.actor && this.fragments[0].parse(data.actor),
+          created_at: data.createdAt,
+          enqueuer: data.enqueuer && this.fragments[0].parse(data.enqueuer),
+          merge_queue: data.mergeQueue?.id,
+          reason: data.reason
+        };
+        break;
+      case 'ReviewDismissedEvent':
+        _data = {
+          ..._data,
+          actor: data.actor && this.fragments[0].parse(data.actor),
+          created_at: data.createdAt,
+          database_id: data.databaseId,
+          dismissal_message: data.dismissalMessage,
+          previous_review_state: data.previousReviewState,
+          pull_request_commit: data.pullRequestCommit?.commit.oid,
+          review: data.review?.id
+        };
+        break;
+      case 'ReviewRequestRemovedEvent':
+      case 'ReviewRequestedEvent':
+        _data = {
+          ..._data,
+          actor: data.actor && this.fragments[0].parse(data.actor),
+          created_at: data.createdAt,
+          requested_reviewer: data.requestedReviewer && this.fragments[0].parse(data.requestedReviewer)
+        };
+        break;
+
       default:
         throw new Error(`Unknown timeline item type: ${data.__typename}`);
     }

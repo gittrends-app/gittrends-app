@@ -4,6 +4,7 @@ import commit from '../entities/schemas/commit.js';
 import discussionComment from '../entities/schemas/discussion-comment.js';
 import discussion from '../entities/schemas/discussion.js';
 import issue from '../entities/schemas/issue.js';
+import pullRequest from '../entities/schemas/pull_request.js';
 import release from '../entities/schemas/release.js';
 import repository from '../entities/schemas/repository.js';
 import stargazer from '../entities/schemas/stargazer.js';
@@ -31,6 +32,7 @@ export type Tag = z.infer<typeof tag>;
 export type Release = z.infer<typeof release>;
 export type Commit = z.infer<typeof commit>;
 export type Issue = z.infer<typeof issue>;
+export type PullRequest = z.infer<typeof pullRequest>;
 
 export type ServiceResourceParams = {
   repo: string;
@@ -58,6 +60,7 @@ export interface Service {
   resource(name: 'releases', opts: ServiceResourceParams): Iterable<Release>;
   resource(name: 'commits', opts: ServiceCommitsParams): Iterable<Commit>;
   resource(name: 'issues', opts: ServiceCommitsParams): Iterable<Issue>;
+  resource(name: 'pull_requests', opts: ServiceCommitsParams): Iterable<PullRequest>;
 
   // resource(Entity: Class<Tag>, opts: ResourceParams): Iterable<Tag>;
   // resource(Entity: Class<Release>, opts: ResourceParams): Iterable<Release>;

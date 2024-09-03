@@ -21,7 +21,7 @@ export class QueryRunner {
     return new QueryRunner(client);
   }
 
-  protected static toString(lookup: QueryLookup<any, any>): string {
+  public static toString(lookup: QueryLookup<any, any>): string {
     return `query { 
       ${lookup.toString()} 
     }

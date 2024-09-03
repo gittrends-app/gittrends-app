@@ -3,311 +3,576 @@ import { zodSanitize } from '../../helpers/sanitize.js';
 import actor from './actor.js';
 import reaction from './reaction.js';
 
-const AddedToProjectEvent = z.object({
+const Node = z.object({
+  id: z.string(),
+  __typename: z.string()
+});
+
+const AddedToProjectEvent = Node.extend({
   __typename: z.literal('AddedToProjectEvent'),
   actor: z.union([z.string(), actor]).optional(),
   created_at: z.coerce.date(),
   database_id: z.number().int(),
-  id: z.string(),
   project: z.string().optional(),
   project_card: z.string().optional(),
   project_column_name: z.string().optional()
 });
 
-const AssignedEvent = z.object({
+const AssignedEvent = Node.extend({
   __typename: z.literal('AssignedEvent'),
   actor: z.union([z.string(), actor]).optional(),
   assignee: z.union([z.string(), actor]).optional(),
-  created_at: z.coerce.date(),
-  id: z.string()
+  created_at: z.coerce.date()
 });
 
-const ClosedEvent = z.object({
+const ClosedEvent = Node.extend({
   __typename: z.literal('ClosedEvent'),
   actor: z.union([z.string(), actor]).optional(),
   closer: z.object({ id: z.string(), __typename: z.string() }).optional(),
   created_at: z.coerce.date(),
-  id: z.string(),
   state_reason: z.string().optional()
 });
 
-const CommentDeletedEvent = z.object({
+const CommentDeletedEvent = Node.extend({
   __typename: z.literal('CommentDeletedEvent'),
   actor: z.union([z.string(), actor]).optional(),
   created_at: z.coerce.date(),
   database_id: z.number().int().optional(),
-  deleted_comment_author: z.union([z.string(), actor]).optional(),
-  id: z.string()
+  deleted_comment_author: z.union([z.string(), actor]).optional()
 });
 
-const ConnectedEvent = z.object({
+const ConnectedEvent = Node.extend({
   __typename: z.literal('ConnectedEvent'),
   actor: z.union([z.string(), actor]).optional(),
   created_at: z.coerce.date(),
-  id: z.string(),
   is_cross_repository: z.boolean(),
   source: z.object({ id: z.string(), __typename: z.enum(['Issue', 'PullRequest']) }).optional()
 });
 
-const ConvertedNoteToIssueEvent = z.object({
+const ConvertedNoteToIssueEvent = Node.extend({
   __typename: z.literal('ConvertedNoteToIssueEvent'),
   actor: z.union([z.string(), actor]).optional(),
   created_at: z.coerce.date(),
   database_id: z.number().int(),
-  id: z.string(),
   project: z.string().optional(),
   project_card: z.string().optional(),
   project_column_name: z.string().optional()
 });
 
-const ConvertedToDiscussionEvent = z.object({
+const ConvertedToDiscussionEvent = Node.extend({
   __typename: z.literal('ConvertedToDiscussionEvent'),
   actor: z.union([z.string(), actor]).optional(),
   created_at: z.coerce.date(),
-  discussion: z.string().optional(),
-  id: z.string()
+  discussion: z.string().optional()
 });
 
-const CrossReferencedEvent = z.object({
+const CrossReferencedEvent = Node.extend({
   __typename: z.literal('CrossReferencedEvent'),
   actor: z.union([z.string(), actor]).optional(),
   created_at: z.coerce.date(),
-  id: z.string(),
   is_cross_repository: z.boolean(),
   referenced_at: z.coerce.date(),
   source: z.object({ id: z.string(), __typename: z.enum(['Issue', 'PullRequest']) }),
   will_close_target: z.boolean()
 });
 
-const DemilestonedEvent = z.object({
+const DemilestonedEvent = Node.extend({
   __typename: z.literal('DemilestonedEvent'),
   actor: z.union([z.string(), actor]).optional(),
   created_at: z.coerce.date(),
-  id: z.string(),
   milestone_title: z.string()
 });
 
-const DisconnectedEvent = z.object({
+const DisconnectedEvent = Node.extend({
   __typename: z.literal('DisconnectedEvent'),
   actor: z.union([z.string(), actor]).optional(),
   created_at: z.coerce.date(),
-  id: z.string(),
   is_cross_repository: z.boolean(),
   source: z.object({ id: z.string(), __typename: z.enum(['Issue', 'PullRequest']) }).optional()
 });
 
-const IssueComment = z.object({
-  __typename: z.literal('IssueComment'),
+const Comment = Node.extend({
   author: z.union([z.string(), actor]).optional(),
   author_association: z.string(),
   body: z.string(),
   created_at: z.coerce.date(),
   created_via_email: z.boolean(),
-  database_id: z.number().int().optional(),
   editor: z.union([z.string(), actor]).optional(),
-  full_database_id: z.coerce.number().int().optional(),
-  id: z.string(),
   includes_created_edit: z.boolean(),
-  is_minimized: z.boolean(),
   last_edited_at: z.coerce.date().optional(),
-  minimized_reason: z.string().optional(),
   published_at: z.coerce.date().optional(),
-  reactions_count: z.number().int(),
-  updated_at: z.coerce.date(),
+  updated_at: z.coerce.date()
+});
 
+const Reactable = Node.extend({
+  reactions_count: z.number().int(),
   reactions: z.array(reaction).optional()
 });
 
-const LabeledEvent = z.object({
+const Minimizable = Node.extend({
+  is_minimized: z.boolean(),
+  minimized_reason: z.string().optional()
+});
+
+const IssueComment = Node.merge(Comment)
+  .merge(Reactable)
+  .merge(Minimizable)
+  .extend({
+    __typename: z.literal('IssueComment'),
+    database_id: z.number().int().optional(),
+    full_database_id: z.coerce.number().int().optional()
+  });
+
+const LabeledEvent = Node.extend({
   __typename: z.literal('LabeledEvent'),
   actor: z.union([z.string(), actor]).optional(),
   created_at: z.coerce.date(),
-  id: z.string(),
   label: z.string().optional()
 });
 
-const LockedEvent = z.object({
+const LockedEvent = Node.extend({
   __typename: z.literal('LockedEvent'),
   actor: z.union([z.string(), actor]).optional(),
   created_at: z.coerce.date(),
-  id: z.string(),
   lock_reason: z.string().optional()
 });
 
-const MarkedAsDuplicateEvent = z.object({
+const MarkedAsDuplicateEvent = Node.extend({
   __typename: z.literal('MarkedAsDuplicateEvent'),
   actor: z.union([z.string(), actor]).optional(),
-  canonical: z.object({ id: z.string(), __typename: z.string() }).optional(),
+  canonical: Node.extend({ id: z.string(), __typename: z.string() }).optional(),
   created_at: z.coerce.date(),
-  id: z.string(),
   is_cross_repository: z.boolean()
 });
 
-const MentionedEvent = z.object({
+const MentionedEvent = Node.extend({
   __typename: z.literal('MentionedEvent'),
   actor: z.union([z.string(), actor]).optional(),
   created_at: z.coerce.date(),
-  database_id: z.number().int().optional(),
-  id: z.string()
+  database_id: z.number().int().optional()
 });
 
-const MilestonedEvent = z.object({
+const MilestonedEvent = Node.extend({
   __typename: z.literal('MilestonedEvent'),
   actor: z.union([z.string(), actor]).optional(),
   created_at: z.coerce.date(),
-  id: z.string(),
   milestone_title: z.string()
 });
 
-const MovedColumnsInProjectEvent = z.object({
+const MovedColumnsInProjectEvent = Node.extend({
   __typename: z.literal('MovedColumnsInProjectEvent'),
   actor: z.union([z.string(), actor]).optional(),
   created_at: z.coerce.date(),
   database_id: z.number().int(),
-  id: z.string(),
   previous_project_column_name: z.string().optional(),
   project: z.string().optional(),
   project_card: z.string().optional(),
   project_column_name: z.string().optional()
 });
 
-const PinnedEvent = z.object({
+const PinnedEvent = Node.extend({
   __typename: z.literal('PinnedEvent'),
   actor: z.union([z.string(), actor]).optional(),
-  created_at: z.coerce.date(),
-  id: z.string()
+  created_at: z.coerce.date()
 });
 
-const ReferencedEvent = z.object({
+const ReferencedEvent = Node.extend({
   __typename: z.literal('ReferencedEvent'),
   actor: z.union([z.string(), actor]).optional(),
   commit: z.string().optional(),
-  repository: z.string().optional(),
+  commit_repository: z.string().optional(),
   created_at: z.coerce.date(),
-  id: z.string(),
   is_cross_repository: z.boolean(),
   is_direct_reference: z.boolean()
 });
 
-const RemovedFromProjectEvent = z.object({
+const RemovedFromProjectEvent = Node.extend({
   __typename: z.literal('RemovedFromProjectEvent'),
   actor: z.union([z.string(), actor]).optional(),
   created_at: z.coerce.date(),
   database_id: z.number().int().optional(),
-  id: z.string(),
   project: z.string().optional(),
   project_column_name: z.string().optional()
 });
 
-const RenamedTitleEvent = z.object({
+const RenamedTitleEvent = Node.extend({
   __typename: z.literal('RenamedTitleEvent'),
   actor: z.union([z.string(), actor]).optional(),
   created_at: z.coerce.date(),
   current_title: z.string(),
-  id: z.string(),
   previous_title: z.string()
 });
 
-const ReopenedEvent = z.object({
+const ReopenedEvent = Node.extend({
   __typename: z.literal('ReopenedEvent'),
   actor: z.union([z.string(), actor]).optional(),
   created_at: z.coerce.date(),
-  id: z.string(),
   state_reason: z.string().optional()
 });
 
-const SubscribedEvent = z.object({
+const SubscribedEvent = Node.extend({
   __typename: z.literal('SubscribedEvent'),
   actor: z.union([z.string(), actor]).optional(),
-  created_at: z.coerce.date(),
-  id: z.string()
+  created_at: z.coerce.date()
 });
 
-const TransferredEvent = z.object({
+const TransferredEvent = Node.extend({
   __typename: z.literal('TransferredEvent'),
   actor: z.union([z.string(), actor]).optional(),
   created_at: z.coerce.date(),
-  from_repository: z.string().optional(),
-  id: z.string()
+  from_repository: z.string().optional()
 });
 
-const UnassignedEvent = z.object({
+const UnassignedEvent = Node.extend({
   __typename: z.literal('UnassignedEvent'),
   actor: z.union([z.string(), actor]).optional(),
   assignee: z.union([z.string(), actor]).optional(),
-  created_at: z.coerce.date(),
-  id: z.string()
+  created_at: z.coerce.date()
 });
 
-const UnlabeledEvent = z.object({
+const UnlabeledEvent = Node.extend({
   __typename: z.literal('UnlabeledEvent'),
   actor: z.union([z.string(), actor]).optional(),
   created_at: z.coerce.date(),
-  id: z.string(),
   label: z.string().optional()
 });
 
-const UnlockedEvent = z.object({
+const UnlockedEvent = Node.extend({
   __typename: z.literal('UnlockedEvent'),
   actor: z.union([z.string(), actor]).optional(),
-  created_at: z.coerce.date(),
-  id: z.string()
+  created_at: z.coerce.date()
 });
 
-const UnmarkedAsDuplicateEvent = z.object({
+const UnmarkedAsDuplicateEvent = Node.extend({
   __typename: z.literal('UnmarkedAsDuplicateEvent'),
   actor: z.union([z.string(), actor]).optional(),
-  canonical: z.object({ id: z.string(), __typename: z.string() }).optional(),
+  canonical: Node.extend({ id: z.string(), __typename: z.string() }).optional(),
   created_at: z.coerce.date(),
-  id: z.string(),
   is_cross_repository: z.boolean()
 });
 
-const UnpinnedEvent = z.object({
+const UnpinnedEvent = Node.extend({
   __typename: z.literal('UnpinnedEvent'),
   actor: z.union([z.string(), actor]).optional(),
-  created_at: z.coerce.date(),
-  id: z.string()
+  created_at: z.coerce.date()
 });
 
-const UnsubscribedEvent = z.object({
+const UnsubscribedEvent = Node.extend({
   __typename: z.literal('UnsubscribedEvent'),
   actor: z.union([z.string(), actor]).optional(),
-  created_at: z.coerce.date(),
-  id: z.string()
+  created_at: z.coerce.date()
 });
 
-const UserBlockedEvent = z.object({
+const UserBlockedEvent = Node.extend({
   __typename: z.literal('UserBlockedEvent'),
   actor: z.union([z.string(), actor]).optional(),
   block_duration: z.string(),
+  created_at: z.coerce.date()
+});
+
+const AddedToMergeQueueEvent = Node.extend({
+  __typename: z.literal('AddedToMergeQueueEvent'),
+  actor: z.union([z.string(), actor]).optional(),
   created_at: z.coerce.date(),
-  id: z.string()
+  enqueuer: z.union([z.string(), actor]).optional(),
+  merge_queue: z.string().optional()
+});
+
+const AutoMergeDisabledEvent = Node.extend({
+  __typename: z.literal('AutoMergeDisabledEvent'),
+  actor: z.union([z.string(), actor]).optional(),
+  created_at: z.coerce.date(),
+  disabler: z.union([z.string(), actor]).optional(),
+  reason: z.string().optional(),
+  reason_code: z.string().optional()
+});
+
+const AutoMergeEnabledEvent = Node.extend({
+  __typename: z.literal('AutoMergeEnabledEvent'),
+  actor: z.union([z.string(), actor]).optional(),
+  created_at: z.coerce.date(),
+  enabler: z.union([z.string(), actor]).optional()
+});
+
+const AutoRebaseEnabledEvent = Node.extend({
+  __typename: z.literal('AutoRebaseEnabledEvent'),
+  actor: z.union([z.string(), actor]).optional(),
+  created_at: z.coerce.date(),
+  enabler: z.union([z.string(), actor]).optional()
+});
+
+const AutoSquashEnabledEvent = Node.extend({
+  __typename: z.literal('AutoSquashEnabledEvent'),
+  actor: z.union([z.string(), actor]).optional(),
+  created_at: z.coerce.date(),
+  enabler: z.union([z.string(), actor]).optional()
+});
+
+const AutomaticBaseChangeFailedEvent = Node.extend({
+  __typename: z.literal('AutomaticBaseChangeFailedEvent'),
+  actor: z.union([z.string(), actor]).optional(),
+  created_at: z.coerce.date(),
+  new_base: z.string(),
+  old_base: z.string()
+});
+
+const AutomaticBaseChangeSucceededEvent = Node.extend({
+  __typename: z.literal('AutomaticBaseChangeSucceededEvent'),
+  actor: z.union([z.string(), actor]).optional(),
+  created_at: z.coerce.date(),
+  new_base: z.string(),
+  old_base: z.string()
+});
+
+const BaseRefChangedEvent = Node.extend({
+  __typename: z.literal('BaseRefChangedEvent'),
+  actor: z.union([z.string(), actor]).optional(),
+  created_at: z.coerce.date(),
+  current_ref_name: z.string(),
+  database_id: z.number().int().optional(),
+  previous_ref_name: z.string()
+});
+
+const BaseRefDeletedEvent = Node.extend({
+  __typename: z.literal('BaseRefDeletedEvent'),
+  actor: z.union([z.string(), actor]).optional(),
+  base_ref_name: z.string().optional(),
+  created_at: z.coerce.date()
+});
+
+const BaseRefForcePushedEvent = Node.extend({
+  __typename: z.literal('BaseRefForcePushedEvent'),
+  actor: z.union([z.string(), actor]).optional(),
+  after_commit: z.string().optional(),
+  before_commit: z.string().optional(),
+  created_at: z.coerce.date(),
+  ref: z.string().optional()
+});
+
+const ConvertToDraftEvent = Node.extend({
+  __typename: z.literal('ConvertToDraftEvent'),
+  actor: z.union([z.string(), actor]).optional(),
+  created_at: z.coerce.date()
+});
+
+const DeployedEvent = Node.extend({
+  __typename: z.literal('DeployedEvent'),
+  actor: z.union([z.string(), actor]).optional(),
+  created_at: z.coerce.date(),
+  database_id: z.number().int().optional(),
+  deployment: z.string(),
+  ref: z.string().optional()
+});
+
+const DeploymentEnvironmentChangedEvent = Node.extend({
+  __typename: z.literal('DeploymentEnvironmentChangedEvent'),
+  actor: z.union([z.string(), actor]).optional(),
+  created_at: z.coerce.date(),
+  deployment_status: z.string()
+});
+
+const HeadRefDeletedEvent = Node.extend({
+  __typename: z.literal('HeadRefDeletedEvent'),
+  actor: z.union([z.string(), actor]).optional(),
+  created_at: z.coerce.date(),
+  head_ref_name: z.string()
+});
+
+const HeadRefRestoredEvent = Node.extend({
+  __typename: z.literal('HeadRefRestoredEvent'),
+  actor: z.union([z.string(), actor]).optional(),
+  created_at: z.coerce.date()
+});
+
+const HeadRefForcePushedEvent = Node.extend({
+  __typename: z.literal('HeadRefForcePushedEvent'),
+  actor: z.union([z.string(), actor]).optional(),
+  after_commit: z.string().optional(),
+  before_commit: z.string().optional(),
+  created_at: z.coerce.date(),
+  ref: z.string().optional()
+});
+
+const MergedEvent = Node.extend({
+  __typename: z.literal('MergedEvent'),
+  actor: z.union([z.string(), actor]).optional(),
+  commit: z.string().optional(),
+  created_at: z.coerce.date(),
+  merge_ref_name: z.string().optional()
+});
+
+const PullRequestCommit = Node.extend({
+  __typename: z.literal('PullRequestCommit'),
+  commit: z.string().optional()
+});
+
+const CommitComment = Node.merge(Comment)
+  .merge(Minimizable)
+  .merge(Reactable)
+  .extend({
+    __typename: z.literal('CommitComment'),
+    commit: z.string().optional(),
+    database_id: z.number().int().optional(),
+    path: z.string().optional(),
+    position: z.number().int().optional()
+  });
+
+const PullRequestReviewComment = Node.merge(Comment)
+  .merge(Reactable)
+  .merge(Minimizable)
+  .extend({
+    __typename: z.literal('PullRequestReviewComment'),
+    commit: z.string().optional(),
+    diff_hunk: z.string(),
+    drafted_at: z.coerce.date(),
+    full_database_id: z.number().int().optional(),
+    line: z.number().int().optional(),
+    original_commit: z.string().optional(),
+    original_line: z.number().int().optional(),
+    original_start_line: z.number().int().optional(),
+    outdated: z.boolean(),
+    path: z.string(),
+    pull_request_review: z.string().optional(),
+    reply_to: z.string().optional(),
+    start_line: z.number().int().optional(),
+    state: z.string(),
+    subject_type: z.string()
+  });
+
+const PullRequestCommitCommentThread = Node.extend({
+  __typename: z.literal('PullRequestCommitCommentThread'),
+  comments: z.array(CommitComment),
+  commit: z.string(),
+  path: z.string().optional(),
+  position: z.number().int().optional()
+});
+
+const PullRequestReview = Node.merge(Comment)
+  .merge(Minimizable)
+  .merge(Reactable)
+  .extend({
+    __typename: z.literal('PullRequestReview'),
+    author_can_push_to_repository: z.boolean(),
+    comments: z.array(PullRequestReviewComment),
+    commit: z.string().optional(),
+    full_database_id: z.number().int().optional(),
+    state: z.string(),
+    submitted_at: z.coerce.date()
+  });
+
+const PullRequestReviewThread = Node.extend({
+  __typename: z.literal('PullRequestReviewThread'),
+  comments: z.array(PullRequestReviewComment),
+  diff_side: z.string().optional(),
+  is_collapsed: z.boolean(),
+  is_outdated: z.boolean(),
+  is_resolved: z.boolean(),
+  line: z.number().int().optional(),
+  original_line: z.number().int().optional(),
+  original_start_line: z.number().int().optional(),
+  path: z.string().optional(),
+  resolved_by: z.union([z.string(), actor]).optional(),
+  start_diff_side: z.string().optional(),
+  start_line: z.number().int().optional(),
+  subject_type: z.string().optional()
+});
+
+// const PullRequestRevisionMarker = node.extend({
+//   __typename: z.literal('PullRequestRevisionMarker'),
+//   created_at: z.coerce.date(),
+//   last_seen_commit: z.string()
+// });
+
+const ReadyForReviewEvent = Node.extend({
+  __typename: z.literal('ReadyForReviewEvent'),
+  actor: z.union([z.string(), actor]).optional(),
+  created_at: z.coerce.date()
+});
+
+const RemovedFromMergeQueueEvent = Node.extend({
+  __typename: z.literal('RemovedFromMergeQueueEvent'),
+  actor: z.union([z.string(), actor]).optional(),
+  before_commit: z.string().optional(),
+  created_at: z.coerce.date(),
+  enqueuer: z.union([z.string(), actor]).optional(),
+  merge_queue: z.string().optional(),
+  reason: z.string().optional()
+});
+
+const ReviewDismissedEvent = Node.extend({
+  __typename: z.literal('ReviewDismissedEvent'),
+  actor: z.union([z.string(), actor]).optional(),
+  created_at: z.coerce.date(),
+  database_id: z.number().int().optional(),
+  dismissal_message: z.string().optional(),
+  previous_review_state: z.string(),
+  pull_request_commit: z.string().optional(),
+  review: z.string().optional()
+});
+
+const ReviewRequestRemovedEvent = Node.extend({
+  __typename: z.literal('ReviewRequestRemovedEvent'),
+  actor: z.union([z.string(), actor]).optional(),
+  created_at: z.coerce.date(),
+  requested_reviewer: z.union([z.string(), actor]).optional()
+});
+
+const ReviewRequestedEvent = Node.extend({
+  __typename: z.literal('ReviewRequestedEvent'),
+  actor: z.union([z.string(), actor]).optional(),
+  created_at: z.coerce.date(),
+  requested_reviewer: z.union([z.string(), actor]).optional()
 });
 
 const list = z.discriminatedUnion('__typename', [
+  AddedToMergeQueueEvent,
   AddedToProjectEvent,
   AssignedEvent,
+  AutoMergeDisabledEvent,
+  AutoMergeEnabledEvent,
+  AutoRebaseEnabledEvent,
+  AutoSquashEnabledEvent,
+  AutomaticBaseChangeFailedEvent,
+  AutomaticBaseChangeSucceededEvent,
+  BaseRefChangedEvent,
+  BaseRefDeletedEvent,
+  BaseRefForcePushedEvent,
   ClosedEvent,
   CommentDeletedEvent,
   ConnectedEvent,
+  ConvertToDraftEvent,
   ConvertedNoteToIssueEvent,
   ConvertedToDiscussionEvent,
   CrossReferencedEvent,
   DemilestonedEvent,
+  DeployedEvent,
+  DeploymentEnvironmentChangedEvent,
   DisconnectedEvent,
+  HeadRefDeletedEvent,
+  HeadRefForcePushedEvent,
+  HeadRefRestoredEvent,
   IssueComment,
   LabeledEvent,
   LockedEvent,
   MarkedAsDuplicateEvent,
   MentionedEvent,
+  MergedEvent,
   MilestonedEvent,
   MovedColumnsInProjectEvent,
   PinnedEvent,
+  PullRequestCommit,
+  PullRequestCommitCommentThread,
+  PullRequestReview,
+  PullRequestReviewThread,
+  ReadyForReviewEvent,
   ReferencedEvent,
+  RemovedFromMergeQueueEvent,
   RemovedFromProjectEvent,
   RenamedTitleEvent,
   ReopenedEvent,
+  ReviewDismissedEvent,
+  ReviewRequestRemovedEvent,
+  ReviewRequestedEvent,
   SubscribedEvent,
   TransferredEvent,
   UnassignedEvent,
