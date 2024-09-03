@@ -163,7 +163,7 @@ export class IssueTimelineItemFragment implements Fragment {
 
       fragment ${this.alias}_ReferencedEvent on ReferencedEvent {
         actor { ...${this.fragments[0].alias} }
-        commit { oid }
+        commit { id }
         commitRepository { id }
         createdAt
         isCrossRepository
@@ -308,8 +308,8 @@ export class IssueTimelineItemFragment implements Fragment {
 
       fragment ${this.alias}_BaseRefForcePushedEvent on BaseRefForcePushedEvent {
         actor { ...${this.fragments[0].alias} }
-        afterCommit { oid }
-        beforeCommit { oid }
+        afterCommit { id }
+        beforeCommit { id }
         createdAt
         ref { name }
       }
@@ -348,21 +348,21 @@ export class IssueTimelineItemFragment implements Fragment {
 
       fragment ${this.alias}_HeadRefForcePushedEvent on HeadRefForcePushedEvent {
         actor { ...${this.fragments[0].alias} }
-        afterCommit { oid }
-        beforeCommit { oid }
+        afterCommit { id }
+        beforeCommit { id }
         createdAt
         ref { name }
       }
 
       fragment ${this.alias}_MergedEvent on MergedEvent {
         actor { ...${this.fragments[0].alias} }
-        commit { oid }
+        commit { id }
         createdAt
         mergeRefName
       }
 
       fragment ${this.alias}_PullRequestCommit on PullRequestCommit {
-        commit { oid }
+        commit { id }
       }
 
       fragment ${this.alias}_PullRequestCommitCommentThread on PullRequestCommitCommentThread {
@@ -372,7 +372,7 @@ export class IssueTimelineItemFragment implements Fragment {
             author { ...${this.fragments[0].alias} }
             authorAssociation
             body
-            commit { oid }
+            commit { id }
             createdAt
             createdViaEmail
             databaseId
@@ -388,7 +388,7 @@ export class IssueTimelineItemFragment implements Fragment {
             updatedAt
           }
         }
-        commit { oid }
+        commit { id }
         path
         position
       }
@@ -410,7 +410,7 @@ export class IssueTimelineItemFragment implements Fragment {
         ...${this.alias}_Comment
         authorCanPushToRepository
         comments(first: 100) { nodes { ...${this.alias}_PullRequestReviewCommentFragment }  }
-        commit { oid }
+        commit { id }
         fullDatabaseId
         isMinimized
         minimizedReason
@@ -438,7 +438,7 @@ export class IssueTimelineItemFragment implements Fragment {
       fragment ${this.alias}_PullRequestRevisionMarker on PullRequestTimelineItems {
         ... on PullRequestRevisionMarker {
       	  createdAt
-      	  lastSeenCommit { oid }
+      	  lastSeenCommit { id }
         }
       }
 
@@ -449,7 +449,7 @@ export class IssueTimelineItemFragment implements Fragment {
 
       fragment ${this.alias}_RemovedFromMergeQueueEvent on RemovedFromMergeQueueEvent {
         actor { ...${this.fragments[0].alias} }
-        beforeCommit { oid }
+        beforeCommit { id }
         createdAt
         enqueuer { ...${this.fragments[0].alias} }
         mergeQueue { id }
@@ -462,7 +462,7 @@ export class IssueTimelineItemFragment implements Fragment {
         databaseId
         dismissalMessage
         previousReviewState
-        pullRequestCommit { commit { oid } }
+        pullRequestCommit { commit { id } }
         review { id }
       }
 
@@ -482,14 +482,14 @@ export class IssueTimelineItemFragment implements Fragment {
         ...${this.alias}_Node
         ...${this.alias}_Comment
 
-        commit { oid }
+        commit { id }
         diffHunk
         draftedAt
         fullDatabaseId
         isMinimized
         line
         minimizedReason
-        originalCommit { oid }
+        originalCommit { id }
         originalLine
         originalStartLine
         outdated

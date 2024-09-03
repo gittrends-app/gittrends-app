@@ -425,7 +425,7 @@ const PullRequestReviewComment = Node.merge(Comment)
     commit: z.string().optional(),
     diff_hunk: z.string(),
     drafted_at: z.coerce.date(),
-    full_database_id: z.number().int().optional(),
+    full_database_id: z.coerce.number().int().optional(),
     line: z.number().int().optional(),
     original_commit: z.string().optional(),
     original_line: z.number().int().optional(),
@@ -455,7 +455,7 @@ const PullRequestReview = Node.merge(Comment)
     author_can_push_to_repository: z.boolean(),
     comments: z.array(PullRequestReviewComment),
     commit: z.string().optional(),
-    full_database_id: z.number().int().optional(),
+    full_database_id: z.coerce.number().int().optional(),
     state: z.string(),
     submitted_at: z.coerce.date().optional()
   });
