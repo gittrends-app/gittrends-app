@@ -13,7 +13,6 @@ import { Iterable, Service, ServiceCommitsParams, ServiceResourceParams } from '
 import { GithubClient } from './client.js';
 import { BaseFragmentFactory, FragmentFactory } from './graphql/fragments/Fragment.js';
 import { QueryLookup } from './graphql/lookups/Lookup.js';
-import { PullRequestsLookup } from './graphql/lookups/PullRequestsLookup.js';
 import { SearchLookup } from './graphql/lookups/SearchLookup.js';
 import { StargazersLookup } from './graphql/lookups/StargazersLookup.js';
 import { TagsLookup } from './graphql/lookups/TagsLookup.js';
@@ -22,6 +21,7 @@ import { QueryRunner } from './graphql/QueryRunner.js';
 import commits from './resources/commits.js';
 import discussions from './resources/discussions.js';
 import issues from './resources/issues.js';
+import pullRequests from './resources/pull_requests.js';
 import releases from './resources/releases.js';
 import repos from './resources/repos.js';
 import { default as users } from './resources/users.js';
@@ -86,7 +86,7 @@ export class GithubService implements Service {
       case 'issues':
         return issues(this.client, { factory: this.factory, ...opts });
       case 'pull_requests':
-        return genericIterator(this.client, new PullRequestsLookup({ factory: this.factory, ...params }));
+        return pullRequests(this.client, { factory: this.factory, ...opts });
       case 'stargazers':
         return genericIterator(this.client, new StargazersLookup({ factory: this.factory, ...params }));
       case 'watchers':
