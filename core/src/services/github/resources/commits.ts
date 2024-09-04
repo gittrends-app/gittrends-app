@@ -1,4 +1,5 @@
-import { Commit, Iterable, ServiceCommitsParams } from '../../service.js';
+import { Commit } from '../../../entities/Commit.js';
+import { Iterable, ServiceCommitsParams } from '../../service.js';
 import { GithubClient } from '../client.js';
 import { FragmentFactory } from '../graphql/fragments/Fragment.js';
 import { CommitsLookup } from '../graphql/lookups/CommitsLookup.js';

@@ -1,6 +1,5 @@
 /* eslint-disable jsdoc/require-jsdoc */
-import { z } from 'zod';
-import actor from '../../../entities/Actor.js';
+import { Actor } from '../../../entities/Actor.js';
 import { GithubClient } from '../client.js';
 import { FragmentFactory } from '../graphql/fragments/Fragment.js';
 import { UserLookup } from '../graphql/lookups/UserLookup.js';
@@ -11,8 +10,8 @@ type Params = { factory: FragmentFactory; client: GithubClient; byLogin?: boolea
 /**
  *  Retrieves users by their ID.
  */
-export default async function (id: string, params: Params): Promise<z.infer<typeof actor> | null>;
-export default async function (id: string[], params: Params): Promise<(z.infer<typeof actor> | null)[]>;
+export default async function (id: string, params: Params): Promise<Actor | null>;
+export default async function (id: string[], params: Params): Promise<(Actor | null)[]>;
 export default async function (id: string | string[], params: Params): Promise<any> {
   const idsArr = Array.isArray(id) ? id : [id];
 
