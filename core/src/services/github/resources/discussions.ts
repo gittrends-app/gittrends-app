@@ -1,5 +1,7 @@
 import { MergeExclusive } from 'type-fest';
-import { Discussion, DiscussionComment, Iterable, ServiceResourceParams } from '../../service.js';
+import { Discussion } from '../../../entities/Discussion.js';
+import { DiscussionComment } from '../../../entities/DiscussionComment.js';
+import { Iterable, ServiceResourceParams } from '../../service.js';
 import { GithubClient } from '../client.js';
 import { FragmentFactory } from '../graphql/fragments/Fragment.js';
 import { DiscussionsCommentsLookup } from '../graphql/lookups/DiscussionsCommentsLookup.js';
@@ -41,7 +43,7 @@ async function discussionComments(
 }
 
 /**
- * Retrieves the stargazers of a repository.
+ * Retrieves the discussions of a repository.
  */
 export default function (
   client: GithubClient,
@@ -54,26 +56,23 @@ export default function (
       for await (const searchRes of QueryRunner.create(client).iterator(new DiscussionsLookup({ id: repo, ...rest }))) {
         const data: Discussion[] = searchRes.data;
 
-        for (const discussion of data) {
-          if (discussion.reactions_count) {
-            const reactions = await QueryRunner.create(client).fetchAll(
-              new ReactionsLookup({ factory: opts.factory, id: discussion.id, first: opts.first })
-            );
+        await Promise.all(
+          data.map(async (discussion) => {
+            if (discussion.reactions_count) {
+              discussion.reactions = await QueryRunner.create(client)
+                .fetchAll(new ReactionsLookup({ factory: opts.factory, id: discussion.id, first: opts.first }))
+                .then(({ data }) => data);
+            }
 
-            discussion.reactions = reactions.data;
-          }
-
-          if (discussion.comments_count) {
-            discussion.comments = await discussionComments(client, { ...opts, discussion: discussion.id });
-          }
-        }
+            if (discussion.comments_count) {
+              discussion.comments = await discussionComments(client, { ...opts, discussion: discussion.id });
+            }
+          })
+        );
 
         const { cursor, first } = searchRes.params;
 
-        yield {
-          data: searchRes.data,
-          params: { has_more: !!searchRes.next, cursor, first }
-        };
+        yield { data, params: { has_more: !!searchRes.next, cursor, first } };
       }
     }
   };
