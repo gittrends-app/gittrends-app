@@ -45,7 +45,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
         }
       } else {
         progress.start(options.total, 0, { task: 'searching' });
-        for await (const { data } of service.search(options.total, { first: 25 })) {
+        for await (const { data } of service.search(options.total, { first: 100 })) {
           progress.increment(data.length);
           repos.push(...data);
         }
