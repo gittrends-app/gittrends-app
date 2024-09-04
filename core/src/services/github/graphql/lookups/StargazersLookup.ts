@@ -1,13 +1,12 @@
 import { StargazerConnection } from '@octokit/graphql-schema';
-import { z } from 'zod';
-import stargazer from '../../../../entities/schemas/stargazer.js';
+import { Stargazer, StargazerSchema } from '../../../../entities/Stargazer.js';
 import { ActorFragment } from '../fragments/ActorFragment.js';
 import { QueryLookup } from './Lookup.js';
 
 /**
  *  A lookup to get repository stargazers.
  */
-export class StargazersLookup extends QueryLookup<z.infer<typeof stargazer>[]> {
+export class StargazersLookup extends QueryLookup<Stargazer[]> {
   toString(): string {
     const params = [`first: ${this.params.first || 100}`, 'orderBy: { field: STARRED_AT, direction: ASC}'];
     if (this.params.cursor) params.push(`after: "${this.params.cursor}"`);
@@ -37,7 +36,8 @@ export class StargazersLookup extends QueryLookup<z.infer<typeof stargazer>[]> {
           })
         : undefined,
       data: (_data.edges || []).map((data) =>
-        stargazer.parse({
+        StargazerSchema.parse({
+          __typename: 'Stargazer',
           starred_at: data!.starredAt,
           user: this.fragments[0].parse(data!.node),
           repository: this.params.id

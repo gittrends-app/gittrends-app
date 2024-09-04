@@ -1,13 +1,12 @@
 import { DiscussionConnection } from '@octokit/graphql-schema';
-import { z } from 'zod';
-import discussion from '../../../../entities/schemas/discussion.js';
+import { Discussion, DiscussionSchema } from '../../../../entities/Discussion.js';
 import { ActorFragment } from '../fragments/ActorFragment.js';
 import { QueryLookup } from './Lookup.js';
 
 /**
  *  A lookup to get repository discussions.
  */
-export class DiscussionsLookup extends QueryLookup<z.infer<typeof discussion>[]> {
+export class DiscussionsLookup extends QueryLookup<Discussion[]> {
   toString(): string {
     const params = [`first: ${this.params.first || 100}`, 'orderBy: { field: UPDATED_AT, direction: ASC }'];
     if (this.params.cursor) params.push(`after: "${this.params.cursor}"`);
@@ -18,6 +17,7 @@ export class DiscussionsLookup extends QueryLookup<z.infer<typeof discussion>[]>
         discussions(${params.join(', ')}) {
           pageInfo { endCursor hasNextPage }
           nodes {
+            __typename
             activeLockReason
             answer { id }
             answerChosenAt
@@ -63,7 +63,9 @@ export class DiscussionsLookup extends QueryLookup<z.infer<typeof discussion>[]>
           })
         : undefined,
       data: (_data.nodes || []).map((data) => {
-        return discussion.parse({
+        return DiscussionSchema.parse({
+          __typename: data!.__typename,
+          repository: this.params.id,
           id: data!.id,
           database_id: data!.databaseId!,
           active_lock_reason: data!.activeLockReason,
@@ -98,7 +100,7 @@ export class DiscussionsLookup extends QueryLookup<z.infer<typeof discussion>[]>
     };
   }
 
-  get fragments() {
+  get fragments(): [ActorFragment] {
     return [this.params.factory.create(ActorFragment)];
   }
 }

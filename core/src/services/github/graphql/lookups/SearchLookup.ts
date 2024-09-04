@@ -1,13 +1,11 @@
 import { Repository } from '@octokit/graphql-schema';
-import { z } from 'zod';
-import repository from '../../../../entities/schemas/repository.js';
 import { RepositoryFragment } from '../fragments/RepositoryFragment.js';
 import { QueryLookup, QueryLookupParams } from './Lookup.js';
 
 /**
  *  A lookup to get a user by ID.
  */
-export class SearchLookup extends QueryLookup<z.infer<typeof repository>[], { limit: number }> {
+export class SearchLookup extends QueryLookup<Repository[], { limit: number }> {
   constructor(params: Omit<QueryLookupParams, 'id'> & { limit: number }) {
     super({ ...params, id: 'search' });
   }

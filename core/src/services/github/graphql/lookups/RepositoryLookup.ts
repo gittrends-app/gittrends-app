@@ -1,12 +1,11 @@
-import { z } from 'zod';
-import repository from '../../../../entities/schemas/repository.js';
+import { Repository } from '../../../../entities/Repository.js';
 import { RepositoryFragment } from '../fragments/RepositoryFragment.js';
 import { QueryLookup } from './Lookup.js';
 
 /**
  *  A lookup to get a user by ID.
  */
-export class RepositoryLookup extends QueryLookup<z.infer<typeof repository> | null, { byName?: boolean }> {
+export class RepositoryLookup extends QueryLookup<Repository | null, { byName?: boolean }> {
   toString(): string {
     if (this.params.byName) {
       const [owner, name] = this.params.id.split('/');

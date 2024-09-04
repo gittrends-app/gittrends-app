@@ -1,15 +1,16 @@
 import { z } from 'zod';
-import { zodSanitize } from '../../helpers/sanitize.js';
-import actor from './actor.js';
+import { zodSanitize } from '../helpers/sanitize.js';
+import { ActorSchema } from './Actor.js';
+import { NodeSchema } from './base/Node.js';
 
-const baseRepository = z.object({
-  id: z.string(),
+const baseRepository = NodeSchema.extend({
+  __typename: z.literal('Repository'),
   database_id: z.number().int(),
   description: z.string().optional(),
   name: z.string(),
   name_with_owner: z.string(),
   open_graph_image_url: z.string(),
-  owner: z.union([z.string(), actor]),
+  owner: z.union([z.string(), ActorSchema]),
   primary_language: z.string().optional()
 });
 
@@ -83,4 +84,5 @@ const extendedRepository = z
   })
   .partial();
 
-export default zodSanitize(baseRepository.merge(extendedRepository));
+export const RepositorySchema = zodSanitize(baseRepository.merge(extendedRepository));
+export type Repository = z.infer<typeof RepositorySchema>;

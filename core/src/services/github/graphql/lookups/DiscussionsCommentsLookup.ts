@@ -1,13 +1,12 @@
 import { DiscussionCommentConnection } from '@octokit/graphql-schema';
-import { z } from 'zod';
-import comment from '../../../../entities/schemas/discussion-comment.js';
+import { DiscussionComment, DiscussionCommentSchema } from '../../../../entities/DiscussionComment.js';
 import { ActorFragment } from '../fragments/ActorFragment.js';
 import { QueryLookup } from './Lookup.js';
 
 /**
  *  A lookup to get repository discussions comments.
  */
-export class DiscussionsCommentsLookup extends QueryLookup<z.infer<typeof comment>[], { isComment?: boolean }> {
+export class DiscussionsCommentsLookup extends QueryLookup<DiscussionComment[], { isComment?: boolean }> {
   toString(): string {
     const params = [`first: ${this.params.first || 100}`];
     if (this.params.cursor) params.push(`after: "${this.params.cursor}"`);
@@ -18,6 +17,7 @@ export class DiscussionsCommentsLookup extends QueryLookup<z.infer<typeof commen
         comments:${this.params.isComment ? 'replies' : 'comments'}(${params.join(', ')}) {
           pageInfo { hasNextPage endCursor }  
           nodes {
+            __typename
             author { ...${this.fragments[0].alias} }
             authorAssociation
             body
@@ -57,7 +57,8 @@ export class DiscussionsCommentsLookup extends QueryLookup<z.infer<typeof commen
           })
         : undefined,
       data: (_data.nodes || []).map((data) => {
-        return comment.parse({
+        return DiscussionCommentSchema.parse({
+          __typename: data!.__typename,
           author: data!.author && this.fragments[0].parse(data!.author),
           author_association: data!.authorAssociation,
           body: data!.body,
@@ -85,7 +86,7 @@ export class DiscussionsCommentsLookup extends QueryLookup<z.infer<typeof commen
     };
   }
 
-  get fragments() {
+  get fragments(): [ActorFragment] {
     return [this.params.factory.create(ActorFragment)];
   }
 }

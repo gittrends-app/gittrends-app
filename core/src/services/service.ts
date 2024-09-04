@@ -1,15 +1,13 @@
-import { z } from 'zod';
-import actor from '../entities/schemas/actor.js';
-import commit from '../entities/schemas/commit.js';
-import discussionComment from '../entities/schemas/discussion-comment.js';
-import discussion from '../entities/schemas/discussion.js';
-import issue from '../entities/schemas/issue.js';
-import pullRequest from '../entities/schemas/pull_request.js';
-import release from '../entities/schemas/release.js';
-import repository from '../entities/schemas/repository.js';
-import stargazer from '../entities/schemas/stargazer.js';
-import tag from '../entities/schemas/tag.js';
-import watcher from '../entities/schemas/watcher.js';
+import { Actor } from '../entities/Actor.js';
+import { Commit } from '../entities/Commit.js';
+import { Discussion } from '../entities/Discussion.js';
+import { Issue } from '../entities/Issue.js';
+import { PullRequest } from '../entities/PullRequest.js';
+import { Release } from '../entities/Release.js';
+import { Repository } from '../entities/Repository.js';
+import { Stargazer } from '../entities/Stargazer.js';
+import { Tag } from '../entities/Tag.js';
+import { Watcher } from '../entities/Watcher.js';
 
 export type PageableParams = {
   cursor?: string;
@@ -21,18 +19,6 @@ export type Iterable<T = any, P extends object = object> = AsyncIterable<{
   data: T[];
   params: { has_more: boolean } & PageableParams & P;
 }>;
-
-export type Repository = z.infer<typeof repository>;
-export type Actor = z.infer<typeof actor>;
-export type Stargazer = z.infer<typeof stargazer>;
-export type Watcher = z.infer<typeof watcher>;
-export type Discussion = z.infer<typeof discussion>;
-export type DiscussionComment = z.infer<typeof discussionComment>;
-export type Tag = z.infer<typeof tag>;
-export type Release = z.infer<typeof release>;
-export type Commit = z.infer<typeof commit>;
-export type Issue = z.infer<typeof issue>;
-export type PullRequest = z.infer<typeof pullRequest>;
 
 export type ServiceResourceParams = {
   repo: string;
@@ -61,14 +47,4 @@ export interface Service {
   resource(name: 'commits', opts: ServiceCommitsParams): Iterable<Commit>;
   resource(name: 'issues', opts: ServiceCommitsParams): Iterable<Issue>;
   resource(name: 'pull_requests', opts: ServiceCommitsParams): Iterable<PullRequest>;
-
-  // resource(Entity: Class<Tag>, opts: ResourceParams): Iterable<Tag>;
-  // resource(Entity: Class<Release>, opts: ResourceParams): Iterable<Release>;
-  // resource(Entity: Class<Watcher>, opts: ResourceParams): Iterable<Watcher>;
-  // resource(Entity: Class<Stargazer>, opts: ResourceParams): Iterable<Stargazer>;
-  // resource(
-  //   Entity: Class<Commit>,
-  //   opts: ResourceParams & { since?: Date; until?: Date }
-  // ): Iterable<Commit, { since?: Date; until?: Date }>;
-  // resource(Entity: Class<Issue>, opts: ResourceParams & { since?: Date }): Iterable<Issue, { since?: Date }>;
 }

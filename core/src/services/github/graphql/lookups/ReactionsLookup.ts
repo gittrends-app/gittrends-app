@@ -1,13 +1,12 @@
 import { ReactionConnection } from '@octokit/graphql-schema';
-import { z } from 'zod';
-import reaction from '../../../../entities/schemas/reaction.js';
+import { Reaction, ReactionSchema } from '../../../../entities/Reaction.js';
 import { ActorFragment } from '../fragments/ActorFragment.js';
 import { QueryLookup } from './Lookup.js';
 
 /**
  *  A lookup to get repository reactions.
  */
-export class ReactionsLookup extends QueryLookup<z.infer<typeof reaction>[]> {
+export class ReactionsLookup extends QueryLookup<Reaction[]> {
   toString(): string {
     const params = [`first: ${this.params.first || 100}`];
     if (this.params.cursor) params.push(`after: "${this.params.cursor}"`);
@@ -19,6 +18,7 @@ export class ReactionsLookup extends QueryLookup<z.infer<typeof reaction>[]> {
         reactions(${params.join(', ')}) {
           pageInfo { hasNextPage endCursor }
           nodes {
+            __typename
             id
             databaseId
             content
@@ -43,7 +43,8 @@ export class ReactionsLookup extends QueryLookup<z.infer<typeof reaction>[]> {
           })
         : undefined,
       data: (_data.nodes || []).map((data) =>
-        reaction.parse({
+        ReactionSchema.parse({
+          __typename: data!.__typename,
           id: data!.id,
           database_id: data!.databaseId,
           content: data!.content,
@@ -56,7 +57,7 @@ export class ReactionsLookup extends QueryLookup<z.infer<typeof reaction>[]> {
     };
   }
 
-  get fragments() {
+  get fragments(): [ActorFragment] {
     return [this.params.factory.create(ActorFragment)];
   }
 }

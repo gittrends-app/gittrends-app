@@ -1,6 +1,5 @@
 import { IssueTimelineItems, PullRequestTimelineItems } from '@octokit/graphql-schema';
-import { z } from 'zod';
-import timelineItem from '../../../../entities/schemas/timeline-item.js';
+import { TimelineItem, TimelineItemSchema } from '../../../../entities/TimelineItem.js';
 import { ActorFragment } from './ActorFragment.js';
 import { Fragment, FragmentFactory } from './Fragment.js';
 
@@ -577,7 +576,7 @@ class TimelineItemFragment implements Fragment {
     `;
   }
 
-  parse(data: IssueTimelineItems | PullRequestTimelineItems): z.infer<typeof timelineItem> {
+  parse(data: IssueTimelineItems | PullRequestTimelineItems): TimelineItem {
     let _data: Record<string, any> = { __typename: data.__typename, id: (data as any).id };
 
     switch (data.__typename) {
@@ -1101,7 +1100,7 @@ class TimelineItemFragment implements Fragment {
         throw new Error(`Unknown timeline item type: ${data.__typename}`);
     }
 
-    return timelineItem.parse(_data);
+    return TimelineItemSchema.parse(_data);
   }
 }
 

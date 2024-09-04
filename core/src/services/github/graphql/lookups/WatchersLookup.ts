@@ -1,13 +1,12 @@
 import { UserConnection } from '@octokit/graphql-schema';
-import { z } from 'zod';
-import watcher from '../../../../entities/schemas/watcher.js';
+import { Watcher, WatcherSchema } from '../../../../entities/Watcher.js';
 import { ActorFragment } from '../fragments/ActorFragment.js';
 import { QueryLookup } from './Lookup.js';
 
 /**
  *  A lookup to get repository watchers.
  */
-export class WatchersLookup extends QueryLookup<z.infer<typeof watcher>[]> {
+export class WatchersLookup extends QueryLookup<Watcher[]> {
   toString(): string {
     const params = [`first: ${this.params.first || 100}`];
     if (this.params.cursor) params.push(`after: "${this.params.cursor}"`);
@@ -34,7 +33,8 @@ export class WatchersLookup extends QueryLookup<z.infer<typeof watcher>[]> {
           })
         : undefined,
       data: (_data.nodes || []).map((data) =>
-        watcher.parse({
+        WatcherSchema.parse({
+          __typename: 'Watcher',
           user: this.fragments[0].parse(data!),
           repository: this.params.id
         })
@@ -43,7 +43,7 @@ export class WatchersLookup extends QueryLookup<z.infer<typeof watcher>[]> {
     };
   }
 
-  get fragments() {
+  get fragments(): [ActorFragment] {
     return [this.params.factory.create(ActorFragment)];
   }
 }

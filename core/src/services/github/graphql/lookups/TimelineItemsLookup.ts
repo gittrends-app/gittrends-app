@@ -1,16 +1,12 @@
 import { IssueTimelineItemsConnection } from '@octokit/graphql-schema';
-import { z } from 'zod';
-import timelineItem from '../../../../entities/schemas/timeline-item.js';
-import { IssueTimelineItemFragment, PullRequestTimelineItemFragment } from '../fragments/IssueTimelineItemFragment.js';
+import { TimelineItem } from '../../../../entities/TimelineItem.js';
+import { IssueTimelineItemFragment, PullRequestTimelineItemFragment } from '../fragments/TimelineItemFragment.js';
 import { QueryLookup } from './Lookup.js';
 
 /**
  *  A lookup to get repository issues.
  */
-export class TimelineItemsLookup extends QueryLookup<
-  z.infer<typeof timelineItem>[],
-  { type?: 'Issue' | 'PullRequest' }
-> {
+export class TimelineItemsLookup extends QueryLookup<TimelineItem[], { type?: 'Issue' | 'PullRequest' }> {
   toString(): string {
     const params = [`first: ${this.params.first || 100}`];
     if (this.params.cursor) params.push(`after: "${this.params.cursor}"`);

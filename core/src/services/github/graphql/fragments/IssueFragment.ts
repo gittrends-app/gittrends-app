@@ -1,6 +1,5 @@
-import { Issue } from '@octokit/graphql-schema';
-import { z } from 'zod';
-import issue from '../../../../entities/schemas/issue.js';
+import { Issue as GsIssue } from '@octokit/graphql-schema';
+import { Issue, IssueSchema } from '../../../../entities/Issue.js';
 import { ActorFragment } from './ActorFragment.js';
 import { Fragment, FragmentFactory } from './Fragment.js';
 
@@ -20,6 +19,7 @@ export class IssueFragment implements Fragment {
   toString(): string {
     return `
       fragment ${this.alias} on Issue {
+        __typename
         activeLockReason
         assignees(first: 100) { nodes { ...${this.fragments[0].alias} } }
         author { ...${this.fragments[0].alias} }
@@ -51,13 +51,12 @@ export class IssueFragment implements Fragment {
         timelineItems { totalCount }
         title
         updatedAt
-        __typename
       }
     `;
   }
 
-  parse(data: Issue): z.infer<typeof issue> {
-    return issue.parse({
+  parse(data: GsIssue): Issue {
+    return IssueSchema.parse({
       active_lock_reason: data.activeLockReason,
       assignees: data.assignees?.nodes?.map((node) => this.fragments[0].parse(node)),
       author: data.author && this.fragments[0].parse(data.author),

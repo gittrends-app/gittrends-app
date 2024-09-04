@@ -1,6 +1,5 @@
 import { RefConnection } from '@octokit/graphql-schema';
-import { z } from 'zod';
-import tag from '../../../../entities/schemas/tag.js';
+import { Tag } from '../../../../entities/Tag.js';
 import { CommitFragment } from '../fragments/CommitFragment.js';
 import { TagFragment } from '../fragments/TagFragment.js';
 import { QueryLookup } from './Lookup.js';
@@ -8,7 +7,7 @@ import { QueryLookup } from './Lookup.js';
 /**
  *  A lookup to get repository tags.
  */
-export class TagsLookup extends QueryLookup<z.infer<typeof tag>[]> {
+export class TagsLookup extends QueryLookup<Tag[]> {
   toString(): string {
     const params = [`first: ${this.params.first || 100}`, 'refPrefix: "refs/tags/"'];
     if (this.params.cursor) params.push(`after: "${this.params.cursor}"`);

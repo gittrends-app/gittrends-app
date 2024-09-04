@@ -1,13 +1,12 @@
 import { IssueConnection } from '@octokit/graphql-schema';
-import { z } from 'zod';
-import issue from '../../../../entities/schemas/issue.js';
+import { Issue } from '../../../../entities/Issue.js';
 import { IssueFragment } from '../fragments/IssueFragment.js';
 import { QueryLookup } from './Lookup.js';
 
 /**
  *  A lookup to get repository issues.
  */
-export class IssuesLookup extends QueryLookup<z.infer<typeof issue>[]> {
+export class IssuesLookup extends QueryLookup<Issue[]> {
   toString(): string {
     const params = [`first: ${this.params.first || 100}`, 'orderBy: { field: UPDATED_AT direction: ASC }'];
     if (this.params.cursor) params.push(`after: "${this.params.cursor}"`);

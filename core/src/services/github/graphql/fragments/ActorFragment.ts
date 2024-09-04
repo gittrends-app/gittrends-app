@@ -1,14 +1,13 @@
 import { Bot, EnterpriseUserAccount, Mannequin, Organization, User } from '@octokit/graphql-schema';
 import snakeCase from 'lodash/snakeCase.js';
-import { z } from 'zod';
-import actor from '../../../../entities/schemas/actor.js';
+import { Actor, ActorSchema } from '../../../../entities/Actor.js';
 import { Fragment } from './Fragment.js';
 
 /**
  * A fragment to select the common fields for an actor.
  */
 export class ActorFragment implements Fragment {
-  readonly fragments = [];
+  readonly fragments: Fragment[] = [];
 
   constructor(
     public alias = 'ActorFragment',
@@ -124,11 +123,11 @@ export class ActorFragment implements Fragment {
     `;
   }
 
-  parse(data: Bot | Mannequin | EnterpriseUserAccount | Organization | User): z.infer<typeof actor> {
+  parse(data: Bot | Mannequin | EnterpriseUserAccount | Organization | User): Actor {
     switch (data.__typename) {
       case 'Bot':
-        return actor.parse({
-          type: data.__typename,
+        return ActorSchema.parse({
+          __typename: data.__typename,
           avatar_url: data.avatarUrl,
           created_at: data.createdAt,
           database_id: data.databaseId as number,
@@ -137,8 +136,8 @@ export class ActorFragment implements Fragment {
           updated_at: data.updatedAt
         });
       case 'Mannequin':
-        return actor.parse({
-          type: data.__typename,
+        return ActorSchema.parse({
+          __typename: data.__typename,
           avatar_url: data.avatarUrl,
           claimant: data.claimant ? (this.parse(data.claimant) as any) : undefined,
           created_at: data.createdAt,
@@ -149,8 +148,8 @@ export class ActorFragment implements Fragment {
           updated_at: data.updatedAt
         });
       case 'EnterpriseUserAccount':
-        return actor.parse({
-          type: data.__typename,
+        return ActorSchema.parse({
+          __typename: data.__typename,
           avatar_url: data.avatarUrl,
           name: data.name as string,
           updated_at: data.updatedAt,
@@ -159,8 +158,8 @@ export class ActorFragment implements Fragment {
           login: data.login
         });
       case 'Organization':
-        return actor.parse({
-          type: data.__typename,
+        return ActorSchema.parse({
+          __typename: data.__typename,
           avatar_url: data.avatarUrl,
           created_at: data.createdAt,
           database_id: data.databaseId,
@@ -186,8 +185,8 @@ export class ActorFragment implements Fragment {
           archived_at: data.archivedAt ? data.archivedAt : undefined
         });
       case 'User':
-        return actor.parse({
-          type: data.__typename,
+        return ActorSchema.parse({
+          __typename: data.__typename,
           avatar_url: data.avatarUrl,
           bio: data.bio,
           company: data.company,
@@ -234,7 +233,7 @@ export class ActorFragment implements Fragment {
           organizations_count: data.organizations?.totalCount
         });
       default:
-        throw new Error(`Unexpected actor type: ${data.__typename}`);
+        throw new Error(`Unexpected actor __typename: ${data.__typename}`);
     }
   }
 }

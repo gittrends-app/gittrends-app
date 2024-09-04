@@ -1,20 +1,15 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import {
-  Actor,
-  Commit,
-  Discussion,
-  Issue,
-  Iterable,
-  PullRequest,
-  Release,
-  Repository,
-  Service,
-  ServiceCommitsParams,
-  ServiceResourceParams,
-  Stargazer,
-  Tag,
-  Watcher
-} from '../service.js';
+import { Actor } from '../../entities/Actor.js';
+import { Commit } from '../../entities/Commit.js';
+import { Discussion } from '../../entities/Discussion.js';
+import { Issue } from '../../entities/Issue.js';
+import { PullRequest } from '../../entities/PullRequest.js';
+import { Release } from '../../entities/Release.js';
+import { Repository } from '../../entities/Repository.js';
+import { Stargazer } from '../../entities/Stargazer.js';
+import { Tag } from '../../entities/Tag.js';
+import { Watcher } from '../../entities/Watcher.js';
+import { Iterable, Service, ServiceCommitsParams, ServiceResourceParams } from '../service.js';
 import { GithubClient } from './client.js';
 import { BaseFragmentFactory, FragmentFactory } from './graphql/fragments/Fragment.js';
 import { QueryLookup } from './graphql/lookups/Lookup.js';
@@ -29,7 +24,7 @@ import discussions from './resources/discussions.js';
 import issues from './resources/issues.js';
 import releases from './resources/releases.js';
 import repos from './resources/repos.js';
-import users from './resources/users.js';
+import { default as users } from './resources/users.js';
 
 /**
  * A service that interacts with the Github API.

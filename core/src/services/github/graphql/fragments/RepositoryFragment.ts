@@ -1,6 +1,5 @@
-import { Repository } from '@octokit/graphql-schema';
-import { z } from 'zod';
-import repository from '../../../../entities/schemas/repository.js';
+import { Repository as GsRepository } from '@octokit/graphql-schema';
+import { Repository, RepositorySchema } from '../../../../entities/Repository.js';
 import { ActorFragment } from './ActorFragment.js';
 import { Fragment, FragmentFactory } from './Fragment.js';
 
@@ -8,19 +7,23 @@ import { Fragment, FragmentFactory } from './Fragment.js';
  *  A fragment to get a repository.
  */
 export class RepositoryFragment implements Fragment {
-  readonly fragments: Fragment[];
+  readonly fragments: Fragment[] = [];
+
+  private readonly full: boolean;
 
   constructor(
     public alias = 'RepositoryFrag',
-    private opts: { factory: FragmentFactory; full?: boolean }
+    opts: { factory: FragmentFactory; full?: boolean }
   ) {
-    this.fragments = [this.opts.factory.create(ActorFragment)];
+    this.fragments = [opts.factory.create(ActorFragment)];
+    this.full = opts.full || false;
   }
 
   toString(): string {
-    return this.opts.full
+    return this.full
       ? `
     fragment ${this.alias} on Repository {
+      __typename
       allowUpdateBranch
       archivedAt
       assignableUsers { totalCount }
@@ -97,6 +100,7 @@ export class RepositoryFragment implements Fragment {
       webCommitSignoffRequired
     }`
       : `fragment ${this.alias} on Repository {
+      __typename
       databaseId
       description
       id
@@ -109,8 +113,9 @@ export class RepositoryFragment implements Fragment {
     }`;
   }
 
-  parse(data: Repository): z.infer<typeof repository> {
-    return repository.parse({
+  parse(data: GsRepository): Repository {
+    return RepositorySchema.parse({
+      __typename: data.__typename,
       id: data.id,
       database_id: data.databaseId!,
       description: data.description!,

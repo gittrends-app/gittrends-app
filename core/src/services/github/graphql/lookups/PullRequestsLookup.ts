@@ -1,13 +1,12 @@
 import { PullRequestConnection } from '@octokit/graphql-schema';
-import { z } from 'zod';
-import pullRequest from '../../../../entities/schemas/pull_request.js';
+import { PullRequest } from '../../../../entities/PullRequest.js';
 import { PullRequestFragment } from '../fragments/PullRequestFragment.js';
 import { QueryLookup } from './Lookup.js';
 
 /**
  *  A lookup to get repository prs.
  */
-export class PullRequestsLookup extends QueryLookup<z.infer<typeof pullRequest>[]> {
+export class PullRequestsLookup extends QueryLookup<PullRequest[]> {
   toString(): string {
     const params = [`first: ${this.params.first || 100}`, 'orderBy: { field: UPDATED_AT direction: ASC }'];
     if (this.params.cursor) params.push(`after: "${this.params.cursor}"`);

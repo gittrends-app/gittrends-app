@@ -1,6 +1,5 @@
-import { PullRequest } from '@octokit/graphql-schema';
-import { z } from 'zod';
-import pullRequest from '../../../../entities/schemas/pull_request.js';
+import { PullRequest as GsPullRequest } from '@octokit/graphql-schema';
+import { PullRequest, PullRequestSchema } from '../../../../entities/PullRequest.js';
 import { ActorFragment } from './ActorFragment.js';
 import { Fragment, FragmentFactory } from './Fragment.js';
 
@@ -21,6 +20,7 @@ export class PullRequestFragment implements Fragment {
   toString(): string {
     return `
       fragment ${this.alias} on PullRequest {
+        __typename
         activeLockReason
         assignees(first: 100) { nodes { ...${this.fragments[0].alias} } }
         author { ...${this.fragments[0].alias} }
@@ -49,8 +49,7 @@ export class PullRequestFragment implements Fragment {
         timelineItems { totalCount }
         title
         updatedAt
-        __typename
-
+        
         additions
         autoMergeRequest {
           authorEmail
@@ -89,8 +88,8 @@ export class PullRequestFragment implements Fragment {
     `;
   }
 
-  parse(data: PullRequest): z.infer<typeof pullRequest> {
-    return pullRequest.parse({
+  parse(data: GsPullRequest): PullRequest {
+    return PullRequestSchema.parse({
       active_lock_reason: data.activeLockReason,
       assignees: data.assignees?.nodes?.map((node) => this.fragments[0].parse(node)),
       author: data.author && this.fragments[0].parse(data.author),

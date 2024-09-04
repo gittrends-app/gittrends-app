@@ -1,6 +1,5 @@
 import { CommitHistoryConnection } from '@octokit/graphql-schema';
-import { z } from 'zod';
-import commit from '../../../../entities/schemas/commit.js';
+import { Commit } from '../../../../entities/Commit.js';
 import { CommitFragment } from '../fragments/CommitFragment.js';
 import { QueryLookup } from './Lookup.js';
 
@@ -14,7 +13,7 @@ function add(date: Date, seconds: number): Date {
 /**
  *  A lookup to get repository commits.
  */
-export class CommitsLookup extends QueryLookup<z.infer<typeof commit>[], { since?: Date; until?: Date }> {
+export class CommitsLookup extends QueryLookup<Commit[], { since?: Date; until?: Date }> {
   toString(): string {
     const params = [`first: ${this.params.first || 100}`];
     if (this.params.cursor) params.push(`after: "${this.params.cursor}"`);
@@ -47,7 +46,7 @@ export class CommitsLookup extends QueryLookup<z.infer<typeof commit>[], { since
     if (!_data) throw Object.assign(new Error('Failed to parse tags.'), { data, query: this.toString() });
 
     const parsedData: ReturnType<CommitFragment['parse']>[] = (_data.nodes || []).map((data) =>
-      this.fragments[0].parse(data)
+      this.fragments[0].parse(data!)
     );
 
     return {
@@ -67,7 +66,7 @@ export class CommitsLookup extends QueryLookup<z.infer<typeof commit>[], { since
     };
   }
 
-  get fragments() {
+  get fragments(): [CommitFragment] {
     return [this.params.factory.create(CommitFragment)];
   }
 }

@@ -1,6 +1,6 @@
 /* eslint-disable jsdoc/require-jsdoc */
 import { z } from 'zod';
-import actor from '../../../entities/schemas/actor.js';
+import actor from '../../../entities/Actor.js';
 import { GithubClient } from '../client.js';
 import { FragmentFactory } from '../graphql/fragments/Fragment.js';
 import { UserLookup } from '../graphql/lookups/UserLookup.js';

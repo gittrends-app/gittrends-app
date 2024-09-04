@@ -1,14 +1,14 @@
 import { z } from 'zod';
-import { zodSanitize } from '../../helpers/sanitize.js';
+import { zodSanitize } from '../helpers/sanitize.js';
+import { NodeSchema } from './base/Node.js';
 
-const actor = z.object({
-  id: z.string(),
+const Actor = NodeSchema.extend({
   login: z.string(),
   avatar_url: z.string(),
-  type: z.enum(['User', 'Organization', 'Bot', 'Mannequin', 'EnterpriseUserAccount'])
+  __typename: z.enum(['User', 'Organization', 'Bot', 'Mannequin', 'EnterpriseUserAccount'])
 });
 
-const bot = actor.merge(z.object({ type: z.literal('Bot') })).merge(
+const Bot = Actor.extend({ __typename: z.literal('Bot') }).merge(
   z
     .object({
       created_at: z.coerce.date(),
@@ -18,7 +18,7 @@ const bot = actor.merge(z.object({ type: z.literal('Bot') })).merge(
     .partial()
 );
 
-const user = actor.merge(z.object({ type: z.literal('User') })).merge(
+const User = Actor.extend({ __typename: z.literal('User') }).merge(
   z
     .object({
       bio: z.string().optional(),
@@ -63,11 +63,10 @@ const user = actor.merge(z.object({ type: z.literal('User') })).merge(
     .partial()
 );
 
-const mannequin = actor.merge(z.object({ type: z.literal('Mannequin') })).merge(
+const Mannequin = Actor.extend({ __typename: z.literal('Mannequin') }).merge(
   z
     .object({
-      type: z.literal('Mannequin'),
-      claimant: z.union([z.string(), user]),
+      claimant: z.union([z.string(), User]),
       created_at: z.coerce.date(),
       database_id: z.number().int().optional(),
       email: z.string().optional(),
@@ -76,17 +75,17 @@ const mannequin = actor.merge(z.object({ type: z.literal('Mannequin') })).merge(
     .partial()
 );
 
-const enterprise = actor.merge(z.object({ type: z.literal('EnterpriseUserAccount') })).merge(
+const Enterprise = Actor.extend({ __typename: z.literal('EnterpriseUserAccount') }).merge(
   z
     .object({
       name: z.string(),
       updated_at: z.coerce.date(),
-      user: z.union([z.string(), user])
+      user: z.union([z.string(), User])
     })
     .partial()
 );
 
-const organization = actor.merge(z.object({ type: z.literal('Organization') })).merge(
+const organization = Actor.extend({ __typename: z.literal('Organization') }).merge(
   z
     .object({
       archived_at: z.coerce.date().optional(),
@@ -114,4 +113,13 @@ const organization = actor.merge(z.object({ type: z.literal('Organization') })).
     .partial()
 );
 
-export default zodSanitize(z.discriminatedUnion('type', [user, bot, mannequin, enterprise, organization]));
+export const ActorSchema = zodSanitize(
+  z.discriminatedUnion('__typename', [User, Bot, Mannequin, Enterprise, organization])
+);
+
+export type Actor = z.output<typeof ActorSchema>;
+export type Bot = z.output<typeof Bot>;
+export type User = z.output<typeof User>;
+export type Mannequin = z.output<typeof Mannequin>;
+export type EnterpriseUserAccount = z.output<typeof Enterprise>;
+export type Organization = z.output<typeof organization>;

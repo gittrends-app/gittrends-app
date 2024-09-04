@@ -1,6 +1,5 @@
-import { Tag } from '@octokit/graphql-schema';
-import { z } from 'zod';
-import tag from '../../../../entities/schemas/tag.js';
+import { Tag as GsTag } from '@octokit/graphql-schema';
+import { Tag, TagSchema } from '../../../../entities/Tag.js';
 import { ActorFragment } from './ActorFragment.js';
 import { CommitFragment } from './CommitFragment.js';
 import { Fragment, FragmentFactory } from './Fragment.js';
@@ -22,6 +21,7 @@ export class TagFragment implements Fragment {
   toString(): string {
     return `
       fragment ${this.alias} on Tag {
+        __typename
         id
         message
         name
@@ -38,8 +38,9 @@ export class TagFragment implements Fragment {
     `;
   }
 
-  parse(data: Tag): z.infer<typeof tag> {
-    return tag.parse({
+  parse(data: GsTag): Tag {
+    return TagSchema.parse({
+      __typename: data.__typename,
       id: data.id,
       message: data.message,
       name: data.name,

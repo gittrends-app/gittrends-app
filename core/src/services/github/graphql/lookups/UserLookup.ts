@@ -1,12 +1,11 @@
-import { z } from 'zod';
-import actor from '../../../../entities/schemas/actor.js';
+import { Actor } from '../../../../entities/Actor.js';
 import { ActorFragment } from '../fragments/ActorFragment.js';
 import { QueryLookup } from './Lookup.js';
 
 /**
  *  A lookup to get a user by ID.
  */
-export class UserLookup extends QueryLookup<z.infer<typeof actor>, { byLogin?: boolean }> {
+export class UserLookup extends QueryLookup<Actor | null, { byLogin?: boolean }> {
   toString(): string {
     return this.params.byLogin
       ? `${this.alias}:repositoryOwner(login: "${this.params.id}") { ...${this.fragments[0].alias} }`
@@ -20,7 +19,7 @@ export class UserLookup extends QueryLookup<z.infer<typeof actor>, { byLogin?: b
     };
   }
 
-  get fragments() {
+  get fragments(): [ActorFragment] {
     return [this.params.factory.create(ActorFragment)];
   }
 }

@@ -1,6 +1,5 @@
-import { Commit } from '@octokit/graphql-schema';
-import { z } from 'zod';
-import commit from '../../../../entities/schemas/commit.js';
+import { Commit as GsCommit } from '@octokit/graphql-schema';
+import { Commit, CommitSchema } from '../../../../entities/Commit.js';
 import { ActorFragment } from './ActorFragment.js';
 import { Fragment, FragmentFactory } from './Fragment.js';
 
@@ -20,6 +19,7 @@ export class CommitFragment implements Fragment {
   toString(): string {
     return `
       fragment ${this.alias} on Commit {
+        __typename
         additions
         author {
           date
@@ -53,8 +53,9 @@ export class CommitFragment implements Fragment {
     `;
   }
 
-  parse(data: Commit): z.infer<typeof commit> {
-    return commit.parse({
+  parse(data: GsCommit): Commit {
+    return CommitSchema.parse({
+      __typename: data.__typename,
       additions: data.additions,
       author: data.author && {
         ...data.author,

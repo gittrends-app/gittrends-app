@@ -1,6 +1,6 @@
 /* eslint-disable jsdoc/require-jsdoc */
 import { z } from 'zod';
-import repository from '../../../entities/schemas/repository.js';
+import repository from '../../../entities/Repository.js';
 import { GithubClient } from '../client.js';
 import { FragmentFactory } from '../graphql/fragments/Fragment.js';
 import { RepositoryLookup } from '../graphql/lookups/RepositoryLookup.js';
