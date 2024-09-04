@@ -11,7 +11,7 @@ import { Tag } from '../../entities/Tag.js';
 import { Watcher } from '../../entities/Watcher.js';
 import { Iterable, Service, ServiceCommitsParams, ServiceResourceParams } from '../service.js';
 import { GithubClient } from './client.js';
-import { BaseFragmentFactory, FragmentFactory } from './graphql/fragments/Fragment.js';
+import { FragmentFactory, PartialFragmentFactory } from './graphql/fragments/Fragment.js';
 import { QueryLookup } from './graphql/lookups/Lookup.js';
 import { SearchLookup } from './graphql/lookups/SearchLookup.js';
 import { StargazersLookup } from './graphql/lookups/StargazersLookup.js';
@@ -31,11 +31,16 @@ import { default as users } from './resources/users.js';
  */
 export class GithubService implements Service {
   private readonly client: GithubClient;
-  private readonly factory: FragmentFactory;
+  private factory: FragmentFactory;
 
   constructor(client: GithubClient, factory?: FragmentFactory) {
     this.client = client;
-    this.factory = factory || new BaseFragmentFactory(false);
+    this.factory = factory || new PartialFragmentFactory();
+  }
+
+  setFragmentFactory(factory: FragmentFactory): GithubService {
+    this.factory = factory;
+    return this;
   }
 
   search(total: number, opts?: { first?: number }): Iterable<Repository> {

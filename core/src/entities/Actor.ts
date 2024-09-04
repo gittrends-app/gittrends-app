@@ -46,11 +46,7 @@ const User = Actor.extend({ __typename: z.literal('User') }).merge(
       following_count: z.number().int(),
       gists_count: z.number().int(),
       issues_count: z.number().int(),
-      lists_count: z.number().int(),
       organizations_count: z.number().int(),
-      packages_count: z.number().int(),
-      pinned_items_count: z.number().int(),
-      projects_count: z.number().int(),
       pull_requests_count: z.number().int(),
       repositories_count: z.number().int(),
       repositories_contributed_to_count: z.number().int(),
@@ -102,13 +98,9 @@ const organization = Actor.extend({ __typename: z.literal('Organization') }).mer
       website_url: z.string().optional(),
 
       members_with_role_count: z.number().int(),
-      packages_count: z.number().int(),
-      pinned_items_count: z.number().int(),
-      projects_count: z.number().int(),
       repositories_count: z.number().int(),
       sponsoring_count: z.number().int(),
-      sponsors_count: z.number().int(),
-      teams_count: z.number().int()
+      sponsors_count: z.number().int()
     })
     .partial()
 );

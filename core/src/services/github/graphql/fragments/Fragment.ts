@@ -17,10 +17,17 @@ export interface FragmentFactory {
 /**
  *  Partial fragment factory
  */
-export class BaseFragmentFactory implements FragmentFactory {
-  constructor(private full = false) {}
-
+export class PartialFragmentFactory implements FragmentFactory {
   create<R>(Ref: Class<Fragment<R>>): Fragment<R> {
-    return new Ref(Ref.name, { factory: this, full: this.full });
+    return new Ref(Ref.name, { factory: this, full: false });
+  }
+}
+
+/**
+ *  Full fragment factory
+ */
+export class FullFragmentFactory implements FragmentFactory {
+  create<R>(Ref: Class<Fragment<R>>): Fragment<R> {
+    return new Ref(Ref.name, { factory: this, full: true });
   }
 }

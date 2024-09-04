@@ -67,10 +67,14 @@ export class MongoStorageFactory implements StorageFactory {
           .bulkWrite(
             arrNode.map((item) =>
               replace
-                ? { insertOne: { document: item } }
-                : { replaceOne: { filter: { _id: item.id as unknown as ObjectId }, replacement: item, upsert: true } }
+                ? { replaceOne: { filter: { _id: item.id as unknown as ObjectId }, replacement: item, upsert: true } }
+                : { insertOne: { document: { _id: item.id as unknown as ObjectId, ...item } } }
             )
-          );
+          )
+          .catch((err) => {
+            if (err.code === 11000) return;
+            throw err;
+          });
       }
     };
   }

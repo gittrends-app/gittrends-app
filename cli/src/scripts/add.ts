@@ -1,5 +1,5 @@
-import { GithubService, Repository, StorageService, User } from '@/core/index.js';
-import { BaseFragmentFactory } from '@/core/services/github/graphql/fragments/Fragment.js';
+import { GithubService, Repository, StorageService } from '@/core/index.js';
+import { FullFragmentFactory, PartialFragmentFactory } from '@/core/services/github/graphql/fragments/Fragment.js';
 import githubClient from '@/helpers/github.js';
 import mongo from '@/mongo/mongo.js';
 import { MongoStorageFactory } from '@/mongo/MongoStorage.js';
@@ -23,10 +23,8 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     .helpOption('-h, --help', 'Display this help message')
     .action(async (names: string[], options: { total: number }) => {
       consola.info('Initializing the storage service...');
-      const service = new StorageService(
-        new GithubService(githubClient, new BaseFragmentFactory(true)),
-        new MongoStorageFactory(mongo.db('public'))
-      );
+      const gService = new GithubService(githubClient, new PartialFragmentFactory());
+      const service = new StorageService(gService, new MongoStorageFactory(mongo.db('_public')));
 
       const progress = new SingleBar({
         format: '{task}: [{bar}] {percentage}% | {duration_formatted} | {value}/{total}',
@@ -47,17 +45,19 @@ if (import.meta.url === `file://${process.argv[1]}`) {
         }
       } else {
         progress.start(options.total, 0, { task: 'searching' });
-        for await (const { data } of service.search(options.total, { first: 5 })) {
+        for await (const { data } of service.search(options.total, { first: 25 })) {
           progress.increment(data.length);
           repos.push(...data);
         }
       }
 
+      gService.setFragmentFactory(new FullFragmentFactory());
+
       await Promise.resolve()
         .then(() => {
           progress.start(repos.length, 0, { task: 'updating' });
           return Promise.all(
-            repos.map((repo) => (repo.owner as User).id).map((id) => service.user(id).then(() => progress.increment(1)))
+            repos.map((repo) => repo.id).map((id) => service.repository(id).then(() => progress.increment(1)))
           );
         })
         .then(() => {

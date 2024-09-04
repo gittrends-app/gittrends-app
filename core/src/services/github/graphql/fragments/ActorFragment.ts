@@ -45,11 +45,7 @@ export class ActorFragment implements Fragment {
       following { totalCount }
       gists { totalCount }
       issues { totalCount }
-      lists { totalCount }
       organizations { totalCount }
-      packages { totalCount }
-      pinnedItems { totalCount }
-      projectsV2 { totalCount }
       pullRequests { totalCount }
       repositories { totalCount }
       repositoriesContributedTo { totalCount }
@@ -103,13 +99,9 @@ export class ActorFragment implements Fragment {
         websiteUrl
         
         membersWithRole { totalCount }
-        packages { totalCount }
-        pinnedItems { totalCount }
-        projectsV2 { totalCount }
         repositories { totalCount }
         sponsoring { totalCount }
         sponsors { totalCount }
-        teams { totalCount }
       }
     }
     `
@@ -175,13 +167,9 @@ export class ActorFragment implements Fragment {
           updated_at: data.updatedAt,
           website_url: data.websiteUrl,
           members_with_role_count: data.membersWithRole?.totalCount,
-          packages_count: data.packages?.totalCount,
-          pinned_items_count: data.pinnedItems?.totalCount,
-          projects_count: data.projectsV2?.totalCount,
           repositories_count: data.repositories?.totalCount,
           sponsoring_count: data.sponsoring?.totalCount,
           sponsors_count: data.sponsors?.totalCount,
-          teams_count: data.teams?.totalCount,
           archived_at: data.archivedAt ? data.archivedAt : undefined
         });
       case 'User':
@@ -198,13 +186,9 @@ export class ActorFragment implements Fragment {
           gists_count: data.gists?.totalCount,
           id: data.id,
           issues_count: data.issues?.totalCount,
-          lists_count: data.lists?.totalCount,
           location: data.location,
           login: data.login,
           name: data.name,
-          packages_count: data.packages?.totalCount,
-          pinned_items_count: data.pinnedItems?.totalCount,
-          projects_count: data.projectsV2?.totalCount,
           pronouns: data.pronouns,
           pull_requests_count: data.pullRequests?.totalCount,
           repositories_count: data.repositories?.totalCount,
