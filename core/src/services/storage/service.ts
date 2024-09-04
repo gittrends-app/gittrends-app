@@ -1,6 +1,5 @@
-import dayjs from 'dayjs';
-import { camelCase } from 'lodash';
-import { singular } from 'pluralize';
+import camelCase from 'lodash/camelCase.js';
+import pluralize from 'pluralize';
 import { Actor } from '../../entities/Actor.js';
 import { RepositoryNode } from '../../entities/base/RepositoryNode.js';
 import { Commit } from '../../entities/Commit.js';
@@ -22,23 +21,14 @@ import { StorageFactory } from './storage.js';
 export class StorageService extends PassThroughService {
   public readonly storage: StorageFactory;
 
-  private readonly expiresIn: number;
-  private readonly resume: boolean;
-
-  constructor(service: Service, storage: StorageFactory, props?: { expiresIn?: number; resume?: boolean }) {
+  constructor(service: Service, storage: StorageFactory) {
     super(service);
     this.storage = storage;
-    this.expiresIn = props?.expiresIn ?? Infinity;
-    this.resume = props?.resume ?? false;
   }
 
-  private isUpdated(date: Date): boolean {
-    return dayjs().diff(date, 'days', true) < this.expiresIn;
-  }
-
-  search(total: number): Iterable<Repository> {
-    const repoStorage = this.storage.nodeStorage<Repository>('Repository');
-    const it = this.service.search(total);
+  search(total: number, opts?: { first?: number }): Iterable<Repository> {
+    const repoStorage = this.storage.nodeStorage('Repository');
+    const it = this.service.search(total, opts);
 
     return {
       [Symbol.asyncIterator]: async function* () {
@@ -55,7 +45,7 @@ export class StorageService extends PassThroughService {
   async user(id: string | string[], opts?: { byLogin: boolean }): Promise<any> {
     const arr = Array.isArray(id) ? id : [id];
 
-    const userStorage = this.storage.nodeStorage<Actor>('Actor');
+    const userStorage = this.storage.nodeStorage('Actor');
 
     const result = await Promise.all(
       arr.map(async (id) => {
@@ -79,7 +69,7 @@ export class StorageService extends PassThroughService {
   }
 
   async repository(ownerOrId: string, name?: string): Promise<Repository | null> {
-    const repoStorage = this.storage.nodeStorage<Repository>('Repository');
+    const repoStorage = this.storage.nodeStorage('Repository');
 
     let repo = await repoStorage.get({ id: name ? `${ownerOrId}/${name}` : ownerOrId });
 
@@ -100,7 +90,7 @@ export class StorageService extends PassThroughService {
   resource(name: 'issues', opts: ServiceResourceParams): Iterable<Issue>;
   resource(name: 'pull_requests', opts: ServiceResourceParams): Iterable<PullRequest>;
   resource(name: string, opts: ServiceResourceParams): Iterable<any> {
-    const resourceName = camelCase(singular(name));
+    const resourceName = camelCase(pluralize.singular(name));
 
     const metadataStorage = this.storage.repoNodeStorage<ServiceResourceParams>('Metadata');
     const resourceStorage = this.storage.repoNodeStorage<RepositoryNode>(resourceName);

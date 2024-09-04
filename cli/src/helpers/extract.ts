@@ -1,69 +1,44 @@
-import { Entity, User } from '@/core/entities/Entity.js';
 import cloneDeep from 'lodash/cloneDeep.js';
 import forIn from 'lodash/forIn.js';
 import isPlainObject from 'lodash/isPlainObject.js';
+import { z, ZodType } from 'zod';
 
 /**
- *  Extracts users from an entity.
+ *  Checks if a value is an instance of a schema.
  */
-export function extract<T = any>(entity: T): { data: T; users?: User[] } {
+function instanceOf<Z extends ZodType>(value: any, schema: Z): value is z.infer<Z> {
+  const result = schema.safeParse(value);
+  return result.success;
+}
+
+/**
+ *  Extracts refs from an entity.
+ */
+export function extract<Z extends ZodType, T = any>(
+  entity: T,
+  schema: Z,
+  replacement: (d: z.infer<Z>) => any
+): { data: T; refs: z.infer<Z>[] } {
   let data: any = cloneDeep(entity);
 
-  const users: User[] = [];
+  const refs: T[] = [];
 
-  if (isPlainObject(entity) || entity instanceof Entity) {
+  if (instanceOf(data, schema)) {
+    refs.push(data);
+    data = replacement(data);
+  } else if (isPlainObject(data)) {
     forIn(entity as object, (value: any, key: string) => {
-      const res = extract(value);
-      users.push(...(res.users || []));
-
+      const res = extract(value, schema, replacement);
+      refs.push(...res.refs);
       data[key] = res.data;
     });
-
-    if (User.validate(data)) {
-      const user = new User(data);
-      users.push(user);
-      data = user._id;
-    }
-  }
-
-  if (Array.isArray(entity)) {
+  } else if (Array.isArray(entity)) {
     data = entity.map((item) => {
-      const res = extract(item);
-      users.push(...(res.users || []));
-
+      const res = extract(item, schema, replacement);
+      refs.push(...res.refs);
       return res.data;
     });
   }
 
-  return {
-    data,
-    users: users.length ? users : undefined
-  };
-}
-
-/**
- *  Extracts users references from an entity (without replacing by its id).
- */
-export function extractRefs<T = any>(entity: T): Omit<WithoutMethods<User>, '_id'>[] {
-  let data: any = entity;
-
-  const users: Omit<WithoutMethods<User>, '_id'>[] = [];
-
-  if (isPlainObject(entity) || entity instanceof Entity) {
-    forIn(entity as object, (value: any) => {
-      users.push(...extractRefs(value));
-    });
-
-    if (User.validate(data)) {
-      users.push(data);
-    }
-  }
-
-  if (Array.isArray(entity)) {
-    data = entity.map((item) => {
-      users.push(...extractRefs(item));
-    });
-  }
-
-  return users;
+  return { data, refs };
 }

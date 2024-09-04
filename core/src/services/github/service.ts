@@ -38,9 +38,9 @@ export class GithubService implements Service {
     this.factory = factory || new BaseFragmentFactory(false);
   }
 
-  search(total: number): Iterable<Repository> {
+  search(total: number, opts?: { first?: number }): Iterable<Repository> {
     const it = QueryRunner.create(this.client).iterator(
-      new SearchLookup({ factory: this.factory, limit: Math.min(total, 100) })
+      new SearchLookup({ factory: this.factory, first: opts?.first, limit: total })
     );
 
     return {

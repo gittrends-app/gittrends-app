@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 const schema = z
   .object({
-    DATABASE_URL: z.string().url().default('postgres://localhost:5432/mining-tool'),
+    DATABASE_URL: z.string().url().default('mongodb://localhost:27017'),
     REDIS_HOST: z.string().ip().default('127.0.0.1'),
     REDIS_PORT: z.coerce.number().default(6379),
     REDIS_QUEUE_DB: z.coerce.number().default(1),

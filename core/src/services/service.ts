@@ -28,7 +28,7 @@ export type ServiceCommitsParams = ServiceResourceParams & { since?: Date; until
  * Service interface to be implemented by all services.
  */
 export interface Service {
-  search(total: number): Iterable<Repository>;
+  search(total: number, opts?: { first?: number }): Iterable<Repository>;
 
   user(id: string, opts?: { byLogin: boolean }): Promise<Actor | null>;
   user(id: string[], opts?: { byLogin: boolean }): Promise<(Actor | null)[]>;

@@ -1,168 +1,63 @@
-/* eslint-disable require-jsdoc */
-/* eslint-disable @typescript-eslint/no-unsafe-declaration-merging */
+import { ActorSchema, Organization, User } from '@/core/entities/index.js';
 import { describe, expect, it } from '@jest/globals';
-
-import { Entity } from '@/core/entities/Entity.js';
-import { z } from 'zod';
-import { extract, extractRefs } from './extract.js';
+import { extract } from './extract.js';
 
 describe('extract', () => {
-  describe('users', () => {
-    const user = {
-      login: 'danielbruns',
-      id: 1478925,
-      node_id: 'MDQ6VXNlcjE0Nzg5MjU=',
-      type: 'User',
-      site_admin: false
-    };
+  const user: User = {
+    __typename: 'User',
+    id: '1',
+    name: 'John Doe',
+    avatar_url: 'https://example.com/avatar.jpg',
+    login: 'johndoe'
+  };
 
-    it('should extract data and users from objects', () => {
-      expect(
-        extract({
-          starred_at: '2014-06-10T17:13:03Z',
-          user: user
-        })
-      ).toEqual({
-        data: { starred_at: '2014-06-10T17:13:03Z', user: user.node_id },
-        users: [expect.objectContaining(user)]
-      });
-    });
+  const org: Organization = {
+    __typename: 'Organization',
+    id: '1',
+    name: 'ACME',
+    avatar_url: 'https://example.com/acme.jpg',
+    login: 'acme'
+  };
 
-    it('should extract data and users from root objects', () => {
-      expect(extract(user)).toEqual({
-        data: user.node_id,
-        users: [expect.objectContaining(user)]
-      });
+  it('should extract refs from if root', () => {
+    const { data, refs } = extract(user, ActorSchema, (d) => d.id);
 
-      expect(extract([user])).toEqual({
-        data: [user.node_id],
-        users: [expect.objectContaining(user)]
-      });
-    });
-
-    it('should extract data and users from entities', () => {
-      const schema = z.object({
-        user: z.union([
-          z.object({
-            login: z.string(),
-            id: z.number().int(),
-            node_id: z.string(),
-            type: z.string(),
-            site_admin: z.boolean()
-          }),
-          z.string()
-        ])
-      });
-      interface EntityImpl extends z.infer<typeof schema> {}
-      class EntityImpl extends Entity {
-        protected static override _schema = schema;
-        get _id(): string {
-          return 'any';
-        }
-      }
-
-      expect(extract(new EntityImpl({ user: user }))).toEqual({
-        data: expect.objectContaining({ user: user.node_id }),
-        users: [expect.objectContaining(user)]
-      });
-    });
-
-    it('should extract data and users from deep objects', () => {
-      expect(
-        extract({
-          starred_at: '2014-06-10T17:13:03Z',
-          key: { user: user }
-        })
-      ).toEqual({
-        data: { starred_at: '2014-06-10T17:13:03Z', key: { user: user.node_id } },
-        users: [expect.objectContaining(user)]
-      });
-    });
-
-    it('should extract data and users from arrays', () => {
-      expect(
-        extract({
-          starred_at: '2014-06-10T17:13:03Z',
-          key: [user]
-        })
-      ).toEqual({
-        data: { starred_at: '2014-06-10T17:13:03Z', key: [user.node_id] },
-        users: [expect.objectContaining(user)]
-      });
-    });
-
-    it('should extract data and users from arrays with multiple instances', () => {
-      expect(
-        extract({
-          starred_at: '2014-06-10T17:13:03Z',
-          key: [user, user, 2]
-        })
-      ).toEqual({
-        data: { starred_at: '2014-06-10T17:13:03Z', key: [user.node_id, user.node_id, 2] },
-        users: [expect.objectContaining(user), expect.objectContaining(user)]
-      });
-    });
-
-    it('should extract data and users from objects inside arrays', () => {
-      expect(
-        extract({
-          starred_at: '2014-06-10T17:13:03Z',
-          key: [{ user: user }]
-        })
-      ).toEqual({
-        data: { starred_at: '2014-06-10T17:13:03Z', key: [{ user: user.node_id }] },
-        users: [expect.objectContaining(user)]
-      });
-    });
-
-    it('should extract data and users from arrays', () => {
-      expect(
-        extract([
-          {
-            starred_at: '2014-06-10T17:13:03Z',
-            user: user
-          }
-        ])
-      ).toEqual({
-        data: [{ starred_at: '2014-06-10T17:13:03Z', user: user.node_id }],
-        users: [expect.objectContaining(user)]
-      });
-    });
+    expect(data).toEqual(user.id);
+    expect(refs).toEqual([user]);
   });
 
-  describe('refs', () => {
-    const user = {
-      login: 'danielbruns',
-      id: 1478925,
-      node_id: 'MDQ6VXNlcjE0Nzg5MjU=',
-      type: 'User',
-      site_admin: false
-    };
+  it('should extract refs from if on object property', () => {
+    const { data, refs } = extract({ user }, ActorSchema, (d) => d.id);
 
-    it('should extract users refs from objects', () => {
-      const copy = { ...user };
+    expect(data).toEqual({ user: user.id });
+    expect(refs).toEqual([user]);
+  });
 
-      const refs = extractRefs({
-        starred_at: '2014-06-10T17:13:03Z',
-        user: copy
-      });
+  it('should extract refs from if on array', () => {
+    const { data, refs } = extract([user], ActorSchema, (d) => d.id);
 
-      expect(refs).toEqual([copy]);
-      expect(Object.assign(refs[0], { id: 0 })).toBe(copy);
-    });
+    expect(data).toEqual([user.id]);
+    expect(refs).toEqual([user]);
+  });
 
-    it('should not modify the original data', () => {
-      const data = {
-        starred_at: '2014-06-10T17:13:03Z',
-        user: user
-      };
+  it('should extract refs from if on array inside a object property', () => {
+    const { data, refs } = extract({ arr: [user] }, ActorSchema, (d) => d.id);
 
-      extractRefs(data);
+    expect(data).toEqual({ arr: [user.id] });
+    expect(refs).toEqual([user]);
+  });
 
-      expect(data).toEqual({
-        starred_at: '2014-06-10T17:13:03Z',
-        user: user
-      });
-    });
+  it('should extract refs from if on object property inside an array', () => {
+    const { data, refs } = extract([{ user }], ActorSchema, (d) => d.id);
+
+    expect(data).toEqual([{ user: user.id }]);
+    expect(refs).toEqual([user]);
+  });
+
+  it('should extract multiple refs', () => {
+    const { data, refs } = extract([user, org], ActorSchema, (d) => d.id);
+
+    expect(data).toEqual([user.id, org.id]);
+    expect(refs).toEqual([user, org]);
   });
 });
