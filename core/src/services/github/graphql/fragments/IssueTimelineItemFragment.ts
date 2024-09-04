@@ -7,7 +7,7 @@ import { Fragment, FragmentFactory } from './Fragment.js';
 /**
  *  A fragment to get a timeline item.
  */
-export class IssueTimelineItemFragment implements Fragment {
+class TimelineItemFragment implements Fragment {
   readonly fragments: Fragment[] = [];
 
   private readonly pullRequest: boolean;
@@ -1102,5 +1102,29 @@ export class IssueTimelineItemFragment implements Fragment {
     }
 
     return timelineItem.parse(_data);
+  }
+}
+
+/**
+ *
+ */
+export class IssueTimelineItemFragment extends TimelineItemFragment {
+  constructor(
+    public alias = 'IssueTimelineItemFrag',
+    opts: { factory: FragmentFactory }
+  ) {
+    super(alias, { ...opts, pullRequest: false });
+  }
+}
+
+/**
+ *
+ */
+export class PullRequestTimelineItemFragment extends TimelineItemFragment {
+  constructor(
+    public alias = 'PullTimelineItemFrag',
+    opts: { factory: FragmentFactory }
+  ) {
+    super(alias, { ...opts, pullRequest: true });
   }
 }

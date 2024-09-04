@@ -18,7 +18,7 @@ import {
 import { GithubClient } from './client.js';
 import { BaseFragmentFactory, FragmentFactory } from './graphql/fragments/Fragment.js';
 import { QueryLookup } from './graphql/lookups/Lookup.js';
-import { PullRequestsLookup } from './graphql/lookups/PullRequests.js';
+import { PullRequestsLookup } from './graphql/lookups/PullRequestsLookup.js';
 import { SearchLookup } from './graphql/lookups/SearchLookup.js';
 import { StargazersLookup } from './graphql/lookups/StargazersLookup.js';
 import { TagsLookup } from './graphql/lookups/TagsLookup.js';

@@ -1,20 +1,23 @@
 import { IssueTimelineItemsConnection } from '@octokit/graphql-schema';
 import { z } from 'zod';
 import timelineItem from '../../../../entities/schemas/timeline-item.js';
-import { IssueTimelineItemFragment } from '../fragments/IssueTimelineItemFragment.js';
+import { IssueTimelineItemFragment, PullRequestTimelineItemFragment } from '../fragments/IssueTimelineItemFragment.js';
 import { QueryLookup } from './Lookup.js';
 
 /**
  *  A lookup to get repository issues.
  */
-export class IssuesTimelineItemsLookup extends QueryLookup<z.infer<typeof timelineItem>[]> {
+export class TimelineItemsLookup extends QueryLookup<
+  z.infer<typeof timelineItem>[],
+  { type?: 'Issue' | 'PullRequest' }
+> {
   toString(): string {
     const params = [`first: ${this.params.first || 100}`];
     if (this.params.cursor) params.push(`after: "${this.params.cursor}"`);
 
     return `
     ${this.alias}:node(id: "${this.params.id}") {
-      ... on Issue {
+      ... on ${this.params.type || 'Issue'} {
         timelineItems(${params.join(', ')}) {
           pageInfo { hasNextPage endCursor }
           nodes { ...${this.fragments[0].alias} }
@@ -26,10 +29,10 @@ export class IssuesTimelineItemsLookup extends QueryLookup<z.infer<typeof timeli
 
   parse(data: any) {
     const _data: IssueTimelineItemsConnection = (data[this.alias] || data).timelineItems;
-    if (!_data) throw Object.assign(new Error('Failed to parse tags.'), { data, query: this.toString() });
+    if (!_data) throw Object.assign(new Error('Failed to parse timeline items.'), { data, query: this.toString() });
     return {
       next: _data.pageInfo.hasNextPage
-        ? new IssuesTimelineItemsLookup({
+        ? new TimelineItemsLookup({
             ...this.params,
             cursor: _data.pageInfo.endCursor || this.params.cursor
           })
@@ -39,7 +42,11 @@ export class IssuesTimelineItemsLookup extends QueryLookup<z.infer<typeof timeli
     };
   }
 
-  get fragments(): [IssueTimelineItemFragment] {
-    return [this.params.factory.create(IssueTimelineItemFragment)];
+  get fragments() {
+    return [
+      this.params.factory.create(
+        this.params.type === 'PullRequest' ? PullRequestTimelineItemFragment : IssueTimelineItemFragment
+      )
+    ];
   }
 }

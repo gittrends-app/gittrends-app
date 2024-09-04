@@ -2,8 +2,8 @@ import { Issue, Iterable, ServiceResourceParams } from '../../service.js';
 import { GithubClient } from '../client.js';
 import { FragmentFactory } from '../graphql/fragments/Fragment.js';
 import { IssuesLookup } from '../graphql/lookups/IssuesLookup.js';
-import { IssuesTimelineItemsLookup } from '../graphql/lookups/IssuesTimelineItemsLookup.js';
 import { ReactionsLookup } from '../graphql/lookups/ReactionsLookup.js';
+import { TimelineItemsLookup } from '../graphql/lookups/TimelineItemsLookup.js';
 import { QueryRunner } from '../graphql/QueryRunner.js';
 
 /**
@@ -30,7 +30,7 @@ export default function (
 
             if (issue.timeline_items_count) {
               issue.timeline_items = await QueryRunner.create(client)
-                .fetchAll(new IssuesTimelineItemsLookup({ ...opts, id: issue.id }))
+                .fetchAll(new TimelineItemsLookup({ ...opts, id: issue.id }))
                 .then(({ data }) => data);
 
               await Promise.all(
