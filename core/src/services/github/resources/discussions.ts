@@ -51,7 +51,7 @@ export default function (
 ): Iterable<Discussion> {
   return {
     [Symbol.asyncIterator]: async function* () {
-      const { repo, ...rest } = opts;
+      const { repository: repo, ...rest } = opts;
 
       for await (const searchRes of QueryRunner.create(client).iterator(new DiscussionsLookup({ id: repo, ...rest }))) {
         const data: Discussion[] = searchRes.data;

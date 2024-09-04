@@ -21,7 +21,7 @@ export default function commits(
 
       if (until || !since) {
         const untilIt = QueryRunner.create(client).iterator(
-          new CommitsLookup({ ...options, id: options.repo, since: undefined, until })
+          new CommitsLookup({ ...options, id: options.repository, since: undefined, until })
         );
 
         for await (const response of untilIt) {
@@ -39,7 +39,7 @@ export default function commits(
 
       if (since) {
         const sinceIt = QueryRunner.create(client).iterator(
-          new CommitsLookup({ ...options, id: options.repo, since, until: undefined })
+          new CommitsLookup({ ...options, id: options.repository, since, until: undefined })
         );
 
         for await (const response of sinceIt) {

@@ -74,7 +74,7 @@ export class GithubService implements Service {
   resource(name: 'issues', opts: ServiceCommitsParams): Iterable<Issue>;
   resource(name: 'pull_requests', opts: ServiceCommitsParams): Iterable<PullRequest>;
   resource<P extends ServiceResourceParams>(name: string, opts: P): Iterable<any> {
-    const params = { id: opts.repo, cursor: opts.cursor, first: opts.first };
+    const params = { id: opts.repository, cursor: opts.cursor, first: opts.first };
 
     switch (name) {
       case 'discussions':

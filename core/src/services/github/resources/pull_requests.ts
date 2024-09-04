@@ -15,7 +15,7 @@ export default function (
   client: GithubClient,
   options: ServiceResourceParams & { factory: FragmentFactory }
 ): Iterable<PullRequest> {
-  const { repo, ...opts } = options;
+  const { repository: repo, ...opts } = options;
 
   return {
     [Symbol.asyncIterator]: async function* () {

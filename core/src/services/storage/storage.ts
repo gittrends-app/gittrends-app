@@ -1,19 +1,29 @@
-import { Class } from 'type-fest';
-import { Entity } from '../../entities/Entity.js';
+import { Node } from '../../entities/base/Node.js';
+import { RepositoryNode } from '../../entities/base/RepositoryNode.js';
 
 /**
- * Interface to be implemented by each Entity.
+ * Storage interface for a single entity.
  */
-export interface EntityStorage<T extends Entity> {
-  get: (query: Partial<WithoutMethods<T>>) => Promise<T | null>;
-  find: (query: Partial<WithoutMethods<T>>, opts?: { limit: number; offset?: number }) => Promise<T[]>;
+export interface NodeStorage<T extends Node> {
+  get: (query: Partial<T>) => Promise<T | null>;
+  find: (query: Partial<T>, opts?: { limit: number; offset?: number }) => Promise<T[]>;
   save: (data: T | T[], replace?: boolean) => Promise<void>;
-  count: (query: Partial<WithoutMethods<T>>) => Promise<number>;
+  count: (query: Partial<T>) => Promise<number>;
 }
 
 /**
- * A storage for entities.
+ * Storage interface for a single entity.
  */
-export interface Storage {
-  create<T extends Entity>(Entity: Class<T>): EntityStorage<T>;
+export interface RepositoryNodeStorage<T extends RepositoryNode> {
+  find: (query: Partial<T>, opts?: { limit: number; offset?: number }) => Promise<T[]>;
+  save: (data: T | T[], replace?: boolean) => Promise<void>;
+  count: (query: Partial<T>) => Promise<number>;
+}
+
+/**
+ * Factory to create storage instances for each Entity.
+ */
+export interface StorageFactory {
+  nodeStorage<T extends Node>(typename: string): NodeStorage<T>;
+  repoNodeStorage<T extends RepositoryNode>(type: string): RepositoryNodeStorage<T>;
 }

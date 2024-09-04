@@ -1,4 +1,5 @@
 import { Actor } from '../entities/Actor.js';
+import { RepositoryNode } from '../entities/base/RepositoryNode.js';
 import { Commit } from '../entities/Commit.js';
 import { Discussion } from '../entities/Discussion.js';
 import { Issue } from '../entities/Issue.js';
@@ -20,12 +21,7 @@ export type Iterable<T = any, P extends object = object> = AsyncIterable<{
   params: { has_more: boolean } & PageableParams & P;
 }>;
 
-export type ServiceResourceParams = {
-  repo: string;
-  cursor?: string;
-  first?: number;
-};
-
+export type ServiceResourceParams = RepositoryNode & PageableParams;
 export type ServiceCommitsParams = ServiceResourceParams & { since?: Date; until?: Date };
 
 /**
@@ -45,6 +41,6 @@ export interface Service {
   resource(name: 'tags', opts: ServiceResourceParams): Iterable<Tag>;
   resource(name: 'releases', opts: ServiceResourceParams): Iterable<Release>;
   resource(name: 'commits', opts: ServiceCommitsParams): Iterable<Commit>;
-  resource(name: 'issues', opts: ServiceCommitsParams): Iterable<Issue>;
-  resource(name: 'pull_requests', opts: ServiceCommitsParams): Iterable<PullRequest>;
+  resource(name: 'issues', opts: ServiceResourceParams): Iterable<Issue>;
+  resource(name: 'pull_requests', opts: ServiceResourceParams): Iterable<PullRequest>;
 }
