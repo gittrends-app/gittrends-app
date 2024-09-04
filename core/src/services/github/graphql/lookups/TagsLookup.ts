@@ -45,7 +45,10 @@ export class TagsLookup extends QueryLookup<Tag[]> {
         : undefined,
       data: (_data.nodes || []).map((data) => {
         const isTag = data!.target?.__typename === 'Tag';
-        return this.fragments[0].parse(isTag ? data!.target : (data as any));
+        return this.fragments[0].parse({
+          ...(isTag ? data!.target : (data as any)),
+          __typename: 'Tag'
+        });
       }),
       params: { ...this.params, cursor: _data.pageInfo.endCursor || this.params.cursor }
     };
