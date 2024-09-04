@@ -627,7 +627,7 @@ export class IssueTimelineItemFragment implements Fragment {
           actor: data.actor && this.fragments[0].parse(data.actor),
           created_at: data.createdAt,
           is_cross_repository: data.isCrossRepository,
-          source: data.source && { id: data.source.id, __typename: data.source.__typename }
+          source: data.source
         };
         break;
       case 'ConvertedToDiscussionEvent':
@@ -645,7 +645,7 @@ export class IssueTimelineItemFragment implements Fragment {
           created_at: data.createdAt,
           is_cross_repository: data.isCrossRepository,
           referenced_at: data.referencedAt,
-          source: data.source && { id: data.source.id, __typename: data.source.__typename },
+          source: data.source,
           will_close_target: data.willCloseTarget
         };
         break;
@@ -701,7 +701,7 @@ export class IssueTimelineItemFragment implements Fragment {
         _data = {
           ..._data,
           actor: data.actor && this.fragments[0].parse(data.actor),
-          canonical: data.canonical && { id: data.canonical.id, __typename: data.canonical.__typename },
+          canonical: data.canonical,
           created_at: data.createdAt,
           is_cross_repository: data.isCrossRepository
         };
@@ -749,7 +749,7 @@ export class IssueTimelineItemFragment implements Fragment {
           ..._data,
           actor: data.actor && this.fragments[0].parse(data.actor),
           commit: data.commit?.id,
-          repository: data.commitRepository?.id,
+          commit_repository: data.commitRepository?.id,
           created_at: data.createdAt,
           is_cross_repository: data.isCrossRepository,
           is_direct_reference: data.isDirectReference
@@ -844,8 +844,8 @@ export class IssueTimelineItemFragment implements Fragment {
         _data = {
           ..._data,
           actor: data.actor && this.fragments[0].parse(data.actor),
-          created_at: data.createdAt,
-          base_ref_name: data.baseRefName
+          base_ref_name: data.baseRefName,
+          created_at: data.createdAt
         };
         break;
       case 'BaseRefForcePushedEvent':
@@ -926,13 +926,13 @@ export class IssueTimelineItemFragment implements Fragment {
             editor: node!.editor && this.fragments[0].parse(node!.editor),
             includes_created_edit: node!.includesCreatedEdit,
             last_edited_at: node!.lastEditedAt,
-            minimized_reason: node!.minimizedReason,
             published_at: node!.publishedAt,
             updated_at: node!.updatedAt,
             commit: node!.commit?.oid,
             database_id: node!.databaseId,
             id: node!.id,
             is_minimized: node!.isMinimized,
+            minimized_reason: node!.minimizedReason,
             path: node!.path,
             position: node!.position,
             reactions_count: node!.reactions?.totalCount,
@@ -946,6 +946,7 @@ export class IssueTimelineItemFragment implements Fragment {
       case 'PullRequestReview':
         _data = {
           ..._data,
+          author_can_push_to_repository: data.authorCanPushToRepository,
           comments: data.comments?.nodes?.map((node) => ({
             author: node!.author && this.fragments[0].parse(node!.author),
             author_association: node!.authorAssociation,
@@ -962,6 +963,8 @@ export class IssueTimelineItemFragment implements Fragment {
             diff_hunk: node!.diffHunk,
             drafted_at: node!.draftedAt,
             full_database_id: node!.fullDatabaseId,
+            id: node!.id,
+            is_minimized: node!.isMinimized,
             line: node!.line,
             minimized_reason: node!.minimizedReason,
             original_commit: node!.originalCommit?.oid,
@@ -979,6 +982,8 @@ export class IssueTimelineItemFragment implements Fragment {
           })),
           commit: data.commit?.oid,
           full_database_id: data.fullDatabaseId,
+          is_minimized: data.isMinimized,
+          minimized_reason: data.minimizedReason,
           reactions_count: data.reactions?.totalCount,
           state: data.state,
           submitted_at: data.submittedAt,
@@ -1014,6 +1019,8 @@ export class IssueTimelineItemFragment implements Fragment {
             diff_hunk: node!.diffHunk,
             drafted_at: node!.draftedAt,
             full_database_id: node!.fullDatabaseId,
+            id: node!.id,
+            is_minimized: node!.isMinimized,
             line: node!.line,
             minimized_reason: node!.minimizedReason,
             original_commit: node!.originalCommit?.oid,
@@ -1061,6 +1068,7 @@ export class IssueTimelineItemFragment implements Fragment {
         _data = {
           ..._data,
           actor: data.actor && this.fragments[0].parse(data.actor),
+          before_commit: data.beforeCommit?.oid,
           created_at: data.createdAt,
           enqueuer: data.enqueuer && this.fragments[0].parse(data.enqueuer),
           merge_queue: data.mergeQueue?.id,
