@@ -1,8 +1,6 @@
 import { z } from 'zod';
 import { zodSanitize } from '../helpers/sanitize.js';
 import { ActorSchema } from './Actor.js';
-import { CommitSchema } from './Commit.js';
-import { TagSchema } from './Tag.js';
 import { NodeSchema } from './base/Node.js';
 import { ReactableSchema } from './base/Reactable.js';
 import { RepositoryNodeSchema } from './base/RepositoryNode.js';
@@ -19,8 +17,7 @@ export const ReleaseSchema = zodSanitize(
       is_prerelease: z.boolean(),
       name: z.string().optional(),
       published_at: z.coerce.date().optional(),
-      tag: TagSchema.optional(),
-      tag_commit: CommitSchema.optional(),
+      tag_commit: z.string().optional(),
       tag_name: z.string(),
       updated_at: z.coerce.date()
     })

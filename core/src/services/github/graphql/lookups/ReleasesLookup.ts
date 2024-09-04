@@ -1,8 +1,6 @@
-import { Tag as GsTag, ReleaseConnection } from '@octokit/graphql-schema';
+import { ReleaseConnection } from '@octokit/graphql-schema';
 import { Release, ReleaseSchema } from '../../../../entities/Release.js';
 import { ActorFragment } from '../fragments/ActorFragment.js';
-import { CommitFragment } from '../fragments/CommitFragment.js';
-import { TagFragment } from '../fragments/TagFragment.js';
 import { QueryLookup } from './Lookup.js';
 
 /**
@@ -31,17 +29,7 @@ export class ReleasesLookup extends QueryLookup<Release[]> {
             publishedAt
             reactions { totalCount }
             repository { id }
-            tag { 
-              id
-              name
-              repository { id }
-              target {
-                __typename
-                ...${this.fragments[1].alias}
-                ...${this.fragments[2].alias}
-              }
-            }
-            tagCommit { ...${this.fragments[2].alias} }
+            tagCommit { id }
             tagName
             updatedAt
           }
@@ -62,7 +50,6 @@ export class ReleasesLookup extends QueryLookup<Release[]> {
           })
         : undefined,
       data: (_data.nodes || []).map((data) => {
-        const isTag = data!.tag?.target?.__typename === 'Tag';
         return ReleaseSchema.parse({
           __typename: data!.__typename,
           author: data!.author && this.fragments[0].parse(data!.author),
@@ -75,10 +62,7 @@ export class ReleasesLookup extends QueryLookup<Release[]> {
           published_at: data!.publishedAt,
           reactions_count: data!.reactions.totalCount,
           repository: data!.repository.id,
-          tag: isTag
-            ? this.fragments[1].parse(data!.tag?.target as unknown as GsTag)
-            : this.fragments[1].parse(data!.tag as unknown as GsTag),
-          tag_commit: data!.tagCommit && this.fragments[2].parse(data!.tagCommit),
+          tag_commit: data!.tagCommit?.id,
           tag_name: data!.tagName,
           updated_at: data!.updatedAt
         });
@@ -87,11 +71,7 @@ export class ReleasesLookup extends QueryLookup<Release[]> {
     };
   }
 
-  get fragments(): [ActorFragment, TagFragment, CommitFragment] {
-    return [
-      this.params.factory.create(ActorFragment),
-      this.params.factory.create(TagFragment),
-      this.params.factory.create(CommitFragment)
-    ];
+  get fragments(): [ActorFragment] {
+    return [this.params.factory.create(ActorFragment)];
   }
 }

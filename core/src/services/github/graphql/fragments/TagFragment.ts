@@ -1,7 +1,6 @@
 import { Tag as GsTag } from '@octokit/graphql-schema';
 import { Tag, TagSchema } from '../../../../entities/Tag.js';
 import { ActorFragment } from './ActorFragment.js';
-import { CommitFragment } from './CommitFragment.js';
 import { Fragment, FragmentFactory } from './Fragment.js';
 
 /**
@@ -15,7 +14,6 @@ export class TagFragment implements Fragment {
     opts: { factory: FragmentFactory }
   ) {
     this.fragments.push(opts.factory.create(ActorFragment));
-    this.fragments.push(opts.factory.create(CommitFragment));
   }
 
   toString(): string {
@@ -33,7 +31,7 @@ export class TagFragment implements Fragment {
           name
           user { ...${this.fragments[0].alias} }
         }
-        target { ...${this.fragments[1].alias} }
+        target { id }
       }
     `;
   }
@@ -50,7 +48,7 @@ export class TagFragment implements Fragment {
         ...data.tagger,
         user: data.tagger.user && this.fragments[0].parse(data.tagger.user)
       },
-      target: data.target && this.fragments[1].parse(data.target)
+      target: data.target?.id
     });
   }
 }
