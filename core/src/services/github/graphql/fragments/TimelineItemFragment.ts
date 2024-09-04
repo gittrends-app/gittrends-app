@@ -852,8 +852,8 @@ class TimelineItemFragment implements Fragment {
         _data = {
           ..._data,
           actor: data.actor && this.fragments[0].parse(data.actor),
-          after_commit: data.afterCommit?.oid,
-          before_commit: data.beforeCommit?.oid,
+          after_commit: data.afterCommit?.id,
+          before_commit: data.beforeCommit?.id,
           created_at: data.createdAt,
           ref: data.ref?.name
         };
@@ -902,7 +902,7 @@ class TimelineItemFragment implements Fragment {
         _data = {
           ..._data,
           actor: data.actor && this.fragments[0].parse(data.actor),
-          commit: data.commit?.oid,
+          commit: data.commit?.id,
           created_at: data.createdAt,
           merge_ref_name: data.mergeRefName
         };
@@ -910,7 +910,7 @@ class TimelineItemFragment implements Fragment {
       case 'PullRequestCommit':
         _data = {
           ..._data,
-          commit: data.commit?.oid
+          commit: data.commit?.id
         };
         break;
       case 'PullRequestCommitCommentThread':
@@ -927,7 +927,7 @@ class TimelineItemFragment implements Fragment {
             last_edited_at: node!.lastEditedAt,
             published_at: node!.publishedAt,
             updated_at: node!.updatedAt,
-            commit: node!.commit?.oid,
+            commit: node!.commit?.id,
             database_id: node!.databaseId,
             id: node!.id,
             is_minimized: node!.isMinimized,
@@ -937,7 +937,7 @@ class TimelineItemFragment implements Fragment {
             reactions_count: node!.reactions?.totalCount,
             __typename: node!.__typename
           })),
-          commit: data.commit?.oid,
+          commit: data.commit?.id,
           path: data.path,
           position: data.position
         };
@@ -958,7 +958,7 @@ class TimelineItemFragment implements Fragment {
             published_at: node!.publishedAt,
             updated_at: node!.updatedAt,
 
-            commit: node!.commit?.oid,
+            commit: node!.commit?.id,
             diff_hunk: node!.diffHunk,
             drafted_at: node!.draftedAt,
             full_database_id: node!.fullDatabaseId,
@@ -966,7 +966,7 @@ class TimelineItemFragment implements Fragment {
             is_minimized: node!.isMinimized,
             line: node!.line,
             minimized_reason: node!.minimizedReason,
-            original_commit: node!.originalCommit?.oid,
+            original_commit: node!.originalCommit?.id,
             original_line: node!.originalLine,
             original_start_line: node!.originalStartLine,
             outdated: node!.outdated,
@@ -979,7 +979,7 @@ class TimelineItemFragment implements Fragment {
             subject_type: node!.subjectType,
             __typename: node!.__typename
           })),
-          commit: data.commit?.oid,
+          commit: data.commit?.id,
           full_database_id: data.fullDatabaseId,
           is_minimized: data.isMinimized,
           minimized_reason: data.minimizedReason,
@@ -1014,7 +1014,7 @@ class TimelineItemFragment implements Fragment {
             published_at: node!.publishedAt,
             updated_at: node!.updatedAt,
 
-            commit: node!.commit?.oid,
+            commit: node!.commit?.id,
             diff_hunk: node!.diffHunk,
             drafted_at: node!.draftedAt,
             full_database_id: node!.fullDatabaseId,
@@ -1022,7 +1022,7 @@ class TimelineItemFragment implements Fragment {
             is_minimized: node!.isMinimized,
             line: node!.line,
             minimized_reason: node!.minimizedReason,
-            original_commit: node!.originalCommit?.oid,
+            original_commit: node!.originalCommit?.id,
             original_line: node!.originalLine,
             original_start_line: node!.originalStartLine,
             outdated: node!.outdated,
@@ -1053,7 +1053,7 @@ class TimelineItemFragment implements Fragment {
         _data = {
           ..._data,
           created_at: data.createdAt,
-          last_seen_commit: data.lastSeenCommit?.oid
+          last_seen_commit: data.lastSeenCommit?.id
         };
         break;
       case 'ReadyForReviewEvent':
@@ -1067,7 +1067,7 @@ class TimelineItemFragment implements Fragment {
         _data = {
           ..._data,
           actor: data.actor && this.fragments[0].parse(data.actor),
-          before_commit: data.beforeCommit?.oid,
+          before_commit: data.beforeCommit?.id,
           created_at: data.createdAt,
           enqueuer: data.enqueuer && this.fragments[0].parse(data.enqueuer),
           merge_queue: data.mergeQueue?.id,
@@ -1082,7 +1082,7 @@ class TimelineItemFragment implements Fragment {
           database_id: data.databaseId,
           dismissal_message: data.dismissalMessage,
           previous_review_state: data.previousReviewState,
-          pull_request_commit: data.pullRequestCommit?.commit.oid,
+          pull_request_commit: data.pullRequestCommit?.commit.id,
           review: data.review?.id
         };
         break;

@@ -1,4 +1,5 @@
-import { Issue, Iterable, ServiceResourceParams } from '../../service.js';
+import { Issue } from '../../../entities/Issue.js';
+import { Iterable, ServiceResourceParams } from '../../service.js';
 import { GithubClient } from '../client.js';
 import { FragmentFactory } from '../graphql/fragments/Fragment.js';
 import { IssuesLookup } from '../graphql/lookups/IssuesLookup.js';
