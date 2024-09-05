@@ -1,16 +1,13 @@
-import { GithubService, Repository, Service, StorageService, User } from '@/core/index.js';
+import { GithubService, Service, StorageService } from '@/core/index.js';
 import { createCache } from '@/helpers/cache.js';
-import env from '@/helpers/env.js';
 import githubClient from '@/helpers/github.js';
-import { connect } from '@/knex/knex.js';
-import { RelationalStorage } from '@/knex/storage.js';
-import { CacheService } from '@/services/cache.js';
+import mongo from '@/mongo/mongo.js';
+import { MongoStorageFactory } from '@/mongo/MongoStorage.js';
+import { CacheService } from '@/services/CacheService.js';
 import { Worker } from 'bullmq';
 import { MultiBar, Presets } from 'cli-progress';
 import { Option, program } from 'commander';
 import consola from 'consola';
-import snakeCase from 'lodash/snakeCase.js';
-import pluralize from 'pluralize';
 import readline from 'readline';
 import { createQueue, createWorker } from './queue/queues.js';
 import { RepositoryUpdater } from './repository.js';
@@ -68,9 +65,9 @@ if (import.meta.url === `file://${process.argv[1]}`) {
  *
  */
 function reposUpdate(service: Service, concurrency: number, progress: MultiBar): Worker {
-  const queue = createQueue(Repository);
+  const queue = createQueue('repos');
 
-  const queueBar = progress.create(Infinity, 0, { name: 'jobs'.padStart(10), repo: '' });
+  const queueBar = progress.create(Infinity, 0, { name: 'jobs'.padStart(13), repo: '' });
 
   setInterval(async () => {
     const count = await queue
@@ -82,16 +79,23 @@ function reposUpdate(service: Service, concurrency: number, progress: MultiBar):
   }, 5000);
 
   const worker = createWorker(
-    Repository,
+    'repos',
     async (job) => {
-      const knex = await connect(env.DATABASE_URL, { schema: job.data.full_name });
-
       const resources = (job.data.resources || [])
-        .map((r) => RepositoryUpdater.resources.find((res) => res.name === r))
+        .map((r) => RepositoryUpdater.resources.find((res) => res === r))
         .filter((r) => r !== undefined);
 
-      const task = new RepositoryUpdater(job.data.full_name, {
-        service: new StorageService(service, new RelationalStorage(knex), { expiresIn: 3, resume: true }),
+      const storageFactory = new MongoStorageFactory(
+        mongo.db(
+          job.data.name_with_owner
+            .replace('/', '@')
+            .replace(/[^a-zA-Z0-9@_]/g, '_')
+            .toLowerCase()
+        )
+      );
+
+      const task = new RepositoryUpdater(job.data.name_with_owner, {
+        service: new StorageService(service, storageFactory),
         resources,
         parallel: true
       });
@@ -99,7 +103,7 @@ function reposUpdate(service: Service, concurrency: number, progress: MultiBar):
       const taskBar = progress.create(
         Infinity,
         0,
-        { name: ''.padStart(10), repo: job.data.full_name, resValue: 0, resTotal: resources.length },
+        { name: ''.padStart(13), repo: job.data.name_with_owner, resValue: 0, resTotal: resources.length },
         {
           format: `{name} | {bar} | {percentage}% | {resValue}/{resTotal} | {value}/{total} | {repo}`,
           forceRedraw: true
@@ -112,9 +116,9 @@ function reposUpdate(service: Service, concurrency: number, progress: MultiBar):
       const totals: Record<string, number> = {};
 
       const usersUpdateTimeout = setInterval(async () => {
-        return knex(pluralize(snakeCase(User.name)))
-          .count({ count: '*' })
-          .then(([res]) => res.count as number)
+        return storageFactory
+          .create('Actor')
+          .count({})
           .then((total) => taskBar.setTotal(resourcesSum + total));
       }, 10000);
 
@@ -122,22 +126,23 @@ function reposUpdate(service: Service, concurrency: number, progress: MultiBar):
         next: async (notification) => {
           if (!notification.resource) {
             taskBar.setTotal(
-              (resourcesSum = resources
-                .map((r) => pluralize(snakeCase(r.name)))
-                .reduce((acc, res) => acc + ((notification.data._resources_counts as any)[res] || 0), 0))
+              (resourcesSum = resources.reduce(
+                (acc, res) => acc + ((notification.data as any)[`${res}_count`] || 0),
+                0
+              ))
             );
           } else {
             if (!notification.done) {
               if (notification.total) {
-                totals[notification.resource.name] = notification.total || 0;
+                totals[notification.resource] = notification.total || 0;
                 taskBar.update(
                   Object.values(totals).reduce((sum, v) => sum + v, 0),
-                  { name: snakeCase(notification.resource.name).padStart(10) }
+                  { name: notification.resource.padStart(13) }
                 );
               } else {
-                totals[notification.resource.name] = notification.data.length;
+                totals[notification.resource] = notification.data.length;
                 taskBar.increment(notification.data.length, {
-                  name: snakeCase(notification.resource.name).padStart(10)
+                  name: notification.resource.padStart(13)
                 });
               }
               job.updateProgress(taskBar.getProgress() * 100);
@@ -157,7 +162,7 @@ function reposUpdate(service: Service, concurrency: number, progress: MultiBar):
           progress.remove(taskBar);
         })
         .finally(() => clearInterval(usersUpdateTimeout))
-        .finally(() => knex.destroy());
+        .finally(() => mongo.close());
     },
     concurrency
   );

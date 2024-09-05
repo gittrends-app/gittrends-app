@@ -1,4 +1,3 @@
-import { Repository } from '@/core/index.js';
 import { createBullBoard } from '@bull-board/api';
 import { BullMQAdapter } from '@bull-board/api/bullMQAdapter.js';
 import { ExpressAdapter } from '@bull-board/express';
@@ -16,7 +15,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       serverAdapter.setBasePath('/');
 
       createBullBoard({
-        queues: [new BullMQAdapter(createQueue(Repository))],
+        queues: [new BullMQAdapter(createQueue('repos'))],
         serverAdapter: serverAdapter
       });
 

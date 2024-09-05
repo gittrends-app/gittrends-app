@@ -20,12 +20,7 @@
     "prettier": "prettier --write src"
   },
   "dependencies": {
-    "@octokit/core": "^6.1.2",
     "@octokit/graphql": "^8.1.1",
-    "@octokit/graphql-schema": "^15.25.0",
-    "@octokit/plugin-retry": "^7.1.1",
-    "@octokit/plugin-throttling": "^9.3.0",
-    "@octokit/rest": "^21.0.0",
     "@octokit/types": "^13.5.0",
     "consola": "^3.2.3",
     "dayjs": "^1.11.12",
@@ -34,6 +29,7 @@
     "zod-validation-error": "^3.3.0"
   },
   "devDependencies": {
+    "@octokit/graphql-schema": "^15.25.0",
     "@types/lodash": "^4.17.6"
   },
   "config": {

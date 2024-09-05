@@ -1,23 +1,30 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import min from 'lodash/min.js';
-import { Class } from 'type-fest';
-import {
-  Commit,
-  Discussion,
-  Issue,
-  PullRequest,
-  Release,
-  Repository,
-  Stargazer,
-  Tag,
-  User,
-  Watcher
-} from '../../entities/Entity.js';
-import { Iterable, ResourceParams, SearchOptions, Service } from '../service.js';
+import { Actor } from '../../entities/Actor.js';
+import { Commit } from '../../entities/Commit.js';
+import { Discussion } from '../../entities/Discussion.js';
+import { Issue } from '../../entities/Issue.js';
+import { PullRequest } from '../../entities/PullRequest.js';
+import { Release } from '../../entities/Release.js';
+import { Repository } from '../../entities/Repository.js';
+import { Stargazer } from '../../entities/Stargazer.js';
+import { Tag } from '../../entities/Tag.js';
+import { Watcher } from '../../entities/Watcher.js';
+import { Iterable, Service, ServiceCommitsParams, ServiceResourceParams } from '../service.js';
 import { GithubClient } from './client.js';
-import { request } from './requests/index.js';
-import resources from './resources/index.js';
-import summary from './resources/summary.js';
+import { FullFragmentFactory, PartialFragmentFactory } from './graphql/fragments/Fragment.js';
+import { QueryLookup } from './graphql/lookups/Lookup.js';
+import { SearchLookup } from './graphql/lookups/SearchLookup.js';
+import { StargazersLookup } from './graphql/lookups/StargazersLookup.js';
+import { TagsLookup } from './graphql/lookups/TagsLookup.js';
+import { WatchersLookup } from './graphql/lookups/WatchersLookup.js';
+import { QueryRunner } from './graphql/QueryRunner.js';
+import commits from './resources/commits.js';
+import discussions from './resources/discussions.js';
+import issues from './resources/issues.js';
+import pullRequests from './resources/pull_requests.js';
+import releases from './resources/releases.js';
+import repos from './resources/repos.js';
+import { default as users } from './resources/users.js';
 
 /**
  * A service that interacts with the Github API.
@@ -29,125 +36,88 @@ export class GithubService implements Service {
     this.client = client;
   }
 
-  search(
-    total: number,
-    opts?: SearchOptions
-  ): Iterable<Repository, { page: number; per_page: number } & SearchOptions> {
-    const { language } = opts || {};
-
-    let page = 1;
-    let count = 0;
-
-    let maxStargazers = Math.max(opts?.maxStargazers || Infinity, 1);
-    let maxStargazersRepos: Repository[] = [];
-
-    const minStargazers = Math.max(opts?.minStargazers || 1, 1);
-
-    const { rest } = this.client;
+  search(total: number, opts?: { first?: number }): Iterable<Repository> {
+    const it = QueryRunner.create(this.client).iterator(
+      new SearchLookup({ factory: new PartialFragmentFactory(), first: opts?.first, limit: total })
+    );
 
     return {
       [Symbol.asyncIterator]: async function* () {
-        do {
-          let query = `stars:${minStargazers}..${maxStargazers === Infinity ? '*' : maxStargazers}`;
-          if (language) query += ` language:${language}`;
-
-          const it = rest.paginate.iterator(rest.search.repos, {
-            q: query,
-            sort: 'stars',
-            order: 'desc',
-            per_page: 100,
-            page: 1
-          });
-
-          for await (const response of it) {
-            const _repos = response.data
-              .map((data) => new Repository(data))
-              .filter((repo) => maxStargazersRepos.every((r) => r._id !== repo._id))
-              .slice(0, total - count);
-
-            count += _repos.length;
-            maxStargazers = min(_repos.map((repo) => repo.stargazers_count)) || Infinity;
-            maxStargazersRepos = _repos.filter((repo) => repo.stargazers_count === maxStargazers);
-
-            yield {
-              data: _repos,
-              params: {
-                has_more: _repos.length === 100,
-                page: page++,
-                per_page: 100,
-                minStargazers,
-                maxStargazers
-              }
-            };
-
-            if (count >= total) return;
-          }
-        } while (true);
+        for await (const searchRes of it) {
+          yield {
+            data: searchRes.data,
+            params: { has_more: !!searchRes.next, ...searchRes.params }
+          };
+        }
       }
     };
   }
 
-  async user(loginOrId: string | number): Promise<User | null>;
-  async user(loginOrId: string[] | number[]): Promise<(User | null)[]>;
-  async user(id: any): Promise<any> {
-    const arr = Array.isArray(id) ? id : [id];
-
-    const res = arr.map(async (loginOrId) => {
-      const [url, args] =
-        typeof loginOrId === 'number'
-          ? [`GET /user/:id` as const, { id: loginOrId }]
-          : [`GET /users/:login` as const, { login: loginOrId }];
-
-      return request({ client: this.client, url, Entity: User }, args as any)
-        .then((user) => user || null)
-        .catch((error) => (error.status === 404 ? null : Promise.reject(error)));
-    });
-
-    return Array.isArray(id) ? res : res[0];
+  async user(id: string, opts?: { byLogin: boolean }): Promise<Actor | null>;
+  async user(id: string[], opts?: { byLogin: boolean }): Promise<(Actor | null)[]>;
+  async user(id: any, opts?: { byLogin: boolean }): Promise<any> {
+    return users(id, { client: this.client, byLogin: opts?.byLogin, factory: new FullFragmentFactory() });
   }
 
-  async repository(ownerOrId: string | number, name?: string): Promise<Repository | null> {
-    const [url, args] =
-      typeof ownerOrId === 'number'
-        ? ['GET /repositories/:repo' as const, { repo: ownerOrId }]
-        : ['GET /repos/:owner/:name' as const, { owner: ownerOrId, name: name }];
-
-    return request({ client: this.client, url, Entity: Repository }, args as any).then(async (repo) => {
-      if (!repo) return null;
-      const res = await summary(this.client, { repo });
-      return res ? new Repository(repo, { counts: res }) : repo;
+  async repository(owner: string, name?: string): Promise<Repository | null> {
+    return repos(name ? `${owner}/${name}` : owner, {
+      client: this.client,
+      byName: !!name,
+      factory: new FullFragmentFactory()
     });
   }
 
-  resource(Entity: Class<Tag>, opts: ResourceParams): Iterable<Tag>;
-  resource(Entity: Class<Release>, opts: ResourceParams): Iterable<Release>;
-  resource(Entity: Class<Stargazer>, opts: ResourceParams): Iterable<Stargazer>;
-  resource(Entity: Class<Watcher>, opts: ResourceParams): Iterable<Watcher>;
-  resource(Entity: Class<Issue>, opts: ResourceParams & { since?: Date }): Iterable<Issue, { since?: Date }>;
-  resource(
-    Entity: Class<Commit>,
-    opts: ResourceParams & { since?: Date; until?: Date }
-  ): Iterable<Commit, { since?: Date; until?: Date }>;
-  resource(Entity: Class<Discussion>, opts: ResourceParams): Iterable<Discussion>;
-  resource(Entity: Class<any>, opts: ResourceParams): Iterable<any> {
-    switch (Entity.name) {
-      case Stargazer.name:
-        return resources.stargazers(this.client, opts);
-      case Watcher.name:
-        return resources.watchers(this.client, opts);
-      case Tag.name:
-        return resources.tags(this.client, opts);
-      case Release.name:
-        return resources.releases(this.client, opts);
-      case Issue.name:
-      case PullRequest.name:
-        return resources.issues(this.client, opts);
-      case Commit.name:
-        return resources.commits(this.client, opts);
-      case Discussion.name:
-        return resources.discussions(this.client, opts);
+  resource(name: 'stargazers', opts: ServiceResourceParams): Iterable<Stargazer>;
+  resource(name: 'watchers', opts: ServiceResourceParams): Iterable<Watcher>;
+  resource(name: 'discussions', opts: ServiceResourceParams): Iterable<Discussion>;
+  resource(name: 'tags', opts: ServiceResourceParams): Iterable<Tag>;
+  resource(name: 'releases', opts: ServiceResourceParams): Iterable<Release>;
+  resource(name: 'commits', opts: ServiceCommitsParams): Iterable<Commit>;
+  resource(name: 'issues', opts: ServiceCommitsParams): Iterable<Issue>;
+  resource(name: 'pull_requests', opts: ServiceCommitsParams): Iterable<PullRequest>;
+  resource<P extends ServiceResourceParams>(name: string, opts: P): Iterable<any> {
+    const params = { id: opts.repository, cursor: opts.cursor, first: opts.first };
+    const factory = new PartialFragmentFactory();
+
+    switch (name) {
+      case 'discussions':
+        return discussions(this.client, { factory, ...opts });
+      case 'releases':
+        return releases(this.client, { factory, ...opts });
+      case 'commits':
+        return commits(this.client, { factory, ...opts });
+      case 'issues':
+        return issues(this.client, { factory, ...opts });
+      case 'pull_requests':
+        return pullRequests(this.client, { factory, ...opts });
+      case 'stargazers':
+        return genericIterator(this.client, new StargazersLookup({ factory, ...params }));
+      case 'watchers':
+        return genericIterator(this.client, new WatchersLookup({ factory, ...params }));
+      case 'tags':
+        return genericIterator(this.client, new TagsLookup({ factory, ...params }));
       default:
-        throw new Error('Method not implemented.');
+        throw new Error(`Resource ${name} not supported`);
     }
   }
+}
+
+/**
+ *  A generic iterator for resources that require a lookup.
+ */
+function genericIterator<R, T>(client: GithubClient, lookup: QueryLookup<R[], T>): Iterable<R> {
+  return {
+    [Symbol.asyncIterator]: async function* () {
+      for await (const searchRes of QueryRunner.create(client).iterator(lookup)) {
+        yield {
+          data: searchRes.data,
+          params: {
+            has_more: !!searchRes.next,
+            cursor: searchRes.params.cursor,
+            first: searchRes.params.first
+          }
+        };
+      }
+    }
+  };
 }

@@ -1,23 +1,11 @@
-import { Commit } from '../../../entities/Entity.js';
-import { Iterable } from '../../service.js';
+import { Commit } from '../../../entities/Commit.js';
+import { Iterable, ServiceCommitsParams } from '../../service.js';
 import { GithubClient } from '../client.js';
-import { iterator, request } from '../requests/index.js';
-import { ResourcesParams } from './index.js';
+import { FragmentFactory } from '../graphql/fragments/Fragment.js';
+import { CommitsLookup } from '../graphql/lookups/CommitsLookup.js';
+import { QueryRunner } from '../graphql/QueryRunner.js';
 
-/**
- * Get a commit by sha.
- */
-function commit(client: GithubClient, params: { repo: { id: number; node_id: string }; sha: string }) {
-  return request(
-    {
-      client,
-      url: 'GET /repositories/:repo/commits/:sha',
-      Entity: Commit,
-      metadata: { repository: params.repo.node_id }
-    },
-    { repo: params.repo.id, sha: params.sha }
-  );
-}
+type IterableCommit = Iterable<Commit, { since?: Date; until?: Date }>;
 
 /**
  * Get the commits of a repository by its id
@@ -25,55 +13,47 @@ function commit(client: GithubClient, params: { repo: { id: number; node_id: str
  */
 export default function commits(
   client: GithubClient,
-  options: ResourcesParams & { since?: Date; until?: Date }
-): Iterable<Commit, { since?: Date; until?: Date }> {
+  options: ServiceCommitsParams & { factory: FragmentFactory }
+): IterableCommit {
   return {
     [Symbol.asyncIterator]: async function* () {
       let { since, until } = options;
 
-      if (since && until) {
-        const its = [
-          commits(client, { ...options, until: undefined }),
-          commits(client, { ...options, since: undefined })
-        ];
-
-        for (const [index, it] of its.entries()) {
-          for await (const { data, params } of it) {
-            since = params.since && params.since > since ? params.since : since;
-            until = params.until && params.until < until ? params.until : until;
-            yield { data, params: { ...params, has_more: index === 0 ? true : params.has_more, since, until } };
-          }
-        }
-      } else {
-        const it = iterator(
-          {
-            client,
-            url: 'GET /repositories/:repo/commits',
-            Entity: Commit,
-            metadata: { repository: options.repo.node_id }
-          },
-          {
-            ...options,
-            repo: options.repo.id,
-            since: since?.toISOString(),
-            until: until?.toISOString()
-          }
+      if (until || !since) {
+        const untilIt = QueryRunner.create(client).iterator(
+          new CommitsLookup({ ...options, id: options.repository, since: undefined, until })
         );
 
-        for await (const { data, params } of it) {
-          const detailedData = await Promise.all(
-            data.map((d) =>
-              commit(client, { repo: options.repo, sha: d.sha }).then((res) => {
-                if (!res) throw new Error('Commit not found');
-                return res;
-              })
-            )
-          );
+        for await (const response of untilIt) {
+          yield {
+            data: response.data,
+            params: {
+              has_more: true,
+              since: (since = response.params.since
+                ? new Date(Math.max(response.params.since.getTime(), since?.getTime() || 0))
+                : since),
+              until: (until = response.params.until),
+              first: options.first
+            }
+          };
+        }
+      }
 
-          since = detailedData[0].commit.committer?.date || since;
-          until = detailedData[detailedData.length - 1].commit.committer?.date || until;
+      if (since) {
+        const sinceIt = QueryRunner.create(client).iterator(
+          new CommitsLookup({ ...options, id: options.repository, since, until: undefined })
+        );
 
-          yield { data: detailedData, params: { ...params, page: 0, since, until } };
+        for await (const response of sinceIt) {
+          yield {
+            data: response.data,
+            params: {
+              has_more: !!response.next,
+              since: new Date(Math.max(response.params.since?.getDate() || 0, since.getTime())),
+              until,
+              first: options.first
+            }
+          };
         }
       }
     }

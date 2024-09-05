@@ -9,17 +9,10 @@ const fetchLimit = function (fetch: typeof global.fetch, limit: number) {
 };
 
 /**
- * Github client.
+ * A Github client instance.
  */
 export default new GithubClient(env.GITHUB_API_BASE_URL, {
   apiToken: env.GITHUB_API_TOKEN,
   disableThrottling: env.GITHUB_DISABLE_THROTTLING,
-  fetcher: fetchLimit(
-    fetchRetry(fetch, {
-      retries: env.FETCH_RETRIES,
-      retryOn: [502],
-      retryDelay: (attempt) => Math.pow(2, attempt) * Math.floor(Math.random() * 1000)
-    }),
-    env.FETCH_LIMIT
-  )
+  fetcher: fetchLimit(fetchRetry(fetch, { retries: env.FETCH_RETRIES, retryOn: [502] }), env.FETCH_LIMIT)
 });

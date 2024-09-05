@@ -1,11 +1,7 @@
-import { Metadata, Repository } from '@/core/index.js';
-import env from '@/helpers/env.js';
-import { connect } from '@/knex/knex.js';
+import mongo from '@/mongo/mongo.js';
 import { Command, Option, program } from 'commander';
 import consola from 'consola';
 import pick from 'lodash/pick.js';
-import snakeCase from 'lodash/snakeCase.js';
-import pluralize from 'pluralize';
 import { createQueue } from './queue/queues.js';
 import { RepositoryUpdater } from './repository.js';
 
@@ -14,7 +10,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     .name('schedule')
     .addCommand(
       new Command('obliterate').action(async () => {
-        const reposQueue = createQueue(Repository);
+        const reposQueue = createQueue('repos');
         await reposQueue.obliterate({ force: true });
         return reposQueue.close();
       })
@@ -22,47 +18,41 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     .addOption(new Option('-p, --priority <priority>', 'Priority of the resource').argParser(Number))
     .addOption(
       new Option('-r, --resource <resource...>', 'Resource to update')
-        .choices(RepositoryUpdater.resources.map((r) => r.name))
-        .default(RepositoryUpdater.resources.map((r) => r.name))
+        .choices(RepositoryUpdater.resources)
+        .default(RepositoryUpdater.resources)
     )
     .addOption(new Option('--repository <repository>', 'Repository to schedule'))
     .addOption(new Option('-f, --force', 'Force the schedule'))
     .action(async (opts: { resource: string[]; priority?: number; repository?: string; force?: boolean }) => {
       consola.info('Starting schedule...');
-      const reposQueue = createQueue(Repository);
+      const reposQueue = createQueue('repos');
 
       consola.info('Connecting to database...');
-      const conn = await connect(env.DATABASE_URL, { schema: 'public', migrate: true });
-
-      const reposIt = conn<WithoutMethods<Repository>>(pluralize(snakeCase(Repository.name)))
-        .where('full_name', 'ILIKE', `%${opts.repository || ''}%`)
-        .select(['id', 'node_id', 'full_name'])
-        .orderBy('updated_at', 'asc')
-        .stream();
+      const reposIt = mongo
+        .db('public')
+        .collection('Repository')
+        .find({ name_with_owner: new RegExp(opts.repository || '.*', 'i') })
+        .sort({ updated_at: -1 })
+        .project({ id: 1, name_with_owner: 1, updated_at: 1 });
 
       for await (const repo of reposIt) {
-        const [meta] = await conn<Metadata>(pluralize(snakeCase(Metadata.name))).where({
-          entity: Repository.name,
-          entity_id: repo.node_id
-        });
-
-        consola.debug(`Scheduling repo ${repo.id} (${repo.full_name})...`);
-        const id = `github@${repo.full_name}`;
+        consola.debug(`Scheduling repo ${repo.id} (${repo.name_with_owner})...`);
+        const id = `github@${repo.name_with_owner}`;
         if (opts.force) await reposQueue.remove(id);
         await reposQueue.add(
-          repo.full_name,
-          { ...pick(repo, ['id', 'node_id', 'full_name']), resources: opts.resource },
+          repo.name_with_owner,
+          { ...pick(repo, ['id', 'name_with_owner']), resources: opts.resource },
           {
             jobId: id,
             attempts: 10,
-            priority: opts.priority || (meta?.updated_at ? 10 : 5),
+            priority: opts.priority || (repo?.updated_at ? 10 : 5),
             removeOnComplete: { age: 1000 * 60 * 60 * 24 }
           }
         );
       }
 
       consola.success('Schedule finished successfully!');
-      await Promise.all([conn.destroy(), reposQueue.close()]);
+      await Promise.all([mongo.close(), reposQueue.close()]);
     })
     .parse(process.argv);
 }
