@@ -215,18 +215,22 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     )
     .addOption(new Option('-p, --parallel', 'Run in parallel').default(false))
     .helpOption('-h, --help', 'Display this help message')
-    .action(async (fullName: string, opts: { resource: string[]; parallel: boolean }) => {
+    .action(async (nameWithOwner: string, opts: { resource: string[]; parallel: boolean }) => {
       const resources = opts.resource
         .map((r) => RepositoryUpdater.resources.find((R) => R === r))
         .filter((r) => r !== undefined);
 
-      if (fullName.split('/').length !== 2) throw new Error('Invalid repository name! Use the format owner/name.');
-
-      consola.info('Connecting to the database...');
-      const dbName = fullName.replace('/', '@').replace(/[^a-zA-Z0-9_]/g, '_');
+      if (nameWithOwner.split('/').length !== 2) throw new Error('Invalid repository name! Use the format owner/name.');
 
       consola.info('Initializing the Github service...');
-      const storageFactory = new MongoStorageFactory(mongo.db(dbName));
+      const storageFactory = new MongoStorageFactory(
+        mongo.db(
+          nameWithOwner
+            .replace('/', '@')
+            .replace(/[^a-zA-Z0-9@_]/g, '_')
+            .toLowerCase()
+        )
+      );
 
       const replicaService = new StorageService(
         new CacheService(new GithubService(githubClient), await createCache()),
@@ -255,7 +259,11 @@ if (import.meta.url === `file://${process.argv[1]}`) {
           .then((total) => bars.users.setTotal(total));
       }, 1000 * 15);
 
-      const task = new RepositoryUpdater(fullName, { service: replicaService, resources, parallel: opts.parallel });
+      const task = new RepositoryUpdater(nameWithOwner, {
+        service: replicaService,
+        resources,
+        parallel: opts.parallel
+      });
 
       task.subscribe({
         next: (notification) => {

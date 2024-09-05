@@ -22,7 +22,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     .helpOption('-h, --help', 'Display this help message')
     .action(async (names: string[], options: { total: number }) => {
       consola.info('Initializing the storage service...');
-      const service = new StorageService(new GithubService(githubClient), new MongoStorageFactory(mongo.db('_public')));
+      const service = new StorageService(new GithubService(githubClient), new MongoStorageFactory(mongo.db('public')));
 
       const progress = new SingleBar({
         format: '{task}: [{bar}] {percentage}% | {duration_formatted} | {value}/{total}',

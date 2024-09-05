@@ -29,7 +29,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 
       consola.info('Connecting to database...');
       const reposIt = mongo
-        .db('_public')
+        .db('public')
         .collection('Repository')
         .find({ name_with_owner: new RegExp(opts.repository || '.*', 'i') })
         .sort({ updated_at: -1 })

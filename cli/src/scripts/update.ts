@@ -81,13 +81,18 @@ function reposUpdate(service: Service, concurrency: number, progress: MultiBar):
   const worker = createWorker(
     'repos',
     async (job) => {
-      const dbName = job.data.name_with_owner.replace('/', '@').replace(/[^a-zA-Z0-9_]/g, '_');
-
       const resources = (job.data.resources || [])
         .map((r) => RepositoryUpdater.resources.find((res) => res === r))
         .filter((r) => r !== undefined);
 
-      const storageFactory = new MongoStorageFactory(mongo.db(dbName));
+      const storageFactory = new MongoStorageFactory(
+        mongo.db(
+          job.data.name_with_owner
+            .replace('/', '@')
+            .replace(/[^a-zA-Z0-9@_]/g, '_')
+            .toLowerCase()
+        )
+      );
 
       const task = new RepositoryUpdater(job.data.name_with_owner, {
         service: new StorageService(service, storageFactory),
