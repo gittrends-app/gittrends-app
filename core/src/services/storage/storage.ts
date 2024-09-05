@@ -1,6 +1,8 @@
 import { Actor } from '../../entities/Actor.js';
 import { Node } from '../../entities/base/Node.js';
 import { RepositoryNode } from '../../entities/base/RepositoryNode.js';
+import { Discussion } from '../../entities/Discussion.js';
+import { DiscussionComment } from '../../entities/DiscussionComment.js';
 import { Metadata } from '../../entities/Metadata.js';
 import { Reaction } from '../../entities/Reaction.js';
 import { Repository } from '../../entities/Repository.js';
@@ -32,6 +34,8 @@ export interface StorageFactory {
   nodeStorage(typename: 'Actor'): NodeStorage<Actor>;
   nodeStorage(typename: 'Metadata'): NodeStorage<Metadata>;
   nodeStorage(typename: 'Reaction'): NodeStorage<Reaction>;
+  nodeStorage(typename: 'Discussion'): NodeStorage<Discussion>;
+  nodeStorage(typename: 'DiscussionComment'): NodeStorage<DiscussionComment>;
   nodeStorage<T extends Node>(typename: string): NodeStorage<T>;
 
   repoNodeStorage<T extends RepositoryNode>(type: string): RepositoryNodeStorage<T>;

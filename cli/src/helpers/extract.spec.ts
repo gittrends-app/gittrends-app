@@ -1,4 +1,4 @@
-import { ActorSchema, Organization, User } from '@/core/entities/index.js';
+import { ActorSchema, Mannequin, Organization, User } from '@/core/entities/index.js';
 import { describe, expect, it } from '@jest/globals';
 import { extract } from './extract.js';
 
@@ -17,6 +17,14 @@ describe('extract', () => {
     name: 'ACME',
     avatar_url: 'https://example.com/acme.jpg',
     login: 'acme'
+  };
+
+  const mannequin: Mannequin = {
+    __typename: 'Mannequin',
+    avatar_url: 'https://example.com/mannequin.jpg',
+    id: '1',
+    login: 'mannequin',
+    claimant: user
   };
 
   it('should extract refs from if root', () => {
@@ -59,5 +67,12 @@ describe('extract', () => {
 
     expect(data).toEqual([user.id, org.id]);
     expect(refs).toEqual([user, org]);
+  });
+
+  it('should extract refs from nested objects', () => {
+    const { data, refs } = extract({ mannequin }, ActorSchema, (d) => d.id);
+
+    expect(data).toEqual({ mannequin: mannequin.id });
+    expect(refs).toEqual([user, { ...mannequin, claimant: (mannequin.claimant as User).id }]);
   });
 });

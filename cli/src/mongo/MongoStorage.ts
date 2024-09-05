@@ -4,6 +4,10 @@ import { Metadata } from '@/core/entities/Metadata.js';
 import {
   Actor,
   ActorSchema,
+  Discussion,
+  DiscussionComment,
+  DiscussionCommentSchema,
+  DiscussionSchema,
   NodeStorage,
   Reaction,
   ReactionSchema,
@@ -32,6 +36,8 @@ const Schemas = {
   Tag: TagSchema,
   Release: ReleaseSchema,
   Reaction: ReactionSchema,
+  Discussion: DiscussionSchema,
+  DiscussionComment: DiscussionCommentSchema,
   Metadata: RepositoryNodeSchema.passthrough()
 };
 
@@ -54,17 +60,21 @@ export class MongoStorageFactory implements StorageFactory {
 
   private actorStorage: NodeStorage<Actor>;
   private reactionsStorage: NodeStorage<Reaction>;
+  private discussionCommentsStorage: NodeStorage<DiscussionComment>;
 
   constructor(db: Db) {
     this.db = db;
     this.actorStorage = this.nodeStorage('Actor');
     this.reactionsStorage = this.nodeStorage('Reaction');
+    this.discussionCommentsStorage = this.nodeStorage('DiscussionComment');
   }
 
   nodeStorage(typename: 'Actor'): NodeStorage<Actor>;
   nodeStorage(typename: 'Repository'): NodeStorage<Repository>;
   nodeStorage(typename: 'Metadata'): NodeStorage<Metadata>;
   nodeStorage(typename: 'Reaction'): NodeStorage<Reaction>;
+  nodeStorage(typename: 'Discussion'): NodeStorage<Discussion>;
+  nodeStorage(typename: 'DiscussionComment'): NodeStorage<DiscussionComment>;
   nodeStorage<T extends Node>(typename: string): NodeStorage<T> {
     if (!(typename in Schemas)) throw new Error(`Schema not found for ${typename}`);
 
@@ -92,6 +102,12 @@ export class MongoStorageFactory implements StorageFactory {
       save: async (node, replace) => {
         let arrNode = Array.isArray(node) ? node : [node];
         if (arrNode.length === 0) return;
+
+        if (typename === 'Discussion') {
+          const { data, refs } = extract(arrNode, DiscussionCommentSchema, (d) => d.id);
+          arrNode = data;
+          await this.discussionCommentsStorage.save(refs, replace);
+        }
 
         if (typename !== 'Actor') {
           const { data, refs } = extract(arrNode, ActorSchema, (d) => d.id);
@@ -146,6 +162,12 @@ export class MongoStorageFactory implements StorageFactory {
       },
       save: async (node, replace) => {
         let arrNode = Array.isArray(node) ? node : [node];
+
+        if (typename === 'Discussion') {
+          const { data, refs } = extract(arrNode, DiscussionCommentSchema, (d) => d.id);
+          arrNode = data;
+          await this.discussionCommentsStorage.save(refs, replace);
+        }
 
         if (typename !== 'Actor') {
           const { data, refs } = extract(arrNode, ActorSchema, (d) => d.id);

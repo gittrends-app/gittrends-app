@@ -23,15 +23,17 @@ export function extract<Z extends ZodType, T = any>(
 
   const refs: T[] = [];
 
-  if (instanceOf(data, schema)) {
-    refs.push(data);
-    data = replacement(data);
-  } else if (isPlainObject(data)) {
+  if (isPlainObject(data)) {
     forIn(entity as object, (value: any, key: string) => {
       const res = extract(value, schema, replacement);
       refs.push(...res.refs);
       data[key] = res.data;
     });
+
+    if (instanceOf(data, schema)) {
+      refs.push(data);
+      data = replacement(data);
+    }
   } else if (Array.isArray(entity)) {
     data = entity.map((item) => {
       const res = extract(item, schema, replacement);
