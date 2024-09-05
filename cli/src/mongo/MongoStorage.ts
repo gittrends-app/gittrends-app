@@ -1,13 +1,20 @@
 import { Node } from '@/core/entities/base/Node.js';
 import { RepositoryNode, RepositoryNodeSchema } from '@/core/entities/base/RepositoryNode.js';
+import { Metadata } from '@/core/entities/Metadata.js';
 import {
   Actor,
   ActorSchema,
   NodeStorage,
+  Reaction,
+  ReactionSchema,
+  ReleaseSchema,
+  Repository,
   RepositoryNodeStorage,
   RepositorySchema,
+  Stargazer,
   StargazerSchema,
   StorageFactory,
+  Tag,
   TagSchema,
   Watcher,
   WatcherSchema
@@ -23,6 +30,8 @@ const Schemas = {
   Watcher: WatcherSchema,
   Stargazer: StargazerSchema,
   Tag: TagSchema,
+  Release: ReleaseSchema,
+  Reaction: ReactionSchema,
   Metadata: RepositoryNodeSchema.passthrough()
 };
 
@@ -44,12 +53,18 @@ export class MongoStorageFactory implements StorageFactory {
   private db: Db;
 
   private actorStorage: NodeStorage<Actor>;
+  private reactionsStorage: NodeStorage<Reaction>;
 
   constructor(db: Db) {
     this.db = db;
     this.actorStorage = this.nodeStorage('Actor');
+    this.reactionsStorage = this.nodeStorage('Reaction');
   }
 
+  nodeStorage(typename: 'Actor'): NodeStorage<Actor>;
+  nodeStorage(typename: 'Repository'): NodeStorage<Repository>;
+  nodeStorage(typename: 'Metadata'): NodeStorage<Metadata>;
+  nodeStorage(typename: 'Reaction'): NodeStorage<Reaction>;
   nodeStorage<T extends Node>(typename: string): NodeStorage<T> {
     if (!(typename in Schemas)) throw new Error(`Schema not found for ${typename}`);
 
@@ -84,6 +99,12 @@ export class MongoStorageFactory implements StorageFactory {
           await this.actorStorage.save(refs, replace);
         }
 
+        if (typename !== 'Reaction') {
+          const { data, refs } = extract(arrNode, ReactionSchema, (d) => d.id);
+          arrNode = data;
+          await this.reactionsStorage.save(refs, replace);
+        }
+
         await this.db
           .collection(typename)
           .bulkWrite(
@@ -101,7 +122,9 @@ export class MongoStorageFactory implements StorageFactory {
     };
   }
 
-  repoNodeStorage<T extends RepositoryNode = Watcher>(typename: 'Watcher'): RepositoryNodeStorage<T>;
+  repoNodeStorage(typename: 'Watcher'): RepositoryNodeStorage<Watcher>;
+  repoNodeStorage(typename: 'Stargazer'): RepositoryNodeStorage<Stargazer>;
+  repoNodeStorage(typename: 'Tag'): RepositoryNodeStorage<Tag>;
   repoNodeStorage<T extends RepositoryNode>(typename: string): RepositoryNodeStorage<T> {
     if (!(typename in Schemas)) throw new Error(`Schema not found for ${typename}`);
 
@@ -128,6 +151,12 @@ export class MongoStorageFactory implements StorageFactory {
           const { data, refs } = extract(arrNode, ActorSchema, (d) => d.id);
           arrNode = data;
           await this.actorStorage.save(refs, replace);
+        }
+
+        if (typename !== 'Reaction') {
+          const { data, refs } = extract(arrNode, ReactionSchema, (d) => d.id);
+          arrNode = data;
+          await this.reactionsStorage.save(refs, replace);
         }
 
         await this.db
