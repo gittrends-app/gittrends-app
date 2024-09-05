@@ -12,7 +12,7 @@ function instanceOf<Z extends ZodType>(value: any, schema: Z): value is z.infer<
 }
 
 /**
- *  Extracts refs from an entity.
+ *  Extracts entities from objects.
  */
 export function extract<Z extends ZodType, T = any>(
   entity: T,

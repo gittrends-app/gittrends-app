@@ -9,7 +9,7 @@ const fetchLimit = function (fetch: typeof global.fetch, limit: number) {
 };
 
 /**
- * Github client.
+ * A Github client instance.
  */
 export default new GithubClient(env.GITHUB_API_BASE_URL, {
   apiToken: env.GITHUB_API_TOKEN,

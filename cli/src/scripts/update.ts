@@ -1,9 +1,9 @@
 import { GithubService, Service, StorageService } from '@/core/index.js';
 import { createCache } from '@/helpers/cache.js';
 import githubClient from '@/helpers/github.js';
-import { MongoStorageFactory } from '@/mongo/MongoStorage.js';
 import mongo from '@/mongo/mongo.js';
-import { CacheService } from '@/services/cache.js';
+import { MongoStorageFactory } from '@/mongo/MongoStorage.js';
+import { CacheService } from '@/services/CacheService.js';
 import { Worker } from 'bullmq';
 import { MultiBar, Presets } from 'cli-progress';
 import { Option, program } from 'commander';
