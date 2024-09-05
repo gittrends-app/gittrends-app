@@ -120,7 +120,7 @@ export class RepositoryUpdater extends AbstractTask<Notification> {
             } else {
               const it = this.service.resource(name as any, {
                 repository: repo.id,
-                first: ['issues', 'pull_requests', 'commits'].includes(name) ? 25 : 100,
+                first: ['issues', 'pull_requests'].includes(name) ? 25 : 100,
                 resume: true
               });
 

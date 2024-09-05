@@ -23,6 +23,7 @@ const extendedRepository = z
     contributing_guidelines: z.string(),
     created_at: z.coerce.date(),
     default_branch: z.string(),
+    commits_count: z.number().int(),
     delete_branch_on_merge: z.boolean(),
     disk_usage: z.number().int(),
     forking_allowed: z.boolean(),

@@ -1,4 +1,4 @@
-import { Repository as GsRepository } from '@octokit/graphql-schema';
+import { Commit as GsCommit, Repository as GsRepository } from '@octokit/graphql-schema';
 import { Repository, RepositorySchema } from '../../../../entities/Repository.js';
 import { ActorFragment } from './ActorFragment.js';
 import { Fragment, FragmentFactory } from './Fragment.js';
@@ -32,7 +32,10 @@ export class RepositoryFragment implements Fragment {
       contributingGuidelines { body }
       createdAt
       databaseId
-      defaultBranchRef { name }
+      defaultBranchRef { 
+        name 
+        target { ... on Commit { history { totalCount } } }
+      }
       deleteBranchOnMerge
       deployments { totalCount }
       description
@@ -132,6 +135,7 @@ export class RepositoryFragment implements Fragment {
       contributing_guidelines: data.contributingGuidelines?.body || undefined,
       created_at: data.createdAt,
       default_branch: data.defaultBranchRef?.name,
+      commits_count: (data.defaultBranchRef?.target as GsCommit | undefined)?.history?.totalCount,
       delete_branch_on_merge: data.deleteBranchOnMerge,
       disk_usage: data.diskUsage || undefined,
       forking_allowed: data.forkingAllowed,

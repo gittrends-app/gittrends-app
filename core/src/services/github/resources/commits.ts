@@ -29,7 +29,9 @@ export default function commits(
             data: response.data,
             params: {
               has_more: true,
-              since: (since = new Date(Math.max(response.params.since!.getTime(), since?.getTime() || 0))),
+              since: (since = response.params.since
+                ? new Date(Math.max(response.params.since.getTime(), since?.getTime() || 0))
+                : since),
               until: (until = response.params.until),
               first: options.first
             }

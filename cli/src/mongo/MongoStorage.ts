@@ -4,6 +4,7 @@ import { Metadata } from '@/core/entities/Metadata.js';
 import {
   Actor,
   ActorSchema,
+  CommitSchema,
   Discussion,
   DiscussionComment,
   DiscussionCommentSchema,
@@ -30,15 +31,16 @@ import { ZodType } from 'zod';
 
 const Schemas = {
   Actor: ActorSchema,
-  Repository: RepositorySchema,
-  Watcher: WatcherSchema,
-  Stargazer: StargazerSchema,
-  Tag: TagSchema,
-  Release: ReleaseSchema,
-  Reaction: ReactionSchema,
+  Commit: CommitSchema,
   Discussion: DiscussionSchema,
   DiscussionComment: DiscussionCommentSchema,
-  Metadata: RepositoryNodeSchema.passthrough()
+  Metadata: RepositoryNodeSchema.passthrough(),
+  Reaction: ReactionSchema,
+  Release: ReleaseSchema,
+  Repository: RepositorySchema,
+  Stargazer: StargazerSchema,
+  Tag: TagSchema,
+  Watcher: WatcherSchema
 };
 
 /**
