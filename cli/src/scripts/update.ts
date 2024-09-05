@@ -112,7 +112,7 @@ function reposUpdate(service: Service, concurrency: number, progress: MultiBar):
 
       const usersUpdateTimeout = setInterval(async () => {
         return storageFactory
-          .nodeStorage('Actor')
+          .create('Actor')
           .count({})
           .then((total) => taskBar.setTotal(resourcesSum + total));
       }, 10000);

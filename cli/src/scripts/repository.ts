@@ -12,7 +12,7 @@ import camelCase from 'lodash/camelCase.js';
 import upperFirst from 'lodash/upperFirst.js';
 import PQueue from 'p-queue';
 import pluralize from 'pluralize';
-import { ObservableLike, Observer, Unsubscribable } from 'type-fest';
+import { ArrayValues, ObservableLike, Observer, Unsubscribable } from 'type-fest';
 
 /**
  * Task interface.
@@ -57,46 +57,42 @@ export abstract class AbstractTask<T = unknown> implements Task<T> {
   abstract execute(): Promise<void>;
 }
 
-type Updatable =
-  | 'tags'
-  | 'releases'
-  | 'stargazers'
-  | 'watchers'
-  | 'issues'
-  | 'pull_requests'
-  | 'commits'
-  | 'users'
-  | 'discussions';
+const UpdatableResources = [
+  'tags',
+  'releases',
+  'stargazers',
+  'watchers',
+  'issues',
+  'pull_requests',
+  'commits',
+  'users',
+  'discussions'
+] as const;
+
+type UpdatableResource = ArrayValues<typeof UpdatableResources>;
 
 type Notification = { repository: string } & (
   | { resource?: undefined; data: Repository }
-  | { resource: Updatable; data: RepositoryNode[] | Actor[]; total?: number; done: false }
-  | { resource: Updatable; done: true }
+  | { resource: UpdatableResource; data: RepositoryNode[] | Actor[]; total?: number; done: false }
+  | { resource: UpdatableResource; done: true }
 );
 
 /**
  * Task to retrieve all resources from a repository.
  */
 export class RepositoryUpdater extends AbstractTask<Notification> {
-  public static readonly resources: Updatable[] = [
-    'tags',
-    'releases',
-    'stargazers',
-    'watchers',
-    'issues',
-    'pull_requests',
-    'commits',
-    'users',
-    'discussions'
-  ];
+  public static readonly resources: UpdatableResource[] = [...UpdatableResources];
 
   private idOrName: string;
 
   private service: StorageService;
-  private resources: Updatable[];
+  private resources: UpdatableResource[];
   private queue: PQueue;
 
-  constructor(idOrName: string, params: { service: StorageService; resources?: Updatable[]; parallel?: boolean }) {
+  constructor(
+    idOrName: string,
+    params: { service: StorageService; resources?: UpdatableResource[]; parallel?: boolean }
+  ) {
     super();
     this.idOrName = idOrName;
     this.service = params.service;
@@ -121,7 +117,7 @@ export class RepositoryUpdater extends AbstractTask<Notification> {
         this.queue
           .add(async () => {
             if (name === 'users') {
-              const storage = this.service.storage.nodeStorage('Actor');
+              const storage = this.service.storage.create('Actor');
 
               let users: Actor[] = [];
 
@@ -168,7 +164,7 @@ export class RepositoryUpdater extends AbstractTask<Notification> {
               const it = this.service.resource(name as any, { repository: repo.id, first, resume: true });
 
               let total = await this.service.storage
-                .repoNodeStorage(upperFirst(camelCase(pluralize.singular(name))))
+                .create<RepositoryNode>(upperFirst(camelCase(pluralize.singular(name))))
                 .count({ repository: repo.id });
 
               for await (const response of it) {
@@ -254,7 +250,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
         if (!resources.includes('users')) return;
 
         return storageFactory
-          .nodeStorage('Actor')
+          .create('Actor')
           .count({})
           .then((total) => bars.users.setTotal(total));
       }, 1000 * 15);

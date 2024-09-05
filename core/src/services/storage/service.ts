@@ -29,7 +29,7 @@ export class StorageService extends PassThroughService {
   }
 
   search(total: number, opts?: { first?: number }): Iterable<Repository> {
-    const repoStorage = this.storage.nodeStorage('Repository');
+    const repoStorage = this.storage.create('Repository');
     const it = this.service.search(total, opts);
 
     return {
@@ -47,7 +47,7 @@ export class StorageService extends PassThroughService {
   async user(id: string | string[], opts?: { byLogin: boolean }): Promise<any> {
     const arr = Array.isArray(id) ? id : [id];
 
-    const userStorage = this.storage.nodeStorage('Actor');
+    const userStorage = this.storage.create('Actor');
 
     const cachedResult = await Promise.all(
       arr.map(async (id) => {
@@ -73,7 +73,7 @@ export class StorageService extends PassThroughService {
   }
 
   async repository(ownerOrId: string, name?: string): Promise<Repository | null> {
-    const repoStorage = this.storage.nodeStorage('Repository');
+    const repoStorage = this.storage.create('Repository');
 
     let repo = await repoStorage.get({ id: name ? `${ownerOrId}/${name}` : ownerOrId });
 
@@ -96,8 +96,8 @@ export class StorageService extends PassThroughService {
   resource(name: string, opts: ServiceResourceParams): Iterable<any> {
     const resourceName = upperFirst(camelCase(pluralize.singular(name)));
 
-    const metadataStorage = this.storage.nodeStorage('Metadata');
-    const resourceStorage = this.storage.repoNodeStorage<RepositoryNode>(resourceName);
+    const metadataStorage = this.storage.create('Metadata');
+    const resourceStorage = this.storage.create<RepositoryNode>(resourceName);
 
     const { service } = this;
 

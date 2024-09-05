@@ -17,12 +17,13 @@ import {
   PullRequestSchema,
   Reaction,
   ReactionSchema,
+  Release,
   ReleaseSchema,
   Repository,
-  RepositoryNodeStorage,
   RepositorySchema,
   Stargazer,
   StargazerSchema,
+  Storage,
   StorageFactory,
   Tag,
   TagSchema,
@@ -77,23 +78,29 @@ export class MongoStorageFactory implements StorageFactory {
 
   constructor(db: Db) {
     this.db = db;
-    this.actorStorage = this.nodeStorage('Actor');
-    this.reactionsStorage = this.nodeStorage('Reaction');
-    this.discussionCommentsStorage = this.nodeStorage('DiscussionComment');
-    this.timelineItemsStorage = this.nodeStorage('TimelineItem');
+    this.actorStorage = this.create('Actor');
+    this.reactionsStorage = this.create('Reaction');
+    this.discussionCommentsStorage = this.create('DiscussionComment');
+    this.timelineItemsStorage = this.create('TimelineItem');
   }
 
-  nodeStorage(typename: 'Actor'): NodeStorage<Actor>;
-  nodeStorage(typename: 'Repository'): NodeStorage<Repository>;
-  nodeStorage(typename: 'Metadata'): NodeStorage<Metadata>;
-  nodeStorage(typename: 'Reaction'): NodeStorage<Reaction>;
-  nodeStorage(typename: 'Discussion'): NodeStorage<Discussion>;
-  nodeStorage(typename: 'DiscussionComment'): NodeStorage<DiscussionComment>;
-  nodeStorage(typename: 'Commit'): NodeStorage<Commit>;
-  nodeStorage(typename: 'Issue'): NodeStorage<Issue>;
-  nodeStorage(typename: 'PullRequest'): NodeStorage<PullRequest>;
-  nodeStorage(typename: 'TimelineItem'): NodeStorage<TimelineItem>;
-  nodeStorage<T extends Node>(typename: string): NodeStorage<T> {
+  create(typename: 'Actor'): NodeStorage<Actor>;
+  create(typename: 'Commit'): NodeStorage<Commit>;
+  create(typename: 'Discussion'): NodeStorage<Discussion>;
+  create(typename: 'DiscussionComment'): NodeStorage<DiscussionComment>;
+  create(typename: 'Issue'): NodeStorage<Issue>;
+  create(typename: 'Metadata'): NodeStorage<Metadata>;
+  create(typename: 'PullRequest'): NodeStorage<PullRequest>;
+  create(typename: 'Reaction'): NodeStorage<Reaction>;
+  create(typename: 'Release'): NodeStorage<Release>;
+  create(typename: 'Repository'): NodeStorage<Repository>;
+  create(typename: 'Stargazer'): Storage<Stargazer>;
+  create(typename: 'Tag'): Storage<Tag>;
+  create(typename: 'TimelineItem'): NodeStorage<TimelineItem>;
+  create(typename: 'Watcher'): Storage<Watcher>;
+  create<T extends Node>(typename: string): NodeStorage<T>;
+  create<T extends RepositoryNode>(typename: string): Storage<T>;
+  create<T = any>(typename: string): Storage<any> {
     if (!(typename in Schemas)) throw new Error(`Schema not found for ${typename}`);
 
     const Schema = Schemas[typename as keyof typeof Schemas] as unknown as ZodType<T>;
@@ -120,72 +127,6 @@ export class MongoStorageFactory implements StorageFactory {
       save: async (node, replace) => {
         let arrNode = Array.isArray(node) ? node : [node];
         if (arrNode.length === 0) return;
-
-        if (typename === 'Discussion') {
-          const { data, refs } = extract(arrNode, DiscussionCommentSchema, (d) => d.id);
-          arrNode = data;
-          await this.discussionCommentsStorage.save(refs, replace);
-        }
-
-        if (typename === 'Issue' || typename === 'PullRequest') {
-          const { data, refs } = extract(arrNode, TimelineItemSchema, (d) => d.id);
-          arrNode = data;
-          await this.timelineItemsStorage.save(refs, replace);
-        }
-
-        if (typename !== 'Actor') {
-          const { data, refs } = extract(arrNode, ActorSchema, (d) => d.id);
-          arrNode = data;
-          await this.actorStorage.save(refs, replace);
-        }
-
-        if (typename !== 'Reaction') {
-          const { data, refs } = extract(arrNode, ReactionSchema, (d) => d.id);
-          arrNode = data;
-          await this.reactionsStorage.save(refs, replace);
-        }
-
-        await this.db
-          .collection(typename)
-          .bulkWrite(
-            arrNode.map((item) =>
-              replace
-                ? { replaceOne: { filter: { _id: getId(item) }, replacement: item, upsert: true } }
-                : { insertOne: { document: { _id: getId(item), ...item } } }
-            )
-          )
-          .catch((err) => {
-            if (err.code === 11000) return;
-            throw err;
-          });
-      }
-    };
-  }
-
-  repoNodeStorage(typename: 'Watcher'): RepositoryNodeStorage<Watcher>;
-  repoNodeStorage(typename: 'Stargazer'): RepositoryNodeStorage<Stargazer>;
-  repoNodeStorage(typename: 'Tag'): RepositoryNodeStorage<Tag>;
-  repoNodeStorage<T extends RepositoryNode>(typename: string): RepositoryNodeStorage<T> {
-    if (!(typename in Schemas)) throw new Error(`Schema not found for ${typename}`);
-
-    const Schema = Schemas[typename as keyof typeof Schemas] as unknown as ZodType<T>;
-
-    return {
-      count: (query) => {
-        return this.db.collection(typename).countDocuments(query);
-      },
-      find: async (query, options) => {
-        const data = await this.db
-          .collection(typename)
-          .find(query)
-          .limit(options?.limit || 100)
-          .skip(options?.offset || 0)
-          .toArray();
-
-        return data.map((item) => Schema.parse(item));
-      },
-      save: async (node, replace) => {
-        let arrNode = Array.isArray(node) ? node : [node];
 
         if (typename === 'Discussion') {
           const { data, refs } = extract(arrNode, DiscussionCommentSchema, (d) => d.id);
