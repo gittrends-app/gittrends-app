@@ -41,9 +41,9 @@ export default function (
                     return [...reactables, item];
                   case 'PullRequestCommitCommentThread':
                   case 'PullRequestReviewThread':
-                    return [...reactables, ...item.comments];
+                    return [...reactables, ...(item.comments || [])];
                   case 'PullRequestReview':
-                    return [...reactables, item, ...item.comments];
+                    return [...reactables, item, ...(item.comments || [])];
                   default:
                     return reactables;
                 }

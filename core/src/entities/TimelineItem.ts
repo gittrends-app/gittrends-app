@@ -420,7 +420,7 @@ const PullRequestReviewComment = NodeSchema.merge(CommentSchema)
 
 const PullRequestCommitCommentThread = NodeSchema.extend({
   __typename: z.literal('PullRequestCommitCommentThread'),
-  comments: z.array(CommitComment),
+  comments: z.array(CommitComment).optional(),
   commit: z.string(),
   path: z.string().optional(),
   position: z.number().int().optional()
@@ -432,7 +432,7 @@ const PullRequestReview = NodeSchema.merge(CommentSchema)
   .extend({
     __typename: z.literal('PullRequestReview'),
     author_can_push_to_repository: z.boolean(),
-    comments: z.array(PullRequestReviewComment),
+    comments: z.array(PullRequestReviewComment).optional(),
     commit: z.string().optional(),
     full_database_id: z.coerce.number().int().optional(),
     state: z.string(),
@@ -441,7 +441,7 @@ const PullRequestReview = NodeSchema.merge(CommentSchema)
 
 const PullRequestReviewThread = NodeSchema.extend({
   __typename: z.literal('PullRequestReviewThread'),
-  comments: z.array(PullRequestReviewComment),
+  comments: z.array(PullRequestReviewComment).optional(),
   diff_side: z.string(),
   is_collapsed: z.boolean(),
   is_outdated: z.boolean(),

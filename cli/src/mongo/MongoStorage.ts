@@ -4,12 +4,17 @@ import { Metadata } from '@/core/entities/Metadata.js';
 import {
   Actor,
   ActorSchema,
+  Commit,
   CommitSchema,
   Discussion,
   DiscussionComment,
   DiscussionCommentSchema,
   DiscussionSchema,
+  Issue,
+  IssueSchema,
   NodeStorage,
+  PullRequest,
+  PullRequestSchema,
   Reaction,
   ReactionSchema,
   ReleaseSchema,
@@ -21,6 +26,8 @@ import {
   StorageFactory,
   Tag,
   TagSchema,
+  TimelineItem,
+  TimelineItemSchema,
   Watcher,
   WatcherSchema
 } from '@/core/index.js';
@@ -34,7 +41,10 @@ const Schemas = {
   Commit: CommitSchema,
   Discussion: DiscussionSchema,
   DiscussionComment: DiscussionCommentSchema,
+  Issue: IssueSchema,
+  TimelineItem: TimelineItemSchema,
   Metadata: RepositoryNodeSchema.passthrough(),
+  PullRequest: PullRequestSchema,
   Reaction: ReactionSchema,
   Release: ReleaseSchema,
   Repository: RepositorySchema,
@@ -63,12 +73,14 @@ export class MongoStorageFactory implements StorageFactory {
   private actorStorage: NodeStorage<Actor>;
   private reactionsStorage: NodeStorage<Reaction>;
   private discussionCommentsStorage: NodeStorage<DiscussionComment>;
+  private timelineItemsStorage: NodeStorage<TimelineItem>;
 
   constructor(db: Db) {
     this.db = db;
     this.actorStorage = this.nodeStorage('Actor');
     this.reactionsStorage = this.nodeStorage('Reaction');
     this.discussionCommentsStorage = this.nodeStorage('DiscussionComment');
+    this.timelineItemsStorage = this.nodeStorage('TimelineItem');
   }
 
   nodeStorage(typename: 'Actor'): NodeStorage<Actor>;
@@ -77,6 +89,10 @@ export class MongoStorageFactory implements StorageFactory {
   nodeStorage(typename: 'Reaction'): NodeStorage<Reaction>;
   nodeStorage(typename: 'Discussion'): NodeStorage<Discussion>;
   nodeStorage(typename: 'DiscussionComment'): NodeStorage<DiscussionComment>;
+  nodeStorage(typename: 'Commit'): NodeStorage<Commit>;
+  nodeStorage(typename: 'Issue'): NodeStorage<Issue>;
+  nodeStorage(typename: 'PullRequest'): NodeStorage<PullRequest>;
+  nodeStorage(typename: 'TimelineItem'): NodeStorage<TimelineItem>;
   nodeStorage<T extends Node>(typename: string): NodeStorage<T> {
     if (!(typename in Schemas)) throw new Error(`Schema not found for ${typename}`);
 
@@ -109,6 +125,12 @@ export class MongoStorageFactory implements StorageFactory {
           const { data, refs } = extract(arrNode, DiscussionCommentSchema, (d) => d.id);
           arrNode = data;
           await this.discussionCommentsStorage.save(refs, replace);
+        }
+
+        if (typename === 'Issue' || typename === 'PullRequest') {
+          const { data, refs } = extract(arrNode, TimelineItemSchema, (d) => d.id);
+          arrNode = data;
+          await this.timelineItemsStorage.save(refs, replace);
         }
 
         if (typename !== 'Actor') {
@@ -169,6 +191,12 @@ export class MongoStorageFactory implements StorageFactory {
           const { data, refs } = extract(arrNode, DiscussionCommentSchema, (d) => d.id);
           arrNode = data;
           await this.discussionCommentsStorage.save(refs, replace);
+        }
+
+        if (typename === 'Issue' || typename === 'PullRequest') {
+          const { data, refs } = extract(arrNode, TimelineItemSchema, (d) => d.id);
+          arrNode = data;
+          await this.timelineItemsStorage.save(refs, replace);
         }
 
         if (typename !== 'Actor') {
