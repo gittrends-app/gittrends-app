@@ -1,6 +1,7 @@
 import { Actor } from '../../entities/Actor.js';
 import { Node } from '../../entities/base/Node.js';
 import { RepositoryNode } from '../../entities/base/RepositoryNode.js';
+import { Metadata } from '../../entities/Metadata.js';
 import { Repository } from '../../entities/Repository.js';
 
 /**
@@ -28,6 +29,7 @@ export interface RepositoryNodeStorage<T extends RepositoryNode> {
 export interface StorageFactory {
   nodeStorage(typename: 'Repository'): NodeStorage<Repository>;
   nodeStorage(typename: 'Actor'): NodeStorage<Actor>;
+  nodeStorage(typename: 'Metadata'): NodeStorage<Metadata>;
   nodeStorage<T extends Node>(typename: string): NodeStorage<T>;
 
   repoNodeStorage<T extends RepositoryNode>(type: string): RepositoryNodeStorage<T>;

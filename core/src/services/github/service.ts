@@ -11,7 +11,7 @@ import { Tag } from '../../entities/Tag.js';
 import { Watcher } from '../../entities/Watcher.js';
 import { Iterable, Service, ServiceCommitsParams, ServiceResourceParams } from '../service.js';
 import { GithubClient } from './client.js';
-import { FragmentFactory, PartialFragmentFactory } from './graphql/fragments/Fragment.js';
+import { FullFragmentFactory, PartialFragmentFactory } from './graphql/fragments/Fragment.js';
 import { QueryLookup } from './graphql/lookups/Lookup.js';
 import { SearchLookup } from './graphql/lookups/SearchLookup.js';
 import { StargazersLookup } from './graphql/lookups/StargazersLookup.js';
@@ -31,21 +31,14 @@ import { default as users } from './resources/users.js';
  */
 export class GithubService implements Service {
   private readonly client: GithubClient;
-  private factory: FragmentFactory;
 
-  constructor(client: GithubClient, factory?: FragmentFactory) {
+  constructor(client: GithubClient) {
     this.client = client;
-    this.factory = factory || new PartialFragmentFactory();
-  }
-
-  setFragmentFactory(factory: FragmentFactory): GithubService {
-    this.factory = factory;
-    return this;
   }
 
   search(total: number, opts?: { first?: number }): Iterable<Repository> {
     const it = QueryRunner.create(this.client).iterator(
-      new SearchLookup({ factory: this.factory, first: opts?.first, limit: total })
+      new SearchLookup({ factory: new PartialFragmentFactory(), first: opts?.first, limit: total })
     );
 
     return {
@@ -63,11 +56,15 @@ export class GithubService implements Service {
   async user(id: string, opts?: { byLogin: boolean }): Promise<Actor | null>;
   async user(id: string[], opts?: { byLogin: boolean }): Promise<(Actor | null)[]>;
   async user(id: any, opts?: { byLogin: boolean }): Promise<any> {
-    return users(id, { client: this.client, byLogin: opts?.byLogin, factory: this.factory });
+    return users(id, { client: this.client, byLogin: opts?.byLogin, factory: new FullFragmentFactory() });
   }
 
   async repository(owner: string, name?: string): Promise<Repository | null> {
-    return repos(name ? `${owner}/${name}` : owner, { client: this.client, byName: !!name, factory: this.factory });
+    return repos(name ? `${owner}/${name}` : owner, {
+      client: this.client,
+      byName: !!name,
+      factory: new FullFragmentFactory()
+    });
   }
 
   resource(name: 'stargazers', opts: ServiceResourceParams): Iterable<Stargazer>;
@@ -80,24 +77,25 @@ export class GithubService implements Service {
   resource(name: 'pull_requests', opts: ServiceCommitsParams): Iterable<PullRequest>;
   resource<P extends ServiceResourceParams>(name: string, opts: P): Iterable<any> {
     const params = { id: opts.repository, cursor: opts.cursor, first: opts.first };
+    const factory = new PartialFragmentFactory();
 
     switch (name) {
       case 'discussions':
-        return discussions(this.client, { factory: this.factory, ...opts });
+        return discussions(this.client, { factory, ...opts });
       case 'releases':
-        return releases(this.client, { factory: this.factory, ...opts });
+        return releases(this.client, { factory, ...opts });
       case 'commits':
-        return commits(this.client, { factory: this.factory, ...opts });
+        return commits(this.client, { factory, ...opts });
       case 'issues':
-        return issues(this.client, { factory: this.factory, ...opts });
+        return issues(this.client, { factory, ...opts });
       case 'pull_requests':
-        return pullRequests(this.client, { factory: this.factory, ...opts });
+        return pullRequests(this.client, { factory, ...opts });
       case 'stargazers':
-        return genericIterator(this.client, new StargazersLookup({ factory: this.factory, ...params }));
+        return genericIterator(this.client, new StargazersLookup({ factory, ...params }));
       case 'watchers':
-        return genericIterator(this.client, new WatchersLookup({ factory: this.factory, ...params }));
+        return genericIterator(this.client, new WatchersLookup({ factory, ...params }));
       case 'tags':
-        return genericIterator(this.client, new TagsLookup({ factory: this.factory, ...params }));
+        return genericIterator(this.client, new TagsLookup({ factory, ...params }));
       default:
         throw new Error(`Resource ${name} not supported`);
     }
@@ -105,7 +103,7 @@ export class GithubService implements Service {
 }
 
 /**
- *
+ *  A generic iterator for resources that require a lookup.
  */
 function genericIterator<R, T>(client: GithubClient, lookup: QueryLookup<R[], T>): Iterable<R> {
   return {

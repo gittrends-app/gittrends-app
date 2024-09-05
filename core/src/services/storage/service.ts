@@ -1,4 +1,6 @@
 import camelCase from 'lodash/camelCase.js';
+import omit from 'lodash/omit.js';
+import upperFirst from 'lodash/upperFirst.js';
 import pluralize from 'pluralize';
 import { Actor } from '../../entities/Actor.js';
 import { RepositoryNode } from '../../entities/base/RepositoryNode.js';
@@ -47,23 +49,25 @@ export class StorageService extends PassThroughService {
 
     const userStorage = this.storage.nodeStorage('Actor');
 
-    const result = await Promise.all(
+    const cachedResult = await Promise.all(
       arr.map(async (id) => {
         const user = await userStorage.get({ id: id });
         if (user && user.updated_at) return user;
-
-        const newUser = await this.service.user(id, opts);
-
-        if (newUser) {
-          await userStorage.save(newUser, true);
-          return newUser;
-        } else if (user) {
-          return user;
-        }
-
-        return null;
+        else return id;
       })
     );
+
+    const notFound = cachedResult.filter((id) => typeof id === 'string');
+    const notFOundResult = await this.service.user(notFound, opts);
+
+    const result = cachedResult.map((id) => {
+      if (typeof id === 'string') {
+        const user = notFOundResult.find((u) => u?.id === id);
+        if (user) userStorage.save(user, true);
+        return user || null;
+      }
+      return id;
+    });
 
     return Array.isArray(id) ? result : result[0];
   }
@@ -90,9 +94,9 @@ export class StorageService extends PassThroughService {
   resource(name: 'issues', opts: ServiceResourceParams): Iterable<Issue>;
   resource(name: 'pull_requests', opts: ServiceResourceParams): Iterable<PullRequest>;
   resource(name: string, opts: ServiceResourceParams): Iterable<any> {
-    const resourceName = camelCase(pluralize.singular(name));
+    const resourceName = upperFirst(camelCase(pluralize.singular(name)));
 
-    const metadataStorage = this.storage.repoNodeStorage<ServiceResourceParams>('Metadata');
+    const metadataStorage = this.storage.nodeStorage('Metadata');
     const resourceStorage = this.storage.repoNodeStorage<RepositoryNode>(resourceName);
 
     const { service } = this;
@@ -102,7 +106,7 @@ export class StorageService extends PassThroughService {
         let params = opts;
 
         if (!params.cursor) {
-          const [meta] = await metadataStorage.find({ repository: params.repository, resource: resourceName });
+          const [meta] = await metadataStorage.find({ id: params.repository, __typename: resourceName });
 
           if (meta) {
             let page = 0;
@@ -118,16 +122,17 @@ export class StorageService extends PassThroughService {
               else break;
             }
 
-            params = meta;
+            params = omit(meta, ['id', '__typename']) as ServiceResourceParams;
           }
         }
 
         for await (const res of service.resource(name as any, params)) {
-          if (res.data.length) await resourceStorage.save(res.data as unknown as RepositoryNode);
-
-          await metadataStorage.save({ ...params, ...res.params });
-
-          if (res.data.length > 0) {
+          if (res.data.length) {
+            await resourceStorage.save(res.data as unknown as RepositoryNode);
+            await metadataStorage.save(
+              { id: opts.repository, __typename: resourceName, ...params, ...res.params },
+              true
+            );
             yield res;
           } else {
             yield { data: [], params: { ...res.params, has_more: false } };

@@ -36,22 +36,31 @@ export class CacheService extends PassThroughService {
 
   override user(loginOrId: string, opts?: { byLogin: boolean }): Promise<Actor | null>;
   override user(loginOrId: string[], opts?: { byLogin: boolean }): Promise<(Actor | null)[]>;
-  override user(loginOrId: any, opts?: { byLogin: boolean }): Promise<any> {
+  override async user(loginOrId: any, opts?: { byLogin: boolean }): Promise<any> {
     const arr = Array.isArray(loginOrId) ? loginOrId : [loginOrId];
 
-    const result = Promise.all(
+    const cachedResults = await Promise.all(
       arr.map(async (id) => {
         const user = await this.cache.get<string>(id);
         if (user) return ActorSchema.parse(JSON.parse(await decompress(Buffer.from(user, 'base64'))));
-
-        return super.user(id, opts).then(async (data) => {
-          const compressed = await compress(JSON.stringify(data));
-          if (data) this.cache.set(id, compressed.toString('base64'));
-          return data;
-        });
+        return id;
       })
     );
 
-    return Array.isArray(loginOrId) ? result : result.then((data) => data[0]);
+    const notFound = cachedResults.filter((id) => typeof id === 'string');
+    const notFoundResult = await super.user(notFound, opts);
+
+    const result = await Promise.all(
+      cachedResults.map(async (id) => {
+        if (typeof id === 'string') {
+          const user = notFoundResult.find((u) => u?.id === id);
+          if (user) this.cache.set(id, (await compress(JSON.stringify(user))).toString('base64'));
+          return user || null;
+        }
+        return id;
+      })
+    );
+
+    return Array.isArray(loginOrId) ? result : result[0];
   }
 }

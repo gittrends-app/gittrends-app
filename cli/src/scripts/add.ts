@@ -1,5 +1,4 @@
 import { GithubService, Repository, StorageService } from '@/core/index.js';
-import { FullFragmentFactory, PartialFragmentFactory } from '@/core/services/github/graphql/fragments/Fragment.js';
 import githubClient from '@/helpers/github.js';
 import mongo from '@/mongo/mongo.js';
 import { MongoStorageFactory } from '@/mongo/MongoStorage.js';
@@ -23,8 +22,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     .helpOption('-h, --help', 'Display this help message')
     .action(async (names: string[], options: { total: number }) => {
       consola.info('Initializing the storage service...');
-      const gService = new GithubService(githubClient, new PartialFragmentFactory());
-      const service = new StorageService(gService, new MongoStorageFactory(mongo.db('_public')));
+      const service = new StorageService(new GithubService(githubClient), new MongoStorageFactory(mongo.db('_public')));
 
       const progress = new SingleBar({
         format: '{task}: [{bar}] {percentage}% | {duration_formatted} | {value}/{total}',
@@ -50,8 +48,6 @@ if (import.meta.url === `file://${process.argv[1]}`) {
           repos.push(...data);
         }
       }
-
-      gService.setFragmentFactory(new FullFragmentFactory());
 
       await Promise.resolve()
         .then(() => {

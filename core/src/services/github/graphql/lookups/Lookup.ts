@@ -1,4 +1,3 @@
-import snakeCase from 'lodash/snakeCase.js';
 import { Fragment, FragmentFactory } from '../fragments/Fragment.js';
 
 /**
@@ -20,7 +19,7 @@ export abstract class QueryLookup<R = any, P = Record<string, any>> {
   readonly params: QueryLookupParams & P;
 
   constructor(params: QueryLookupParams & P) {
-    this.alias = (params.alias || `_${snakeCase(this.constructor.name)}`).replace(/[^a-zA-Z0-9]/g, '');
+    this.alias = (params.alias || params.id).replace(/[^a-zA-Z0-9]/g, '');
     this.params = params;
   }
 
