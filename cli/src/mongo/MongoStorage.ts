@@ -6,7 +6,9 @@ import {
   NodeStorage,
   RepositoryNodeStorage,
   RepositorySchema,
+  StargazerSchema,
   StorageFactory,
+  TagSchema,
   Watcher,
   WatcherSchema
 } from '@/core/index.js';
@@ -19,6 +21,8 @@ const Schemas = {
   Actor: ActorSchema,
   Repository: RepositorySchema,
   Watcher: WatcherSchema,
+  Stargazer: StargazerSchema,
+  Tag: TagSchema,
   Metadata: RepositoryNodeSchema.passthrough()
 };
 

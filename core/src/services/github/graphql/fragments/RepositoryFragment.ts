@@ -186,7 +186,7 @@ export class RepositoryFragment implements Fragment {
       releases_count: data.releases?.totalCount,
       tags_count: (data as any).tags?.totalCount,
       rulesets_count: data.rulesets?.totalCount,
-      stargazer_count: data.stargazerCount,
+      stargazers_count: data.stargazerCount,
       submodules_count: data.submodules?.totalCount,
       vulnerability_alerts_count: data.vulnerabilityAlerts?.totalCount,
       watchers_count: data.watchers?.totalCount

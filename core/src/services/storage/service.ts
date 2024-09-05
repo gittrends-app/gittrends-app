@@ -106,7 +106,7 @@ export class StorageService extends PassThroughService {
         let params = opts;
 
         if (!params.cursor) {
-          const [meta] = await metadataStorage.find({ id: params.repository, __typename: resourceName });
+          const [meta] = await metadataStorage.find({ id: `${params.repository}_${resourceName}` });
 
           if (meta) {
             let page = 0;
@@ -130,7 +130,7 @@ export class StorageService extends PassThroughService {
           if (res.data.length) {
             await resourceStorage.save(res.data as unknown as RepositoryNode);
             await metadataStorage.save(
-              { id: opts.repository, __typename: resourceName, ...params, ...res.params },
+              { id: `${opts.repository}_${resourceName}`, __typename: 'Metadata', ...params, ...res.params },
               true
             );
             yield res;

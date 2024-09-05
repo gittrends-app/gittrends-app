@@ -111,6 +111,44 @@ export class ActorFragment implements Fragment {
       login
       avatarUrl
       __typename
+
+      ... on User {
+        bio
+        company
+        createdAt
+        databaseId
+        email
+        hasSponsorsListing
+        isBountyHunter
+        isCampusExpert
+        isDeveloperProgramMember
+        isEmployee
+        isGitHubStar
+        isHireable
+        isSiteAdmin
+        location
+        name
+        pronouns
+        socialAccounts(first: 100) { 
+          nodes { provider displayName } 
+        }
+        twitterUsername
+        websiteUrl
+      }
+
+      ... on Organization {
+        archivedAt
+        createdAt
+        databaseId
+        description
+        email
+        hasSponsorsListing
+        isVerified
+        location
+        name
+        twitterUsername
+        websiteUrl
+      }
     }
     `;
   }

@@ -77,7 +77,7 @@ const extendedRepository = z
     tags_count: z.number().int(),
     releases_count: z.number().int(),
     rulesets_count: z.number().int(),
-    stargazer_count: z.number().int(),
+    stargazers_count: z.number().int(),
     submodules_count: z.number().int(),
     vulnerability_alerts_count: z.number().int(),
     watchers_count: z.number().int()

@@ -9,6 +9,8 @@ import { QueryBuilder } from '../graphql/QueryBuilder.js';
 type Params = { factory: FragmentFactory; client: GithubClient; byLogin?: boolean };
 
 async function users(idsArr: string[], params: Params): Promise<(Actor | null)[]> {
+  if (idsArr.length === 0) return [];
+
   const result = await idsArr
     .reduce(
       (builder, id) => builder.add(new UserLookup({ id, byLogin: params.byLogin, factory: params.factory })),
@@ -18,11 +20,11 @@ async function users(idsArr: string[], params: Params): Promise<(Actor | null)[]
     .then((result) => result.map((d) => d?.data as Actor | undefined))
     .catch((error) => {
       if ([502, 504].includes(error.status)) {
-        if (idsArr.length === 1) return [null];
-        else
-          return Promise.all(chunk(idsArr, Math.ceil(idsArr.length / 2)).map((chunk) => users(chunk, params))).then(
-            (data) => data.flat()
-          );
+        if (idsArr.length === 1 && error.status === 504) {
+          return [null];
+        } else if (idsArr.length > 1) {
+          return Promise.all(chunk(idsArr, 1).map((chunk) => users(chunk, params))).then((data) => data.flat());
+        }
       }
       throw error;
     });
@@ -36,9 +38,7 @@ async function users(idsArr: string[], params: Params): Promise<(Actor | null)[]
 export default async function (id: string, params: Params): Promise<Actor | null>;
 export default async function (id: string[], params: Params): Promise<(Actor | null)[]>;
 export default async function (id: string | string[], params: Params): Promise<any> {
-  const idsArr = Array.isArray(id) ? id : [id];
-
-  const resData = await Promise.all(chunk(idsArr, 50).map((chunk) => users(chunk, params))).then((data) => data.flat());
-
+  const ids = Array.isArray(id) ? id : [id];
+  const resData = await Promise.all(chunk(ids, 10).map((c) => users(c, params))).then((data) => data.flat());
   return Array.isArray(id) ? resData : resData[0];
 }
