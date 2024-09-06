@@ -75,7 +75,7 @@ const pr = NodeSchema.merge(RepositoryNodeSchema)
       .optional(),
     total_comments_count: z.number().int(),
 
-    timeline_items: z.array(TimelineItemSchema).optional()
+    timeline_items: z.union([z.string().array(), TimelineItemSchema.array()]).optional()
   });
 
 export const PullRequestSchema = zodSanitize(pr as z.ZodType<z.output<typeof pr>, ZodObjectDef, z.input<typeof pr>>);

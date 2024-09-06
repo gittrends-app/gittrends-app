@@ -57,10 +57,8 @@ export class QueryRunner {
   }
 
   public async fetchAll<R, P>(lookup: QueryLookup<R, P>) {
-    const it = this.iterator(lookup);
-
     const responses: ReturnType<(typeof lookup)['parse']>[] = [];
-    for await (const res of it) responses.push(res);
+    for await (const res of this.iterator(lookup)) responses.push(res);
 
     return { data: responses.map((res) => res.data).flat(), params: responses.at(-1)!.params };
   }

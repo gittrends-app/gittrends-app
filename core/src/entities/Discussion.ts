@@ -30,7 +30,7 @@ export const DiscussionSchema = zodSanitize(
       title: z.string(),
       upvote_count: z.number(),
 
-      comments: z.array(DiscussionCommentSchema).optional()
+      comments: z.union([z.string().array(), DiscussionCommentSchema.array()]).optional()
     })
 );
 

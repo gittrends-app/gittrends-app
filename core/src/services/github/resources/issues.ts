@@ -15,6 +15,7 @@ export default function (
   options: ServiceResourceParams & { factory: FragmentFactory }
 ): Iterable<Issue> {
   const { repository: repo, ...opts } = options;
+  const { first, factory } = options;
 
   return {
     [Symbol.asyncIterator]: async function* () {
@@ -25,13 +26,13 @@ export default function (
           res.data.map(async (issue) => {
             if (issue.reactions_count) {
               issue.reactions = await QueryRunner.create(client)
-                .fetchAll(new ReactionsLookup({ ...opts, id: issue.id }))
+                .fetchAll(new ReactionsLookup({ id: issue.id, first, factory }))
                 .then(({ data }) => data);
             }
 
             if (issue.timeline_items_count) {
               issue.timeline_items = await QueryRunner.create(client)
-                .fetchAll(new TimelineItemsLookup({ ...opts, id: issue.id }))
+                .fetchAll(new TimelineItemsLookup({ id: issue.id, first, factory }))
                 .then(({ data }) => data);
 
               await Promise.all(
@@ -40,7 +41,7 @@ export default function (
                   .map(async (comment) => {
                     if (comment.reactions_count) {
                       comment.reactions = await QueryRunner.create(client)
-                        .fetchAll(new ReactionsLookup({ ...opts, id: comment.id }))
+                        .fetchAll(new ReactionsLookup({ id: comment.id, first, factory }))
                         .then(({ data }) => data);
                     }
                   })
@@ -49,8 +50,10 @@ export default function (
           })
         );
 
-        const { cursor, first } = res.params;
-        yield { data: res.data, params: { has_more: !!res.next, first, cursor } };
+        yield {
+          data: res.data,
+          params: { has_more: !!res.next, first: res.params.first, cursor: res.params.cursor }
+        };
       }
 
       return;

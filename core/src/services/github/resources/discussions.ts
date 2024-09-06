@@ -10,7 +10,7 @@ import { ReactionsLookup } from '../graphql/lookups/ReactionsLookup.js';
 import { QueryRunner } from '../graphql/QueryRunner.js';
 
 /**
- *
+ *  Recursively retrieve the comments of a discussion.
  */
 async function discussionComments(
   client: GithubClient,
@@ -19,17 +19,17 @@ async function discussionComments(
       { comment: string }
     >
 ): Promise<DiscussionComment[]> {
-  const { discussion, comment, ...rest } = opts;
+  const { discussion, comment, first, factory } = opts;
 
   const res = await QueryRunner.create(client).fetchAll(
-    new DiscussionsCommentsLookup({ id: (discussion || comment) as string, isComment: !!comment, ...rest })
+    new DiscussionsCommentsLookup({ id: (discussion || comment) as string, isComment: !!comment, first, factory })
   );
 
   await Promise.all(
     res.data.map(async (comment) => {
       if (comment.reactions_count) {
         comment.reactions = await QueryRunner.create(client)
-          .fetchAll(new ReactionsLookup({ ...opts, id: comment.id }))
+          .fetchAll(new ReactionsLookup({ id: comment.id, first, factory }))
           .then(({ data }) => data);
       }
 
@@ -52,15 +52,16 @@ export default function (
   return {
     [Symbol.asyncIterator]: async function* () {
       const { repository: repo, ...rest } = opts;
+      const { first, factory } = opts;
 
-      for await (const searchRes of QueryRunner.create(client).iterator(new DiscussionsLookup({ id: repo, ...rest }))) {
+      for await (const searchRes of QueryRunner.create(client).iterator(new DiscussionsLookup({ ...rest, id: repo }))) {
         const data: Discussion[] = searchRes.data;
 
         await Promise.all(
           data.map(async (discussion) => {
             if (discussion.reactions_count) {
               discussion.reactions = await QueryRunner.create(client)
-                .fetchAll(new ReactionsLookup({ factory: opts.factory, id: discussion.id, first: opts.first }))
+                .fetchAll(new ReactionsLookup({ id: discussion.id, first, factory }))
                 .then(({ data }) => data);
             }
 
@@ -70,9 +71,10 @@ export default function (
           })
         );
 
-        const { cursor, first } = searchRes.params;
-
-        yield { data, params: { has_more: !!searchRes.next, cursor, first } };
+        yield {
+          data,
+          params: { has_more: !!searchRes.next, cursor: searchRes.params.cursor, first: searchRes.params.first }
+        };
       }
     }
   };

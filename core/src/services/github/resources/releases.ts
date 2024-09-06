@@ -14,6 +14,7 @@ export default function (
   options: ServiceResourceParams & { factory: FragmentFactory }
 ): Iterable<Release> {
   const { repository: repo, ...opts } = options;
+  const { first, factory } = options;
 
   return {
     [Symbol.asyncIterator]: async function* () {
@@ -24,14 +25,16 @@ export default function (
           res.data.map(async (release) => {
             if (release.reactions_count) {
               release.reactions = await QueryRunner.create(client)
-                .fetchAll(new ReactionsLookup({ ...opts, id: release.id }))
+                .fetchAll(new ReactionsLookup({ id: release.id, first, factory }))
                 .then(({ data }) => data);
             }
           })
         );
 
-        const { cursor, first } = res.params;
-        yield { data: res.data, params: { has_more: !!res.next, first, cursor } };
+        yield {
+          data: res.data,
+          params: { has_more: !!res.next, first: res.params.first, cursor: res.params.cursor }
+        };
       }
 
       return;

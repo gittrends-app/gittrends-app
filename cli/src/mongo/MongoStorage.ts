@@ -128,28 +128,68 @@ export class MongoStorageFactory implements StorageFactory {
         let arrNode = Array.isArray(node) ? node : [node];
         if (arrNode.length === 0) return;
 
-        if (typename === 'Discussion') {
-          const { data, refs } = extract(arrNode, DiscussionCommentSchema, (d) => d.id);
-          arrNode = data;
-          await this.discussionCommentsStorage.save(refs, replace);
-        }
+        switch (typename) {
+          case 'Discussion': {
+            await this.discussionCommentsStorage.save(
+              (arrNode as Discussion[])
+                .map((d) => d.comments || [])
+                .flat()
+                .filter((c) => typeof c !== 'string'),
+              replace
+            );
 
-        if (typename === 'Issue' || typename === 'PullRequest') {
-          const { data, refs } = extract(arrNode, TimelineItemSchema, (d) => d.id);
-          arrNode = data;
-          await this.timelineItemsStorage.save(refs, replace);
-        }
+            arrNode = (arrNode as Discussion[]).map((d) => {
+              d.comments = d.comments?.map((c) => (typeof c === 'string' ? c : c.id));
+              return d;
+            });
 
-        if (typename !== 'Actor') {
-          const { data, refs } = extract(arrNode, ActorSchema, (d) => d.id);
-          arrNode = data;
-          await this.actorStorage.save(refs, replace);
+            break;
+          }
+          case 'DiscussionComment': {
+            await this.discussionCommentsStorage.save(
+              (arrNode as DiscussionComment[])
+                .map((d) => d.replies || [])
+                .flat()
+                .filter((c) => typeof c !== 'string'),
+              replace
+            );
+
+            arrNode = (arrNode as DiscussionComment[]).map((d) => {
+              d.replies = d.replies?.map((c) => (typeof c === 'string' ? c : c.id));
+              return d;
+            });
+
+            break;
+          }
+          case 'Issue':
+          case 'PullRequest': {
+            await this.timelineItemsStorage.save(
+              (arrNode as (Issue | PullRequest)[])
+                .map((d) => d.timeline_items || [])
+                .flat()
+                .filter((c) => typeof c !== 'string'),
+              replace
+            );
+
+            arrNode = (arrNode as (Issue | PullRequest)[]).map((d) => {
+              d.timeline_items = d.timeline_items?.map((c) => (typeof c === 'string' ? c : c.id));
+              return d;
+            });
+
+            break;
+          }
         }
 
         if (typename !== 'Reaction') {
           const { data, refs } = extract(arrNode, ReactionSchema, (d) => d.id);
           arrNode = data;
           await this.reactionsStorage.save(refs, replace);
+        }
+
+        if (typename !== 'Actor') {
+          const { data, refs } = extract(arrNode, ActorSchema, (d) => d.id);
+          arrNode = data;
+          await this.actorStorage.save(refs, replace);
         }
 
         await this.db

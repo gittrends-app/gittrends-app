@@ -365,28 +365,7 @@ class TimelineItemFragment implements Fragment {
       }
 
       fragment ${this.alias}_PullRequestCommitCommentThread on PullRequestCommitCommentThread {
-        comments(first: 100) {
-          nodes {
-            ...${this.alias}_Node
-            author { ...${this.fragments[0].alias} }
-            authorAssociation
-            body
-            commit { id }
-            createdAt
-            createdViaEmail
-            databaseId
-            editor { ...${this.fragments[0].alias} }
-            includesCreatedEdit
-            isMinimized
-            lastEditedAt
-            minimizedReason
-            path
-            position
-            publishedAt
-            reactions { totalCount }
-            updatedAt
-          }
-        }
+        comments { totalCount }
         commit { id }
         path
         position
@@ -408,7 +387,7 @@ class TimelineItemFragment implements Fragment {
       fragment ${this.alias}_PullRequestReview on PullRequestReview {
         ...${this.alias}_Comment
         authorCanPushToRepository
-        comments(first: 100) { nodes { ...${this.alias}_PullRequestReviewCommentFragment }  }
+        comments { totalCount  }
         commit { id }
         fullDatabaseId
         isMinimized
@@ -419,7 +398,7 @@ class TimelineItemFragment implements Fragment {
       }
 
       fragment ${this.alias}_PullRequestReviewThread on PullRequestReviewThread {
-        comments(first: 100) { nodes { ...${this.alias}_PullRequestReviewCommentFragment }  }
+        comments { totalCount }
         diffSide
         isCollapsed
         isOutdated
@@ -916,27 +895,7 @@ class TimelineItemFragment implements Fragment {
       case 'PullRequestCommitCommentThread':
         _data = {
           ..._data,
-          comments: data.comments?.nodes?.map((node) => ({
-            author: node!.author && this.fragments[0].parse(node!.author),
-            author_association: node!.authorAssociation,
-            body: node!.body,
-            created_at: node!.createdAt,
-            created_via_email: node!.createdViaEmail,
-            editor: node!.editor && this.fragments[0].parse(node!.editor),
-            includes_created_edit: node!.includesCreatedEdit,
-            last_edited_at: node!.lastEditedAt,
-            published_at: node!.publishedAt,
-            updated_at: node!.updatedAt,
-            commit: node!.commit?.id,
-            database_id: node!.databaseId,
-            id: node!.id,
-            is_minimized: node!.isMinimized,
-            minimized_reason: node!.minimizedReason,
-            path: node!.path,
-            position: node!.position,
-            reactions_count: node!.reactions?.totalCount,
-            __typename: node!.__typename
-          })),
+          comments_count: data.comments.totalCount,
           commit: data.commit?.id,
           path: data.path,
           position: data.position
@@ -946,39 +905,7 @@ class TimelineItemFragment implements Fragment {
         _data = {
           ..._data,
           author_can_push_to_repository: data.authorCanPushToRepository,
-          comments: data.comments?.nodes?.map((node) => ({
-            author: node!.author && this.fragments[0].parse(node!.author),
-            author_association: node!.authorAssociation,
-            body: node!.body,
-            created_at: node!.createdAt,
-            created_via_email: node!.createdViaEmail,
-            editor: node!.editor && this.fragments[0].parse(node!.editor),
-            includes_created_edit: node!.includesCreatedEdit,
-            last_edited_at: node!.lastEditedAt,
-            published_at: node!.publishedAt,
-            updated_at: node!.updatedAt,
-
-            commit: node!.commit?.id,
-            diff_hunk: node!.diffHunk,
-            drafted_at: node!.draftedAt,
-            full_database_id: node!.fullDatabaseId,
-            id: node!.id,
-            is_minimized: node!.isMinimized,
-            line: node!.line,
-            minimized_reason: node!.minimizedReason,
-            original_commit: node!.originalCommit?.id,
-            original_line: node!.originalLine,
-            original_start_line: node!.originalStartLine,
-            outdated: node!.outdated,
-            path: node!.path,
-            pull_request_review: node!.pullRequestReview?.id,
-            reactions_count: node!.reactions?.totalCount,
-            reply_to: node!.replyTo?.id,
-            start_line: node!.startLine,
-            state: node!.state,
-            subject_type: node!.subjectType,
-            __typename: node!.__typename
-          })),
+          comments_count: data.comments.totalCount,
           commit: data.commit?.id,
           full_database_id: data.fullDatabaseId,
           is_minimized: data.isMinimized,
@@ -1002,39 +929,7 @@ class TimelineItemFragment implements Fragment {
       case 'PullRequestReviewThread':
         _data = {
           ..._data,
-          comments: data.comments?.nodes?.map((node) => ({
-            author: node!.author && this.fragments[0].parse(node!.author),
-            author_association: node!.authorAssociation,
-            body: node!.body,
-            created_at: node!.createdAt,
-            created_via_email: node!.createdViaEmail,
-            editor: node!.editor && this.fragments[0].parse(node!.editor),
-            includes_created_edit: node!.includesCreatedEdit,
-            last_edited_at: node!.lastEditedAt,
-            published_at: node!.publishedAt,
-            updated_at: node!.updatedAt,
-
-            commit: node!.commit?.id,
-            diff_hunk: node!.diffHunk,
-            drafted_at: node!.draftedAt,
-            full_database_id: node!.fullDatabaseId,
-            id: node!.id,
-            is_minimized: node!.isMinimized,
-            line: node!.line,
-            minimized_reason: node!.minimizedReason,
-            original_commit: node!.originalCommit?.id,
-            original_line: node!.originalLine,
-            original_start_line: node!.originalStartLine,
-            outdated: node!.outdated,
-            path: node!.path,
-            pull_request_review: node!.pullRequestReview?.id,
-            reactions_count: node!.reactions?.totalCount,
-            reply_to: node!.replyTo?.id,
-            start_line: node!.startLine,
-            state: node!.state,
-            subject_type: node!.subjectType,
-            __typename: node!.__typename
-          })),
+          comments_count: data.comments.totalCount,
           diff_side: data.diffSide,
           is_collapsed: data.isCollapsed,
           is_outdated: data.isOutdated,

@@ -2,7 +2,10 @@ import { z, ZodDiscriminatedUnionDef } from 'zod';
 import { zodSanitize } from '../helpers/sanitize.js';
 import { ActorSchema } from './Actor.js';
 import { CommentSchema } from './base/Comment.js';
+import { CommitCommentSchema } from './base/CommitComment.js';
+import { MinimizableSchema } from './base/Minimizable.js';
 import { NodeSchema } from './base/Node.js';
+import { PullRequestReviewCommentSchema } from './base/PullRequestReviewComment.js';
 import { ReactableSchema } from './base/Reactable.js';
 
 const AddedToProjectEvent = NodeSchema.extend({
@@ -88,14 +91,9 @@ const DisconnectedEvent = NodeSchema.extend({
   source: z.object({ id: z.string(), __typename: z.enum(['Issue', 'PullRequest']) })
 });
 
-const Minimizable = NodeSchema.extend({
-  is_minimized: z.boolean(),
-  minimized_reason: z.string().optional()
-});
-
 const IssueComment = NodeSchema.merge(CommentSchema)
   .merge(ReactableSchema)
-  .merge(Minimizable)
+  .merge(MinimizableSchema)
   .extend({
     __typename: z.literal('IssueComment'),
     database_id: z.number().int().optional(),
@@ -385,54 +383,23 @@ const PullRequestCommit = NodeSchema.extend({
   commit: z.string()
 });
 
-const CommitComment = NodeSchema.merge(CommentSchema)
-  .merge(Minimizable)
-  .merge(ReactableSchema)
-  .extend({
-    __typename: z.literal('CommitComment'),
-    commit: z.string().optional(),
-    database_id: z.number().int().optional(),
-    path: z.string().optional(),
-    position: z.number().int().optional()
-  });
-
-const PullRequestReviewComment = NodeSchema.merge(CommentSchema)
-  .merge(Minimizable)
-  .merge(ReactableSchema)
-  .extend({
-    __typename: z.literal('PullRequestReviewComment'),
-    commit: z.string().optional(),
-    diff_hunk: z.string(),
-    drafted_at: z.coerce.date(),
-    full_database_id: z.coerce.number().int().optional(),
-    line: z.number().int().optional(),
-    original_commit: z.string().optional(),
-    original_line: z.number().int().optional(),
-    original_start_line: z.number().int().optional(),
-    outdated: z.boolean(),
-    path: z.string(),
-    pull_request_review: z.string().optional(),
-    reply_to: z.string().optional(),
-    start_line: z.number().int().optional(),
-    state: z.string(),
-    subject_type: z.string()
-  });
-
 const PullRequestCommitCommentThread = NodeSchema.extend({
   __typename: z.literal('PullRequestCommitCommentThread'),
-  comments: z.array(CommitComment).optional(),
+  comments_count: z.number().int(),
+  comments: z.array(CommitCommentSchema).optional(),
   commit: z.string(),
   path: z.string().optional(),
   position: z.number().int().optional()
 });
 
 const PullRequestReview = NodeSchema.merge(CommentSchema)
-  .merge(Minimizable)
+  .merge(MinimizableSchema)
   .merge(ReactableSchema)
   .extend({
     __typename: z.literal('PullRequestReview'),
     author_can_push_to_repository: z.boolean(),
-    comments: z.array(PullRequestReviewComment).optional(),
+    comments_count: z.number().int(),
+    comments: z.array(PullRequestReviewCommentSchema).optional(),
     commit: z.string().optional(),
     full_database_id: z.coerce.number().int().optional(),
     state: z.string(),
@@ -441,7 +408,8 @@ const PullRequestReview = NodeSchema.merge(CommentSchema)
 
 const PullRequestReviewThread = NodeSchema.extend({
   __typename: z.literal('PullRequestReviewThread'),
-  comments: z.array(PullRequestReviewComment).optional(),
+  comments_count: z.number().int(),
+  comments: z.array(PullRequestReviewCommentSchema).optional(),
   diff_side: z.string(),
   is_collapsed: z.boolean(),
   is_outdated: z.boolean(),

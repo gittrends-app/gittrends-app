@@ -129,9 +129,6 @@ export class ActorFragment implements Fragment {
         location
         name
         pronouns
-        socialAccounts(first: 100) { 
-          nodes { provider displayName } 
-        }
         twitterUsername
         websiteUrl
       }

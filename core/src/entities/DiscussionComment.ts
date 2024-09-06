@@ -30,10 +30,10 @@ type Output = z.output<typeof base> & {
   replies?: string[] | Output[];
 };
 
-const comment: z.ZodType<Output, z.ZodTypeDef, Input> = base.extend({
+const Comment: z.ZodType<Output, z.ZodTypeDef, Input> = base.extend({
   reactions: z.array(ReactionSchema).optional(),
-  replies: z.lazy(() => z.union([z.string().array(), comment.array()])).optional()
+  replies: z.lazy(() => z.union([z.string().array(), Comment.array()])).optional()
 });
 
-export const DiscussionCommentSchema = zodSanitize(comment);
+export const DiscussionCommentSchema = zodSanitize(Comment);
 export type DiscussionComment = z.output<typeof DiscussionCommentSchema>;
