@@ -1,7 +1,4 @@
-import camelCase from 'lodash/camelCase.js';
 import omit from 'lodash/omit.js';
-import upperFirst from 'lodash/upperFirst.js';
-import pluralize from 'pluralize';
 import { Actor } from '../../entities/Actor.js';
 import { RepositoryNode } from '../../entities/base/RepositoryNode.js';
 import { Commit } from '../../entities/Commit.js';
@@ -95,7 +92,17 @@ export class StorageService implements Service {
   resource(name: 'issues', opts: ServiceResourceParams & { resume?: boolean }): Iterable<Issue>;
   resource(name: 'pull_requests', opts: ServiceResourceParams & { resume?: boolean }): Iterable<PullRequest>;
   resource(name: string, opts: ServiceResourceParams & { resume?: boolean }): Iterable<any> {
-    const resourceName = upperFirst(camelCase(pluralize.singular(name)));
+    let resourceName;
+
+    if (name === 'watchers') resourceName = 'Watcher';
+    else if (name === 'stargazers') resourceName = 'Stargazer';
+    else if (name === 'discussions') resourceName = 'Discussion';
+    else if (name === 'tags') resourceName = 'Tag';
+    else if (name === 'releases') resourceName = 'Release';
+    else if (name === 'commits') resourceName = 'Commit';
+    else if (name === 'issues') resourceName = 'Issue';
+    else if (name === 'pull_requests') resourceName = 'PullRequest';
+    else throw new Error(`Unknown resource: ${name}`);
 
     const metadataStorage = this.storage.create('Metadata');
     const resourceStorage = this.storage.create<RepositoryNode>(resourceName);

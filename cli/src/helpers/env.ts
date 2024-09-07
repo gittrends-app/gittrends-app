@@ -9,7 +9,6 @@ const schema = z
     GITHUB_API_BASE_URL: z.string().url().default('https://api.github.com'),
     GITHUB_API_TOKEN: z.string().optional(),
     FETCH_RETRIES: z.coerce.number().default(5),
-    FETCH_LIMIT: z.coerce.number().default(Infinity),
     CACHE_SIZE: z.coerce.number().default(100000),
     CACHE_TTL: z.coerce.number().default(1000 * 60 * 60 * 24 * 7)
   })
