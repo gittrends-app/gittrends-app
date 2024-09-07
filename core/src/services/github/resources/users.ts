@@ -1,7 +1,7 @@
 /* eslint-disable jsdoc/require-jsdoc */
 import chunk from 'lodash/chunk.js';
 import { Actor } from '../../../entities/Actor.js';
-import { GithubClient } from '../client.js';
+import { GithubClient } from '../GithubClient.js';
 import { FragmentFactory } from '../graphql/fragments/Fragment.js';
 import { UserLookup } from '../graphql/lookups/UserLookup.js';
 import { QueryBuilder } from '../graphql/QueryBuilder.js';

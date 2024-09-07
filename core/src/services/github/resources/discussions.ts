@@ -1,8 +1,8 @@
 import { MergeExclusive } from 'type-fest';
 import { Discussion } from '../../../entities/Discussion.js';
 import { DiscussionComment } from '../../../entities/DiscussionComment.js';
-import { Iterable, ServiceResourceParams } from '../../service.js';
-import { GithubClient } from '../client.js';
+import { Iterable, ServiceResourceParams } from '../../Service.js';
+import { GithubClient } from '../GithubClient.js';
 import { FragmentFactory } from '../graphql/fragments/Fragment.js';
 import { DiscussionsCommentsLookup } from '../graphql/lookups/DiscussionsCommentsLookup.js';
 import { DiscussionsLookup } from '../graphql/lookups/DiscussionsLookup.js';

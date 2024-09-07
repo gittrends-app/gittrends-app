@@ -13,8 +13,8 @@ import { Repository } from '../../entities/Repository.js';
 import { Stargazer } from '../../entities/Stargazer.js';
 import { Tag } from '../../entities/Tag.js';
 import { Watcher } from '../../entities/Watcher.js';
-import { PassThroughService } from '../passthrough.js';
-import { Iterable, Service, ServiceCommitsParams, ServiceResourceParams } from '../service.js';
+import { PassThroughService } from '../PassThroughService.js';
+import { Iterable, Service, ServiceCommitsParams, ServiceResourceParams } from '../Service.js';
 import { StorageFactory } from './storage.js';
 
 /**

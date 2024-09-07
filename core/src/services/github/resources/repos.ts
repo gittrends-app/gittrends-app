@@ -1,6 +1,6 @@
 /* eslint-disable jsdoc/require-jsdoc */
 import { Repository } from '../../../entities/Repository.js';
-import { GithubClient } from '../client.js';
+import { GithubClient } from '../GithubClient.js';
 import { FragmentFactory } from '../graphql/fragments/Fragment.js';
 import { RepositoryLookup } from '../graphql/lookups/RepositoryLookup.js';
 import { QueryBuilder } from '../graphql/QueryBuilder.js';

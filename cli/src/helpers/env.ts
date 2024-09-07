@@ -16,7 +16,6 @@ const schema = z
   .refine((data) => data.GITHUB_API_BASE_URL !== 'https://api.github.com' || data.GITHUB_API_TOKEN, {
     message: 'GITHUB_API_TOKEN is required if GITHUB_API_BASE_URL is "https://api.github.com"',
     path: ['GITHUB_API_TOKEN']
-  })
-  .transform((data) => ({ ...data, GITHUB_DISABLE_THROTTLING: data.GITHUB_API_BASE_URL !== 'https://api.github.com' }));
+  });
 
 export default schema.parse(process.env);

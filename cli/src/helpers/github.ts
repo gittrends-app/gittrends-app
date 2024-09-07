@@ -13,6 +13,5 @@ const fetchLimit = function (fetch: typeof global.fetch, limit: number) {
  */
 export default new GithubClient(env.GITHUB_API_BASE_URL, {
   apiToken: env.GITHUB_API_TOKEN,
-  disableThrottling: env.GITHUB_DISABLE_THROTTLING,
   fetcher: fetchLimit(fetchRetry(fetch, { retries: env.FETCH_RETRIES, retryOn: [502] }), env.FETCH_LIMIT)
 });

@@ -35,12 +35,12 @@ export interface Service {
 
   repository(ownerOrId: string, name?: string): Promise<Repository | null>;
 
-  resource(name: 'watchers', opts: ServiceResourceParams): Iterable<Watcher>;
-  resource(name: 'stargazers', opts: ServiceResourceParams): Iterable<Stargazer>;
-  resource(name: 'discussions', opts: ServiceResourceParams): Iterable<Discussion>;
-  resource(name: 'tags', opts: ServiceResourceParams): Iterable<Tag>;
-  resource(name: 'releases', opts: ServiceResourceParams): Iterable<Release>;
   resource(name: 'commits', opts: ServiceCommitsParams): Iterable<Commit>;
+  resource(name: 'discussions', opts: ServiceResourceParams): Iterable<Discussion>;
   resource(name: 'issues', opts: ServiceResourceParams): Iterable<Issue>;
   resource(name: 'pull_requests', opts: ServiceResourceParams): Iterable<PullRequest>;
+  resource(name: 'releases', opts: ServiceResourceParams): Iterable<Release>;
+  resource(name: 'stargazers', opts: ServiceResourceParams): Iterable<Stargazer>;
+  resource(name: 'tags', opts: ServiceResourceParams): Iterable<Tag>;
+  resource(name: 'watchers', opts: ServiceResourceParams): Iterable<Watcher>;
 }

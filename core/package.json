@@ -16,7 +16,7 @@
     "build": "run-s build:clean compile",
     "jest": "jest --runInBand",
     "jest:coverage": "jest --runInBand --collect-coverage",
-    "verify": "run-p lint build jest",
+    "verify": "run-s lint build jest",
     "prettier": "prettier --write src"
   },
   "dependencies": {
@@ -31,10 +31,5 @@
   "devDependencies": {
     "@octokit/graphql-schema": "^15.25.0",
     "@types/lodash": "^4.17.6"
-  },
-  "config": {
-    "commitizen": {
-      "path": "./node_modules/cz-conventional-changelog"
-    }
   }
 }

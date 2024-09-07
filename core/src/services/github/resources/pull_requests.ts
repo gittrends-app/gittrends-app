@@ -1,9 +1,9 @@
 import { Commentable } from '../../../entities/base/Commentable.js';
+import { Node } from '../../../entities/base/Node.js';
 import { Reactable } from '../../../entities/base/Reactable.js';
-import { Node } from '../../../entities/index.js';
 import { PullRequest } from '../../../entities/PullRequest.js';
-import { Iterable, ServiceResourceParams } from '../../service.js';
-import { GithubClient } from '../client.js';
+import { Iterable, ServiceResourceParams } from '../../Service.js';
+import { GithubClient } from '../GithubClient.js';
 import { FragmentFactory } from '../graphql/fragments/Fragment.js';
 import { PullRequestsLookup } from '../graphql/lookups/PullRequestsLookup.js';
 import { ReactionsLookup } from '../graphql/lookups/ReactionsLookup.js';

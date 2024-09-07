@@ -1,6 +1,6 @@
 import { Release } from '../../../entities/Release.js';
-import { Iterable, ServiceResourceParams } from '../../service.js';
-import { GithubClient } from '../client.js';
+import { Iterable, ServiceResourceParams } from '../../Service.js';
+import { GithubClient } from '../GithubClient.js';
 import { FragmentFactory } from '../graphql/fragments/Fragment.js';
 import { ReactionsLookup } from '../graphql/lookups/ReactionsLookup.js';
 import { ReleasesLookup } from '../graphql/lookups/ReleasesLookup.js';

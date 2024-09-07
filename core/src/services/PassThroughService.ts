@@ -8,7 +8,7 @@ import { Repository } from '../entities/Repository.js';
 import { Stargazer } from '../entities/Stargazer.js';
 import { Tag } from '../entities/Tag.js';
 import { Watcher } from '../entities/Watcher.js';
-import { Iterable, Service, ServiceCommitsParams, ServiceResourceParams } from './service.js';
+import { Iterable, Service, ServiceCommitsParams, ServiceResourceParams } from './Service.js';
 
 /**
  * A service that passes all requests through to the underlying service.
@@ -16,13 +16,13 @@ import { Iterable, Service, ServiceCommitsParams, ServiceResourceParams } from '
 export class PassThroughService implements Service {
   constructor(public readonly service: Service) {}
 
-  search(total: number): Iterable<Repository> {
-    return this.service.search(total);
+  search(total: number, opts?: { first?: number }): Iterable<Repository> {
+    return this.service.search(total, opts);
   }
 
   user(id: string, opts?: { byLogin: boolean }): Promise<Actor | null>;
   user(id: string[], opts?: { byLogin: boolean }): Promise<(Actor | null)[]>;
-  user(id: any, opts?: { byLogin: boolean }): Promise<any> {
+  user(id: any, opts?: any): Promise<any> {
     return this.service.user(id, opts);
   }
 
@@ -30,14 +30,14 @@ export class PassThroughService implements Service {
     return this.service.repository(ownerOrId, name);
   }
 
-  resource(name: 'watchers', opts: ServiceResourceParams): Iterable<Watcher>;
-  resource(name: 'stargazers', opts: ServiceResourceParams): Iterable<Stargazer>;
-  resource(name: 'discussions', opts: ServiceResourceParams): Iterable<Discussion>;
-  resource(name: 'tags', opts: ServiceResourceParams): Iterable<Tag>;
-  resource(name: 'releases', opts: ServiceResourceParams): Iterable<Release>;
   resource(name: 'commits', opts: ServiceCommitsParams): Iterable<Commit>;
-  resource(name: 'issues', opts: ServiceCommitsParams): Iterable<Issue>;
-  resource(name: 'pull_requests', opts: ServiceCommitsParams): Iterable<PullRequest>;
+  resource(name: 'discussions', opts: ServiceResourceParams): Iterable<Discussion>;
+  resource(name: 'issues', opts: ServiceResourceParams): Iterable<Issue>;
+  resource(name: 'pull_requests', opts: ServiceResourceParams): Iterable<PullRequest>;
+  resource(name: 'releases', opts: ServiceResourceParams): Iterable<Release>;
+  resource(name: 'stargazers', opts: ServiceResourceParams): Iterable<Stargazer>;
+  resource(name: 'tags', opts: ServiceResourceParams): Iterable<Tag>;
+  resource(name: 'watchers', opts: ServiceResourceParams): Iterable<Watcher>;
   resource(name: any, opts: any): Iterable<any> {
     return this.service.resource(name, opts);
   }

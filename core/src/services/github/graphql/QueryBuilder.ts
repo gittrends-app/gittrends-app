@@ -1,6 +1,6 @@
 import { GraphqlResponseError } from '@octokit/graphql';
 import sanitize from '../../../helpers/sanitize.js';
-import { GithubClient } from '../client.js';
+import { GithubClient } from '../GithubClient.js';
 import { Fragment } from './fragments/Fragment.js';
 import { QueryLookup } from './lookups/Lookup.js';
 

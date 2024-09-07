@@ -1,6 +1,6 @@
 import { GraphqlResponseError } from '@octokit/graphql';
 import sanitize from '../../../helpers/sanitize.js';
-import { GithubClient } from '../client.js';
+import { GithubClient } from '../GithubClient.js';
 import { Fragment } from './fragments/Fragment.js';
 import { QueryLookup } from './lookups/Lookup.js';
 
@@ -12,7 +12,7 @@ function resolveFragment(fragment: Fragment): Fragment[] {
 }
 
 /**
- * GraphqlQuery is a wrapper around the GraphqlClient.query method.
+ *  QueryRunner is a wrapper around the GraphqlClient.query method.
  */
 export class QueryRunner {
   private constructor(private readonly client: GithubClient) {}

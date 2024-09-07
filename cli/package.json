@@ -14,15 +14,12 @@
     "build:clean": "shx rm -rf ./dist tsconfig.tsbuildinfo",
     "build": "run-s build:clean compile",
     "tsx": "tsx -r \"dotenv-flow/config\"",
-    "migrate:up": "tsx -r \"dotenv-flow/config\" src/knex/migrate.ts up",
-    "migrate:down": "tsx -r \"dotenv-flow/config\" src/knex/migrate.ts down",
-    "migrate:latest": "tsx -r \"dotenv-flow/config\" src/knex/migrate.ts latest",
     "dev": "tsx  -r \"dotenv-flow/config\" src/scripts/main.ts",
     "start": "node -r \"dotenv-flow/config\" dist/scripts/main.js",
     "jest": "jest --runInBand",
     "test": "jest --runInBand",
     "test:coverage": "jest --collect-coverage",
-    "verify": "run-p lint build test",
+    "verify": "run-s lint build test",
     "prettier": "prettier --write src"
   },
   "dependencies": {
@@ -40,7 +37,6 @@
     "dayjs": "^1.11.12",
     "express": "^4.19.2",
     "fetch-retry": "^6.0.0",
-    "knex": "^3.1.0",
     "lodash": "^4.17.21",
     "mongodb": "^6.8.0",
     "object-hash": "^3.0.0",
@@ -55,10 +51,5 @@
     "@types/lodash": "^4.17.6",
     "@types/object-hash": "^3.0.6",
     "@types/pluralize": "^0.0.33"
-  },
-  "config": {
-    "commitizen": {
-      "path": "./node_modules/cz-conventional-changelog"
-    }
   }
 }

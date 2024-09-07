@@ -1,2 +1,2 @@
-export * from './client.js';
-export * from './service.js';
+export * from './GithubClient.js';
+export * from './GithubService.js';

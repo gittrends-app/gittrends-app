@@ -1,6 +1,6 @@
 import { Commit } from '../../../entities/Commit.js';
-import { Iterable, ServiceCommitsParams } from '../../service.js';
-import { GithubClient } from '../client.js';
+import { Iterable, ServiceCommitsParams } from '../../Service.js';
+import { GithubClient } from '../GithubClient.js';
 import { FragmentFactory } from '../graphql/fragments/Fragment.js';
 import { CommitsLookup } from '../graphql/lookups/CommitsLookup.js';
 import { QueryRunner } from '../graphql/QueryRunner.js';

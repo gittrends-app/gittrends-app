@@ -9,8 +9,8 @@ import { Repository } from '../../entities/Repository.js';
 import { Stargazer } from '../../entities/Stargazer.js';
 import { Tag } from '../../entities/Tag.js';
 import { Watcher } from '../../entities/Watcher.js';
-import { Iterable, Service, ServiceCommitsParams, ServiceResourceParams } from '../service.js';
-import { GithubClient } from './client.js';
+import { Iterable, Service, ServiceCommitsParams, ServiceResourceParams } from '../Service.js';
+import { GithubClient } from './GithubClient.js';
 import { FullFragmentFactory, PartialFragmentFactory } from './graphql/fragments/Fragment.js';
 import { QueryLookup } from './graphql/lookups/Lookup.js';
 import { SearchLookup } from './graphql/lookups/SearchLookup.js';
@@ -67,14 +67,14 @@ export class GithubService implements Service {
     });
   }
 
-  resource(name: 'stargazers', opts: ServiceResourceParams): Iterable<Stargazer>;
-  resource(name: 'watchers', opts: ServiceResourceParams): Iterable<Watcher>;
-  resource(name: 'discussions', opts: ServiceResourceParams): Iterable<Discussion>;
-  resource(name: 'tags', opts: ServiceResourceParams): Iterable<Tag>;
-  resource(name: 'releases', opts: ServiceResourceParams): Iterable<Release>;
   resource(name: 'commits', opts: ServiceCommitsParams): Iterable<Commit>;
+  resource(name: 'discussions', opts: ServiceResourceParams): Iterable<Discussion>;
   resource(name: 'issues', opts: ServiceCommitsParams): Iterable<Issue>;
   resource(name: 'pull_requests', opts: ServiceCommitsParams): Iterable<PullRequest>;
+  resource(name: 'releases', opts: ServiceResourceParams): Iterable<Release>;
+  resource(name: 'stargazers', opts: ServiceResourceParams): Iterable<Stargazer>;
+  resource(name: 'tags', opts: ServiceResourceParams): Iterable<Tag>;
+  resource(name: 'watchers', opts: ServiceResourceParams): Iterable<Watcher>;
   resource<P extends ServiceResourceParams>(name: string, opts: P): Iterable<any> {
     const params = { id: opts.repository, cursor: opts.cursor, first: opts.first };
     const factory = new PartialFragmentFactory();
