@@ -158,7 +158,8 @@ export class RepositoryUpdater extends AbstractTask<Notification> {
               this.notify({ repository: repo.id, resource: 'users', done: true });
             } else {
               let first = 100;
-              if (['issues', 'pull_requests'].includes(name)) first = 25;
+              if (name === 'issues') first = 25;
+              if (name === 'pull_requests') first = 15;
 
               const it = this.service.resource(name as any, { repository: repo.id, first, resume: true });
 
