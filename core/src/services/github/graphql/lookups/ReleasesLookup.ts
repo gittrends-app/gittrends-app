@@ -8,7 +8,7 @@ import { QueryLookup } from './Lookup.js';
  */
 export class ReleasesLookup extends QueryLookup<Release[]> {
   toString(): string {
-    const params = [`first: ${this.params.first || 100}`, 'orderBy: { field: CREATED_AT direction: ASC }'];
+    const params = [`first: ${this.params.per_page || 100}`, 'orderBy: { field: CREATED_AT direction: ASC }'];
     if (this.params.cursor) params.push(`after: "${this.params.cursor}"`);
 
     return `

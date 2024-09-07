@@ -157,11 +157,11 @@ export class RepositoryUpdater extends AbstractTask<Notification> {
 
               this.notify({ repository: repo.id, resource: 'users', done: true });
             } else {
-              let first = 100;
-              if (name === 'issues') first = 25;
-              if (name === 'pull_requests') first = 15;
+              let perPage = 100;
+              if (name === 'issues') perPage = 25;
+              if (name === 'pull_requests') perPage = 15;
 
-              const it = this.service.resource(name as any, { repository: repo.id, first, resume: true });
+              const it = this.service.resource(name as any, { repository: repo.id, per_page: perPage, resume: true });
 
               let total = await this.service.storage
                 .create<RepositoryNode>(upperFirst(camelCase(pluralize.singular(name))))

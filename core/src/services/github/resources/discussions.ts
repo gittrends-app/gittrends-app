@@ -1,11 +1,11 @@
 import { MergeExclusive } from 'type-fest';
 import { Discussion } from '../../../entities/Discussion.js';
 import { DiscussionComment } from '../../../entities/DiscussionComment.js';
-import { Iterable, ServiceResourceParams } from '../../Service.js';
+import { Iterable } from '../../Service.js';
 import { GithubClient } from '../GithubClient.js';
-import { FragmentFactory } from '../graphql/fragments/Fragment.js';
 import { DiscussionsCommentsLookup } from '../graphql/lookups/DiscussionsCommentsLookup.js';
 import { DiscussionsLookup } from '../graphql/lookups/DiscussionsLookup.js';
+import { QueryLookupParams } from '../graphql/lookups/Lookup.js';
 import { ReactionsLookup } from '../graphql/lookups/ReactionsLookup.js';
 import { QueryRunner } from '../graphql/QueryRunner.js';
 
@@ -14,22 +14,22 @@ import { QueryRunner } from '../graphql/QueryRunner.js';
  */
 async function discussionComments(
   client: GithubClient,
-  opts: ServiceResourceParams & { factory: FragmentFactory } & MergeExclusive<
-      { discussion: string },
-      { comment: string }
-    >
+  opts: QueryLookupParams & MergeExclusive<{ discussion: string }, { comment: string }>
 ): Promise<DiscussionComment[]> {
-  const { discussion, comment, first, factory } = opts;
-
   const res = await QueryRunner.create(client).fetchAll(
-    new DiscussionsCommentsLookup({ id: (discussion || comment) as string, isComment: !!comment, first, factory })
+    new DiscussionsCommentsLookup({
+      id: (opts.discussion || opts.comment) as string,
+      isComment: !!opts.comment,
+      per_page: opts.per_page,
+      factory: opts.factory
+    })
   );
 
   await Promise.all(
     res.data.map(async (comment) => {
       if (comment.reactions_count) {
         comment.reactions = await QueryRunner.create(client)
-          .fetchAll(new ReactionsLookup({ id: comment.id, first, factory }))
+          .fetchAll(new ReactionsLookup({ id: comment.id, per_page: opts.per_page, factory: opts.factory }))
           .then(({ data }) => data);
       }
 
@@ -45,23 +45,17 @@ async function discussionComments(
 /**
  * Retrieves the discussions of a repository.
  */
-export default function (
-  client: GithubClient,
-  opts: ServiceResourceParams & { factory: FragmentFactory }
-): Iterable<Discussion> {
+export default function (client: GithubClient, opts: QueryLookupParams): Iterable<Discussion> {
   return {
     [Symbol.asyncIterator]: async function* () {
-      const { repository: repo, ...rest } = opts;
-      const { first, factory } = opts;
-
-      for await (const searchRes of QueryRunner.create(client).iterator(new DiscussionsLookup({ ...rest, id: repo }))) {
+      for await (const searchRes of QueryRunner.create(client).iterator(new DiscussionsLookup(opts))) {
         const data: Discussion[] = searchRes.data;
 
         await Promise.all(
           data.map(async (discussion) => {
             if (discussion.reactions_count) {
               discussion.reactions = await QueryRunner.create(client)
-                .fetchAll(new ReactionsLookup({ id: discussion.id, first, factory }))
+                .fetchAll(new ReactionsLookup({ id: discussion.id, per_page: opts.per_page, factory: opts.factory }))
                 .then(({ data }) => data);
             }
 
@@ -73,7 +67,11 @@ export default function (
 
         yield {
           data,
-          params: { has_more: !!searchRes.next, cursor: searchRes.params.cursor, first: searchRes.params.first }
+          metadata: {
+            has_more: !!searchRes.next,
+            cursor: searchRes.params.cursor,
+            per_page: searchRes.params.per_page
+          }
         };
       }
     }

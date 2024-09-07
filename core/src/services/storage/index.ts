@@ -1,2 +1,2 @@
-export * from './service.js';
-export * from './storage.js';
+export * from './StorageFactory.js';
+export * from './StorageService.js';

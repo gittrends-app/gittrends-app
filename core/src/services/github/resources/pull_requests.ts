@@ -2,9 +2,9 @@ import { Commentable } from '../../../entities/base/Commentable.js';
 import { Node } from '../../../entities/base/Node.js';
 import { Reactable } from '../../../entities/base/Reactable.js';
 import { PullRequest } from '../../../entities/PullRequest.js';
-import { Iterable, ServiceResourceParams } from '../../Service.js';
+import { Iterable } from '../../Service.js';
 import { GithubClient } from '../GithubClient.js';
-import { FragmentFactory } from '../graphql/fragments/Fragment.js';
+import { QueryLookupParams } from '../graphql/lookups/Lookup.js';
 import { PullRequestsLookup } from '../graphql/lookups/PullRequestsLookup.js';
 import { ReactionsLookup } from '../graphql/lookups/ReactionsLookup.js';
 import { TimelineItemsCommentsLookup } from '../graphql/lookups/TimelineItemsCommentsLookup.js';
@@ -14,30 +14,30 @@ import { QueryRunner } from '../graphql/QueryRunner.js';
 /**
  * Get the pull requests of a repository by its id
  */
-export default function (
-  client: GithubClient,
-  options: ServiceResourceParams & { factory: FragmentFactory }
-): Iterable<PullRequest> {
-  const { repository: repo, ...opts } = options;
-
+export default function (client: GithubClient, opts: QueryLookupParams): Iterable<PullRequest> {
   return {
     [Symbol.asyncIterator]: async function* () {
-      const it = QueryRunner.create(client).iterator(new PullRequestsLookup({ ...opts, id: repo }));
-
-      const { factory, first } = opts;
+      const it = QueryRunner.create(client).iterator(new PullRequestsLookup(opts));
 
       for await (const res of it) {
         await Promise.all(
           res.data.map(async (pr) => {
             if (pr.reactions_count) {
               pr.reactions = await QueryRunner.create(client)
-                .fetchAll(new ReactionsLookup({ id: pr.id, first, factory }))
+                .fetchAll(new ReactionsLookup({ id: pr.id, per_page: opts.per_page, factory: opts.factory }))
                 .then(({ data }) => data);
             }
 
             if (pr.timeline_items_count) {
               pr.timeline_items = await QueryRunner.create(client)
-                .fetchAll(new TimelineItemsLookup({ id: pr.id, type: 'PullRequest', first, factory }))
+                .fetchAll(
+                  new TimelineItemsLookup({
+                    id: pr.id,
+                    type: 'PullRequest',
+                    per_page: opts.per_page,
+                    factory: opts.factory
+                  })
+                )
                 .then(({ data }) => data);
 
               const commentables = (pr.timeline_items || []).filter(
@@ -47,7 +47,9 @@ export default function (
               await Promise.all(
                 commentables.map(async (commentable) => {
                   commentable.comments = await QueryRunner.create(client)
-                    .fetch(new TimelineItemsCommentsLookup({ id: commentable.id, first: 100, factory }))
+                    .fetch(
+                      new TimelineItemsCommentsLookup({ id: commentable.id, per_page: 100, factory: opts.factory })
+                    )
                     .then(({ data }) => data.comments);
                   return commentable;
                 })
@@ -72,7 +74,9 @@ export default function (
                 reatables.map(async (reactable) => {
                   if (reactable.reactions_count) {
                     reactable.reactions = await QueryRunner.create(client)
-                      .fetchAll(new ReactionsLookup({ id: reactable.id, first, factory }))
+                      .fetchAll(
+                        new ReactionsLookup({ id: reactable.id, per_page: opts.per_page, factory: opts.factory })
+                      )
                       .then(({ data }) => data);
                   }
                 })
@@ -83,7 +87,7 @@ export default function (
 
         yield {
           data: res.data,
-          params: { has_more: !!res.next, first: res.params.first, cursor: res.params.cursor }
+          metadata: { has_more: !!res.next, per_page: res.params.per_page, cursor: res.params.cursor }
         };
       }
 

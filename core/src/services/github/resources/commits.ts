@@ -1,11 +1,9 @@
 import { Commit } from '../../../entities/Commit.js';
-import { Iterable, ServiceCommitsParams } from '../../Service.js';
+import { Iterable } from '../../Service.js';
 import { GithubClient } from '../GithubClient.js';
-import { FragmentFactory } from '../graphql/fragments/Fragment.js';
 import { CommitsLookup } from '../graphql/lookups/CommitsLookup.js';
+import { QueryLookupParams } from '../graphql/lookups/Lookup.js';
 import { QueryRunner } from '../graphql/QueryRunner.js';
-
-type IterableCommit = Iterable<Commit, { since?: Date; until?: Date }>;
 
 /**
  * Get the commits of a repository by its id
@@ -13,45 +11,41 @@ type IterableCommit = Iterable<Commit, { since?: Date; until?: Date }>;
  */
 export default function commits(
   client: GithubClient,
-  options: ServiceCommitsParams & { factory: FragmentFactory }
-): IterableCommit {
+  opts: QueryLookupParams & { since?: Date; until?: Date }
+): Iterable<Commit, { since?: Date; until?: Date }> {
   return {
     [Symbol.asyncIterator]: async function* () {
-      let { since, until } = options;
+      let { since, until } = opts;
 
       if (until || !since) {
-        const untilIt = QueryRunner.create(client).iterator(
-          new CommitsLookup({ ...options, id: options.repository, since: undefined, until })
-        );
+        const untilIt = QueryRunner.create(client).iterator(new CommitsLookup({ ...opts, since: undefined, until }));
 
         for await (const response of untilIt) {
           yield {
             data: response.data,
-            params: {
+            metadata: {
               has_more: true,
               since: (since = response.params.since
                 ? new Date(Math.max(response.params.since.getTime(), since?.getTime() || 0))
                 : since),
               until: (until = response.params.until),
-              first: options.first
+              per_page: opts.per_page
             }
           };
         }
       }
 
       if (since) {
-        const sinceIt = QueryRunner.create(client).iterator(
-          new CommitsLookup({ ...options, id: options.repository, since, until: undefined })
-        );
+        const sinceIt = QueryRunner.create(client).iterator(new CommitsLookup({ ...opts, since, until: undefined }));
 
         for await (const response of sinceIt) {
           yield {
             data: response.data,
-            params: {
+            metadata: {
               has_more: !!response.next,
               since: new Date(Math.max(response.params.since?.getDate() || 0, since.getTime())),
               until,
-              first: options.first
+              per_page: opts.per_page
             }
           };
         }

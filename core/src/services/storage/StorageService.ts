@@ -13,22 +13,23 @@ import { Repository } from '../../entities/Repository.js';
 import { Stargazer } from '../../entities/Stargazer.js';
 import { Tag } from '../../entities/Tag.js';
 import { Watcher } from '../../entities/Watcher.js';
-import { PassThroughService } from '../PassThroughService.js';
-import { Iterable, Service, ServiceCommitsParams, ServiceResourceParams } from '../Service.js';
-import { StorageFactory } from './storage.js';
+import { Iterable, PageableParams, Service, ServiceCommitsParams, ServiceResourceParams } from '../Service.js';
+import { StorageFactory } from './StorageFactory.js';
 
 /**
  * A service that interacts with the Github API and stores the results in a storage.
  */
-export class StorageService extends PassThroughService {
+export class StorageService implements Service {
+  private readonly service: Service;
+
   public readonly storage: StorageFactory;
 
   constructor(service: Service, storage: StorageFactory) {
-    super(service);
+    this.service = service;
     this.storage = storage;
   }
 
-  search(total: number, opts?: { first?: number }): Iterable<Repository> {
+  search(total: number, opts?: PageableParams): Iterable<Repository> {
     const repoStorage = this.storage.create('Repository');
     const it = this.service.search(total, opts);
 
@@ -85,15 +86,15 @@ export class StorageService extends PassThroughService {
     return repo;
   }
 
-  resource(name: 'watchers', opts: ServiceResourceParams): Iterable<Watcher>;
-  resource(name: 'stargazers', opts: ServiceResourceParams): Iterable<Stargazer>;
-  resource(name: 'discussions', opts: ServiceResourceParams): Iterable<Discussion>;
-  resource(name: 'tags', opts: ServiceResourceParams): Iterable<Tag>;
-  resource(name: 'releases', opts: ServiceResourceParams): Iterable<Release>;
-  resource(name: 'commits', opts: ServiceCommitsParams): Iterable<Commit>;
-  resource(name: 'issues', opts: ServiceResourceParams): Iterable<Issue>;
-  resource(name: 'pull_requests', opts: ServiceResourceParams): Iterable<PullRequest>;
-  resource(name: string, opts: ServiceResourceParams): Iterable<any> {
+  resource(name: 'watchers', opts: ServiceResourceParams & { resume?: boolean }): Iterable<Watcher>;
+  resource(name: 'stargazers', opts: ServiceResourceParams & { resume?: boolean }): Iterable<Stargazer>;
+  resource(name: 'discussions', opts: ServiceResourceParams & { resume?: boolean }): Iterable<Discussion>;
+  resource(name: 'tags', opts: ServiceResourceParams & { resume?: boolean }): Iterable<Tag>;
+  resource(name: 'releases', opts: ServiceResourceParams & { resume?: boolean }): Iterable<Release>;
+  resource(name: 'commits', opts: ServiceCommitsParams & { resume?: boolean }): Iterable<Commit>;
+  resource(name: 'issues', opts: ServiceResourceParams & { resume?: boolean }): Iterable<Issue>;
+  resource(name: 'pull_requests', opts: ServiceResourceParams & { resume?: boolean }): Iterable<PullRequest>;
+  resource(name: string, opts: ServiceResourceParams & { resume?: boolean }): Iterable<any> {
     const resourceName = upperFirst(camelCase(pluralize.singular(name)));
 
     const metadataStorage = this.storage.create('Metadata');
@@ -110,19 +111,18 @@ export class StorageService extends PassThroughService {
 
           if (meta) {
             let page = 0;
-            const limit = meta.first ? Number(meta.first) : 100;
 
             while (!params.resume) {
               const resources = await resourceStorage.find({ repository: params.repository } as RepositoryNode, {
-                limit,
-                offset: page++ * limit
+                limit: opts.per_page || 100,
+                offset: page++ * (opts.per_page || 100)
               });
 
-              if (resources.length) yield { data: resources, params: { has_more: true, ...meta } };
+              if (resources.length) yield { data: resources, metadata: { has_more: true, ...meta } };
               else break;
             }
 
-            params = omit(meta, ['id', '__typename']) as ServiceResourceParams;
+            params = omit(meta, ['id', '__typename', 'per_page']) as ServiceResourceParams;
           }
         }
 
@@ -130,12 +130,12 @@ export class StorageService extends PassThroughService {
           if (res.data.length) {
             await resourceStorage.save(res.data as unknown as RepositoryNode);
             await metadataStorage.save(
-              { id: `${opts.repository}_${resourceName}`, __typename: 'Metadata', ...params, ...res.params },
+              { id: `${opts.repository}_${resourceName}`, __typename: 'Metadata', ...params, ...res.metadata },
               true
             );
             yield res;
           } else {
-            yield { data: [], params: { ...res.params, has_more: false } };
+            yield { data: [], metadata: { ...res.metadata, has_more: false } };
             return;
           }
         }

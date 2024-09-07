@@ -12,13 +12,12 @@ import { Watcher } from '../entities/Watcher.js';
 
 export type PageableParams = {
   cursor?: string;
-  first?: number;
-  [key: string]: unknown;
+  per_page?: number;
 };
 
 export type Iterable<T = any, P extends object = object> = AsyncIterable<{
   data: T[];
-  params: { has_more: boolean } & PageableParams & P;
+  metadata: PageableParams & P & { has_more: boolean };
 }>;
 
 export type ServiceResourceParams = RepositoryNode & PageableParams;
@@ -28,14 +27,14 @@ export type ServiceCommitsParams = ServiceResourceParams & { since?: Date; until
  * Service interface to be implemented by all services.
  */
 export interface Service {
-  search(total: number, opts?: { first?: number }): Iterable<Repository>;
+  search(total: number, opts?: PageableParams): Iterable<Repository>;
 
   user(id: string, opts?: { byLogin: boolean }): Promise<Actor | null>;
   user(id: string[], opts?: { byLogin: boolean }): Promise<(Actor | null)[]>;
 
   repository(ownerOrId: string, name?: string): Promise<Repository | null>;
 
-  resource(name: 'commits', opts: ServiceCommitsParams): Iterable<Commit>;
+  resource(name: 'commits', opts: ServiceCommitsParams): Iterable<Commit, { since?: Date; until?: Date }>;
   resource(name: 'discussions', opts: ServiceResourceParams): Iterable<Discussion>;
   resource(name: 'issues', opts: ServiceResourceParams): Iterable<Issue>;
   resource(name: 'pull_requests', opts: ServiceResourceParams): Iterable<PullRequest>;

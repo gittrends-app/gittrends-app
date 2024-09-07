@@ -8,7 +8,7 @@ import { QueryLookup } from './Lookup.js';
  */
 export class DiscussionsCommentsLookup extends QueryLookup<DiscussionComment[], { isComment?: boolean }> {
   toString(): string {
-    const params = [`first: ${this.params.first || 100}`];
+    const params = [`first: ${this.params.per_page || 100}`];
     if (this.params.cursor) params.push(`after: "${this.params.cursor}"`);
 
     return `

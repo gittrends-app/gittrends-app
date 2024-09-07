@@ -13,7 +13,7 @@ export class SearchLookup extends QueryLookup<Repository[], { limit: number }> {
   toString(): string {
     const query = ['stars:1..*', 'sort:stars-desc'];
 
-    const total = Math.min(this.params.first || 100, this.params.limit);
+    const total = Math.min(this.params.per_page || 100, this.params.limit);
 
     const params = [`first: ${total}`, 'type: REPOSITORY', `query: "${query.join(' ')}"`];
     if (this.params.cursor) params.push(`after: "${this.params.cursor}"`);

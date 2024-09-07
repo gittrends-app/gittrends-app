@@ -7,14 +7,14 @@ export type QueryLookupParams = {
   id: string;
   factory: FragmentFactory;
   alias?: string;
-  first?: number;
+  per_page?: number;
   cursor?: string;
 };
 
 /**
  *  A lookup to get data from the GitHub API.
  */
-export abstract class QueryLookup<R = any, P = Record<string, any>> {
+export abstract class QueryLookup<R = any, P = object> {
   readonly alias: string;
   readonly params: QueryLookupParams & P;
 

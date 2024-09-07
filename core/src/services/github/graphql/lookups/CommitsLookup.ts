@@ -15,7 +15,7 @@ function add(date: Date, seconds: number): Date {
  */
 export class CommitsLookup extends QueryLookup<Commit[], { since?: Date; until?: Date }> {
   toString(): string {
-    const params = [`first: ${this.params.first || 100}`];
+    const params = [`first: ${this.params.per_page || 100}`];
     if (this.params.cursor) params.push(`after: "${this.params.cursor}"`);
 
     if (this.params.since) params.push(`since: "${add(this.params.since, 1).toISOString()}"`);

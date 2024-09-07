@@ -8,7 +8,7 @@ import { Repository } from '../entities/Repository.js';
 import { Stargazer } from '../entities/Stargazer.js';
 import { Tag } from '../entities/Tag.js';
 import { Watcher } from '../entities/Watcher.js';
-import { Iterable, Service, ServiceCommitsParams, ServiceResourceParams } from './Service.js';
+import { Iterable, PageableParams, Service, ServiceCommitsParams, ServiceResourceParams } from './Service.js';
 
 /**
  * A service that passes all requests through to the underlying service.
@@ -16,7 +16,7 @@ import { Iterable, Service, ServiceCommitsParams, ServiceResourceParams } from '
 export class PassThroughService implements Service {
   constructor(public readonly service: Service) {}
 
-  search(total: number, opts?: { first?: number }): Iterable<Repository> {
+  search(total: number, opts?: PageableParams): Iterable<Repository> {
     return this.service.search(total, opts);
   }
 
@@ -30,7 +30,7 @@ export class PassThroughService implements Service {
     return this.service.repository(ownerOrId, name);
   }
 
-  resource(name: 'commits', opts: ServiceCommitsParams): Iterable<Commit>;
+  resource(name: 'commits', opts: ServiceCommitsParams): Iterable<Commit, { since?: Date; until?: Date }>;
   resource(name: 'discussions', opts: ServiceResourceParams): Iterable<Discussion>;
   resource(name: 'issues', opts: ServiceResourceParams): Iterable<Issue>;
   resource(name: 'pull_requests', opts: ServiceResourceParams): Iterable<PullRequest>;

@@ -9,7 +9,7 @@ import { QueryLookup } from './Lookup.js';
  */
 export class TagsLookup extends QueryLookup<Tag[]> {
   toString(): string {
-    const params = [`first: ${this.params.first || 100}`, 'refPrefix: "refs/tags/"'];
+    const params = [`first: ${this.params.per_page || 100}`, 'refPrefix: "refs/tags/"'];
     if (this.params.cursor) params.push(`after: "${this.params.cursor}"`);
 
     return `
