@@ -23,13 +23,21 @@
     "@octokit/graphql": "^8.1.1",
     "@octokit/types": "^13.5.0",
     "consola": "^3.2.3",
-    "dayjs": "^1.11.12",
+    "dayjs": "^1.11.13",
     "lodash": "^4.17.21",
     "zod": "^3.23.8",
-    "zod-validation-error": "^3.3.0"
+    "zod-validation-error": "^3.3.1"
   },
   "devDependencies": {
     "@octokit/graphql-schema": "^15.25.0",
-    "@types/lodash": "^4.17.6"
+    "@types/lodash": "^4.17.7",
+    "@types/node": "^22.5.4",
+    "esbuild": "^0.23.1",
+    "husky": "^9.1.5",
+    "prettier": "^3.3.3",
+    "ts-jest": "^29.2.5",
+    "tsx": "^4.19.0",
+    "type-fest": "^4.26.0",
+    "typescript": "^5.5.4"
   }
 }
