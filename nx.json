@@ -1,0 +1,9 @@
+{
+  "targetDefaults": {
+    "verify": {
+      "cache": true,
+      "dependsOn": ["^verify"],
+      "outputs": ["{projectRoot}/dist"]
+    }
+  }
+}
