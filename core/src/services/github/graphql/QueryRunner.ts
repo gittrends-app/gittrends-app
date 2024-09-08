@@ -59,7 +59,7 @@ export class QueryRunner {
         if (error.response?.status === 502 && (lookup.params.per_page || 100) > 1) {
           lookup.params.per_page = Math.ceil((lookup.params.per_page || 100) / 2);
           return this.fetch(lookup).then((response) => {
-            lookup.params.per_page = lookup.params.per_page! * 2;
+            if (response.next) response.next.params.per_page = lookup.params.per_page! * 2;
             return response;
           });
         }
