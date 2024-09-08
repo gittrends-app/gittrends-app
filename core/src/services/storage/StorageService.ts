@@ -129,7 +129,10 @@ export class StorageService implements Service {
               else break;
             }
 
-            params = omit(meta, ['id', '__typename', 'per_page']) as ServiceResourceParams;
+            params = {
+              ...omit(meta, ['id', '__typename', 'per_page']),
+              per_page: opts.per_page
+            } as ServiceResourceParams;
           }
         }
 
