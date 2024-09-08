@@ -6,11 +6,7 @@
     "node": ">=18.0.0"
   },
   "scripts": {
-    "prepare": "husky",
-    "build": "yarn workspaces run build",
-    "lint": "yarn workspaces run lint",
-    "test": "yarn workspaces run jest",
-    "verify": "yarn workspaces run verify"
+    "prepare": "husky"
   },
   "workspaces": [
     "core",
