@@ -199,7 +199,8 @@ export class MongoStorageFactory implements StorageFactory {
               replace
                 ? { replaceOne: { filter: { _id: getId(item) }, replacement: item, upsert: true } }
                 : { insertOne: { document: { _id: getId(item), ...item } } }
-            )
+            ),
+            { ordered: false }
           )
           .catch((err) => {
             if (err.code === 11000) return;
