@@ -158,8 +158,8 @@ export class RepositoryUpdater extends AbstractTask<Notification> {
               this.notify({ repository: repo.id, resource: 'users', done: true });
             } else {
               let perPage = 100;
-              if (name === 'issues') perPage = 75;
-              if (name === 'pull_requests') perPage = 50;
+              if (name === 'issues') perPage = 50;
+              if (name === 'pull_requests') perPage = 25;
 
               const it = this.service.resource(name as any, { repository: repo.id, per_page: perPage, resume: true });
 
