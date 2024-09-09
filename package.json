@@ -36,6 +36,7 @@
     "prettier-plugin-organize-imports": "^4.0.0",
     "shx": "^0.3.4",
     "ts-jest": "^29.2.5",
+    "tsup": "^8.2.4",
     "tsx": "^4.19.0",
     "type-fest": "^4.26.0",
     "typescript": "^5.5.4"

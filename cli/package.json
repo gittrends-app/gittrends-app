@@ -19,7 +19,7 @@
     "jest": "jest --runInBand",
     "test": "jest --runInBand",
     "test:coverage": "jest --collect-coverage",
-    "verify": "run-s lint test build",
+    "verify": "run-s lint build test",
     "prettier": "prettier --write src",
     "prepublishOnly": "npm run verify"
   },
