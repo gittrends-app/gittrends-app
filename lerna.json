@@ -2,5 +2,7 @@
   "$schema": "node_modules/lerna/schemas/lerna-schema.json",
   "packages": ["core", "cli"],
   "npmClient": "yarn",
-  "version": "independent"
+  "version": "independent",
+  "contents": "dist",
+  "conventionalCommits": true
 }

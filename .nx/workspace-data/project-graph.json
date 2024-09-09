@@ -20,7 +20,8 @@
               "jest",
               "jest:coverage",
               "verify",
-              "prettier"
+              "prettier",
+              "prepublishOnly"
             ]
           }
         },
@@ -103,7 +104,7 @@
               "script": "verify"
             },
             "metadata": {
-              "scriptContent": "run-s lint build jest",
+              "scriptContent": "run-s lint jest build",
               "runCommand": "yarn verify"
             },
             "configurations": {},
@@ -124,6 +125,18 @@
             "metadata": {
               "scriptContent": "prettier --write src",
               "runCommand": "yarn prettier"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "prepublishOnly": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "prepublishOnly"
+            },
+            "metadata": {
+              "scriptContent": "npm run verify",
+              "runCommand": "yarn prepublishOnly"
             },
             "configurations": {},
             "parallelism": true
@@ -165,7 +178,8 @@
               "test",
               "test:coverage",
               "verify",
-              "prettier"
+              "prettier",
+              "prepublishOnly"
             ]
           }
         },
@@ -296,7 +310,7 @@
               "script": "verify"
             },
             "metadata": {
-              "scriptContent": "run-s lint build test",
+              "scriptContent": "run-s lint test build",
               "runCommand": "yarn verify"
             },
             "configurations": {},
@@ -317,6 +331,18 @@
             "metadata": {
               "scriptContent": "prettier --write src",
               "runCommand": "yarn prettier"
+            },
+            "configurations": {},
+            "parallelism": true
+          },
+          "prepublishOnly": {
+            "executor": "nx:run-script",
+            "options": {
+              "script": "prepublishOnly"
+            },
+            "metadata": {
+              "scriptContent": "npm run verify",
+              "runCommand": "yarn prepublishOnly"
             },
             "configurations": {},
             "parallelism": true

@@ -34,64 +34,64 @@
   "fileMap": {
     "nonProjectFiles": [
       {
-        "file": ".vscode/extensions.json",
-        "hash": "17407920778043032623"
-      },
-      {
-        "file": ".vscode/settings.json",
-        "hash": "1655430029908408278"
-      },
-      {
-        "file": ".prettierrc",
-        "hash": "15447270974613342889"
-      },
-      {
-        "file": ".husky/prepare-commit-msg",
-        "hash": "4209568681588660774"
-      },
-      {
-        "file": "lerna.json",
-        "hash": "12979990916130697481"
-      },
-      {
-        "file": ".eslintignore",
-        "hash": "10615514739492158651"
-      },
-      {
-        "file": "package.json",
-        "hash": "12974551445956389068"
-      },
-      {
-        "file": ".husky/pre-commit",
-        "hash": "1186014993995934601"
-      },
-      {
-        "file": ".editorconfig",
-        "hash": "16018554881173840505"
+        "file": ".gitignore",
+        "hash": "1487329792345232666"
       },
       {
         "file": "nx.json",
         "hash": "10704517289830382010"
       },
       {
-        "file": "yarn.lock",
-        "hash": "12500556363807885670"
+        "file": "package.json",
+        "hash": "12974551445956389068"
       },
       {
-        "file": ".prettierignore",
-        "hash": "2564006380064570502"
+        "file": ".prettierrc",
+        "hash": "15447270974613342889"
       },
       {
         "file": "tsconfig.json",
         "hash": "14618355383367463102"
       },
       {
+        "file": ".vscode/settings.json",
+        "hash": "1655430029908408278"
+      },
+      {
+        "file": ".editorconfig",
+        "hash": "16018554881173840505"
+      },
+      {
+        "file": ".husky/pre-commit",
+        "hash": "1186014993995934601"
+      },
+      {
         "file": ".eslintrc",
         "hash": "4079652981935924209"
       },
       {
-        "file": ".gitignore",
-        "hash": "1487329792345232666"
+        "file": "lerna.json",
+        "hash": "6322396265523231783"
+      },
+      {
+        "file": ".vscode/extensions.json",
+        "hash": "17407920778043032623"
+      },
+      {
+        "file": ".husky/prepare-commit-msg",
+        "hash": "4209568681588660774"
+      },
+      {
+        "file": "yarn.lock",
+        "hash": "12500556363807885670"
+      },
+      {
+        "file": ".eslintignore",
+        "hash": "10615514739492158651"
+      },
+      {
+        "file": ".prettierignore",
+        "hash": "2564006380064570502"
       }
     ],
     "projectFileMap": {
@@ -118,7 +118,7 @@
         },
         {
           "file": "cli/package.json",
-          "hash": "17347341477028648447",
+          "hash": "9224275378658872780",
           "deps": [
             "npm:@types/cli-progress",
             "npm:@types/express",
@@ -223,7 +223,7 @@
         },
         {
           "file": "core/package.json",
-          "hash": "13565115158365983131",
+          "hash": "5745103501386603481",
           "deps": [
             "npm:@octokit/graphql-schema",
             "npm:@types/lodash",

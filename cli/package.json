@@ -19,8 +19,9 @@
     "jest": "jest --runInBand",
     "test": "jest --runInBand",
     "test:coverage": "jest --collect-coverage",
-    "verify": "run-s lint build test",
-    "prettier": "prettier --write src"
+    "verify": "run-s lint test build",
+    "prettier": "prettier --write src",
+    "prepublishOnly": "npm run verify"
   },
   "dependencies": {
     "@bull-board/api": "^5.21.4",

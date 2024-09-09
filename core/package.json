@@ -16,8 +16,9 @@
     "build": "run-s build:clean compile",
     "jest": "jest --runInBand",
     "jest:coverage": "jest --runInBand --collect-coverage",
-    "verify": "run-s lint build jest",
-    "prettier": "prettier --write src"
+    "verify": "run-s lint jest build",
+    "prettier": "prettier --write src",
+    "prepublishOnly": "npm run verify"
   },
   "dependencies": {
     "@octokit/graphql": "^8.1.1",
