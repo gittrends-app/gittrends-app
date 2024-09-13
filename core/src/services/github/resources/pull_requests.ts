@@ -2,10 +2,12 @@ import { Commentable } from '../../../entities/base/Commentable.js';
 import { Node } from '../../../entities/base/Node.js';
 import { Reactable } from '../../../entities/base/Reactable.js';
 import { PullRequest } from '../../../entities/PullRequest.js';
+import { TimelineItem } from '../../../entities/TimelineItem.js';
 import { Iterable } from '../../Service.js';
 import { GithubClient } from '../GithubClient.js';
 import { QueryLookupParams } from '../graphql/lookups/Lookup.js';
 import { PullRequestsLookup } from '../graphql/lookups/PullRequestsLookup.js';
+import { PullRequestsReviewThreadsLookup } from '../graphql/lookups/PullRequestsReviewThreadsLookup.js';
 import { ReactionsLookup } from '../graphql/lookups/ReactionsLookup.js';
 import { TimelineItemsCommentsLookup } from '../graphql/lookups/TimelineItemsCommentsLookup.js';
 import { TimelineItemsLookup } from '../graphql/lookups/TimelineItemsLookup.js';
@@ -54,6 +56,29 @@ export default function (client: GithubClient, opts: QueryLookupParams): Iterabl
                   return commentable;
                 })
               );
+
+              const pullRequestsReviews = (pr.timeline_items || []).filter(
+                (item) => (item as TimelineItem).__typename === 'PullRequestReview'
+              );
+
+              if (pullRequestsReviews.length > 0) {
+                const threads = await QueryRunner.create(client).fetchAll(
+                  new PullRequestsReviewThreadsLookup({
+                    id: pr.id,
+                    per_page: opts.per_page,
+                    factory: opts.factory
+                  })
+                );
+
+                for (const prr of pullRequestsReviews) {
+                  (prr as any).comments = (prr as Commentable).comments
+                    ?.map((comment) => {
+                      const thread = threads.data.find((t) => t.comments?.some((c) => c.id === comment.id));
+                      return thread?.comments || [comment];
+                    })
+                    .flat();
+                }
+              }
 
               const reatables = pr.timeline_items!.reduce((reactables: Reactable[], item) => {
                 if (typeof item === 'string') return reactables;

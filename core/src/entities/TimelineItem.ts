@@ -6,6 +6,7 @@ import { CommitCommentSchema } from './base/CommitComment.js';
 import { MinimizableSchema } from './base/Minimizable.js';
 import { NodeSchema } from './base/Node.js';
 import { PullRequestReviewCommentSchema } from './base/PullRequestReviewComment.js';
+import { PullRequestReviewThreadSchema } from './base/PullRequestReviewThread.js';
 import { ReactableSchema } from './base/Reactable.js';
 
 const AddedToProjectEvent = NodeSchema.extend({
@@ -406,24 +407,6 @@ const PullRequestReview = NodeSchema.merge(CommentSchema)
     submitted_at: z.coerce.date().optional()
   });
 
-const PullRequestReviewThread = NodeSchema.extend({
-  __typename: z.literal('PullRequestReviewThread'),
-  comments_count: z.number().int(),
-  comments: z.array(PullRequestReviewCommentSchema).optional(),
-  diff_side: z.string(),
-  is_collapsed: z.boolean(),
-  is_outdated: z.boolean(),
-  is_resolved: z.boolean(),
-  line: z.number().int().optional(),
-  original_line: z.number().int().optional(),
-  original_start_line: z.number().int().optional(),
-  path: z.string(),
-  resolved_by: z.union([z.string(), ActorSchema]).optional(),
-  start_diff_side: z.string().optional(),
-  start_line: z.number().int().optional(),
-  subject_type: z.string()
-});
-
 // const PullRequestRevisionMarker = node.extend({
 //   __typename: z.literal('PullRequestRevisionMarker'),
 //   created_at: z.coerce.date(),
@@ -510,7 +493,7 @@ const list = z.discriminatedUnion('__typename', [
   PullRequestCommit,
   PullRequestCommitCommentThread,
   PullRequestReview,
-  PullRequestReviewThread,
+  PullRequestReviewThreadSchema,
   ReadyForReviewEvent,
   ReferencedEvent,
   RemovedFromMergeQueueEvent,
