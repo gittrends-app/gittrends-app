@@ -18,7 +18,7 @@
     "build:bundle": "esbuild src/index.ts --bundle --minify --sourcemap --outfile=dist/index.bundle.js",
     "build:clean": "shx rm -rf ./dist tsconfig.tsbuildinfo",
     "build:declarations": "tsc --emitDeclarationOnly --declaration",
-    "build": "run-s build:clean build:compile build:bundle build:declarations",
+    "build": "run-s build:clean build:compile build:declarations",
     "jest": "jest --runInBand",
     "jest:coverage": "jest --runInBand --collect-coverage",
     "verify": "run-s lint build jest",

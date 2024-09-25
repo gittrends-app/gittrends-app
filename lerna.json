@@ -3,6 +3,6 @@
   "packages": ["core", "cli"],
   "npmClient": "yarn",
   "version": "independent",
-  "contents": "dist",
-  "conventionalCommits": true
+  "conventionalCommits": true,
+  "private": false
 }
