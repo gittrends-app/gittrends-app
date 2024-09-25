@@ -2,7 +2,6 @@
   "$schema": "node_modules/lerna/schemas/lerna-schema.json",
   "packages": ["core", "cli"],
   "npmClient": "yarn",
-  "createRelease": "github",
   "version": "independent",
   "contents": "dist",
   "conventionalCommits": true

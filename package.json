@@ -1,12 +1,13 @@
 {
-  "name": "@gittrends-app/gittrends-app",
   "license": "MIT",
   "private": true,
   "engines": {
     "node": ">=18.0.0"
   },
   "scripts": {
-    "prepare": "husky"
+    "prepare": "husky",
+    "build": "lerna run build",
+    "publish": "lerna publish --contents dist"
   },
   "workspaces": [
     "core",
