@@ -1,6 +1,6 @@
 {
   "name": "@gittrends-app/core",
-  "version": "1.1.7",
+  "version": "1.1.1",
   "main": "./dist/index.js",
   "exports": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -47,5 +47,5 @@
     "type-fest": "^4.26.0",
     "typescript": "^5.5.4"
   },
-  "gitHead": "d0b33304932a827578ae0cf3d1ba27b79b545fe1"
+  "gitHead": "db7deab7d66bfd9e98ad532453263ce38508665d"
 }
