@@ -1,8 +1,9 @@
 {
   "name": "@gittrends-app/cli",
-  "version": "1.0.2",
+  "version": "1.0.6",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "private": true,
   "type": "module",
   "license": "MIT",
   "engines": {
@@ -51,5 +52,6 @@
     "@types/lodash": "^4.17.7",
     "@types/object-hash": "^3.0.6",
     "@types/pluralize": "^0.0.33"
-  }
+  },
+  "gitHead": "d0b33304932a827578ae0cf3d1ba27b79b545fe1"
 }
