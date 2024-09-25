@@ -47,5 +47,11 @@
     "type-fest": "^4.26.0",
     "typescript": "^5.5.4"
   },
+  "files": [
+    "dist",
+    "CHANGELOG.md",
+    "package.json",
+    "README.md"
+  ],
   "gitHead": "db7deab7d66bfd9e98ad532453263ce38508665d"
 }
