@@ -32,10 +32,18 @@ import { default as users } from './resources/users.js';
 export class GithubService implements Service {
   private readonly client: GithubClient;
 
+  /**
+   * Creates a new GithubService
+   * @param client The Github client.
+   */
   constructor(client: GithubClient) {
     this.client = client;
   }
 
+  /**
+   * Searches for repositories.
+   * @see Service.search
+   */
   search(total: number, opts?: PageableParams): Iterable<Repository> {
     const it = QueryRunner.create(this.client).iterator(
       new SearchLookup({ factory: new PartialFragmentFactory(), per_page: opts?.per_page, limit: total })
@@ -53,12 +61,20 @@ export class GithubService implements Service {
     };
   }
 
+  /**
+   * Fetches a user by id or login.
+   * @see Service.user
+   */
   async user(id: string, opts?: { byLogin: boolean }): Promise<Actor | null>;
   async user(id: string[], opts?: { byLogin: boolean }): Promise<(Actor | null)[]>;
   async user(id: any, opts?: { byLogin: boolean }): Promise<any> {
     return users(id, { client: this.client, byLogin: opts?.byLogin, factory: new FullFragmentFactory() });
   }
 
+  /**
+   * Fetches a repository by owner and name.
+   * @see Service.repository
+   */
   async repository(owner: string, name?: string): Promise<Repository | null> {
     return repos(name ? `${owner}/${name}` : owner, {
       client: this.client,
@@ -67,6 +83,10 @@ export class GithubService implements Service {
     });
   }
 
+  /**
+   * Fetches a resource from a repository.
+   * @see Service.resource
+   */
   resource(name: 'commits', opts: ServiceCommitsParams): Iterable<Commit>;
   resource(name: 'discussions', opts: ServiceResourceParams): Iterable<Discussion>;
   resource(name: 'issues', opts: ServiceResourceParams): Iterable<Issue>;

@@ -21,11 +21,20 @@ export class StorageService implements Service {
 
   public readonly storage: StorageFactory;
 
+  /**
+   * Creates a new StorageService.
+   * @param service The underlying service.
+   * @param storage The storage factory.
+   */
   constructor(service: Service, storage: StorageFactory) {
     this.service = service;
     this.storage = storage;
   }
 
+  /**
+   * Searches for repositories.
+   * @see Service.search
+   */
   search(total: number, opts?: PageableParams): Iterable<Repository> {
     const repoStorage = this.storage.create('Repository');
     const it = this.service.search(total, opts);
@@ -40,6 +49,10 @@ export class StorageService implements Service {
     };
   }
 
+  /**
+   * Fetches a user by id or login.
+   * @see Service.user
+   */
   user(id: string, opts?: { byLogin: boolean }): Promise<Actor | null>;
   user(id: string[], opts?: { byLogin: boolean }): Promise<(Actor | null)[]>;
   async user(id: string | string[], opts?: { byLogin: boolean }): Promise<any> {
@@ -70,6 +83,10 @@ export class StorageService implements Service {
     return Array.isArray(id) ? result : result[0];
   }
 
+  /**
+   * Fetches a repository by owner and name.
+   * @see Service.repository
+   */
   async repository(ownerOrId: string, name?: string): Promise<Repository | null> {
     const repoStorage = this.storage.create('Repository');
 
@@ -83,6 +100,10 @@ export class StorageService implements Service {
     return repo;
   }
 
+  /**
+   * Fetches a resource from a repository.
+   * @see Service.resource
+   */
   resource(name: 'watchers', opts: ServiceResourceParams & { resume?: boolean }): Iterable<Watcher>;
   resource(name: 'stargazers', opts: ServiceResourceParams & { resume?: boolean }): Iterable<Stargazer>;
   resource(name: 'discussions', opts: ServiceResourceParams & { resume?: boolean }): Iterable<Discussion>;

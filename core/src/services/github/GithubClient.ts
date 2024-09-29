@@ -10,6 +10,9 @@ export class GithubClient {
   private readonly apiToken?: string;
   private readonly fetcher?: Fetch;
 
+  /**
+   * Creates a new GithubClient.
+   */
   constructor(
     baseUrl: string = 'https://api.github.com',
     opts?: { apiToken?: string; fetcher?: Fetch; timeout?: number }
@@ -21,6 +24,9 @@ export class GithubClient {
     if (baseUrl === 'https://api.github.com') this.fetcher = throttler(this.fetcher, 2);
   }
 
+  /**
+   * Returns a graphql client.
+   */
   get graphql(): typeof graphql {
     return graphql.defaults({
       request: { fetch: this.fetcher },
