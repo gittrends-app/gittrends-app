@@ -7,7 +7,7 @@
   "scripts": {
     "prepare": "husky",
     "build": "lerna run build",
-    "publish": "lerna publish --contents dist"
+    "publish": "lerna publish"
   },
   "workspaces": [
     "core",
