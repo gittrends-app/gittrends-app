@@ -11,7 +11,7 @@ import { Tag } from '../../entities/Tag.js';
 import { Watcher } from '../../entities/Watcher.js';
 import { Iterable, PageableParams, Service, ServiceCommitsParams, ServiceResourceParams } from '../Service.js';
 import { GithubClient } from './GithubClient.js';
-import { FullFragmentFactory, PartialFragmentFactory } from './graphql/fragments/Fragment.js';
+import { FragmentFactory, FullFragmentFactory, PartialFragmentFactory } from './graphql/fragments/Fragment.js';
 import { QueryLookup, QueryLookupParams } from './graphql/lookups/Lookup.js';
 import { SearchLookup } from './graphql/lookups/SearchLookup.js';
 import { StargazersLookup } from './graphql/lookups/StargazersLookup.js';
@@ -95,12 +95,15 @@ export class GithubService implements Service {
   resource(name: 'stargazers', opts: ServiceResourceParams): Iterable<Stargazer>;
   resource(name: 'tags', opts: ServiceResourceParams): Iterable<Tag>;
   resource(name: 'watchers', opts: ServiceResourceParams): Iterable<Watcher>;
-  resource<P extends ServiceResourceParams & Record<string, any>>(name: string, opts: P): Iterable<any> {
+  resource<P extends ServiceResourceParams & { factory?: FragmentFactory } & Record<string, any>>(
+    name: string,
+    opts: P
+  ): Iterable<any> {
     const params: QueryLookupParams & Partial<{ since: Date; until: Date }> = {
       id: opts.repository,
       cursor: opts.cursor,
       per_page: opts.per_page,
-      factory: new PartialFragmentFactory(),
+      factory: opts.factory || new PartialFragmentFactory(),
       since: opts.since,
       until: opts.until
     };
