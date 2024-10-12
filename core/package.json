@@ -58,6 +58,7 @@
   "release-it": {
     "git": {
       "commit": true,
+      "commitMessage": "chore(release): v${version}",
       "tag": true,
       "push": true,
       "changelog": "npx auto-changelog --stdout --commit-limit false --unreleased --template https://raw.githubusercontent.com/release-it/release-it/main/templates/changelog-compact.hbs"
