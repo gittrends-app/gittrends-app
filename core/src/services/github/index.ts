@@ -1,3 +1,3 @@
 export * from './GithubClient.js';
 export * from './GithubService.js';
-export { BaseFragmentFactory, FragmentFactory } from './graphql/fragments/Fragment.js';
+export * from './graphql/fragments/index.js';
