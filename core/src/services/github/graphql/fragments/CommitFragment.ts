@@ -1,18 +1,16 @@
 import { Commit as GsCommit } from '@octokit/graphql-schema';
 import { Commit, CommitSchema } from '../../../../entities/Commit.js';
 import { ActorFragment } from './ActorFragment.js';
-import { Fragment, FragmentFactory } from './Fragment.js';
+import { AbstractFragment, Fragment, FragmentFactory } from './Fragment.js';
 
 /**
  *  A fragment to get a commit.
  */
-export class CommitFragment implements Fragment {
+export class CommitFragment extends AbstractFragment<Commit> {
   readonly fragments: Fragment[] = [];
 
-  constructor(
-    public alias = 'CommitFrag',
-    opts: { factory: FragmentFactory }
-  ) {
+  constructor(alias = 'CommitFrag', opts: { factory: FragmentFactory }) {
+    super(alias, opts);
     this.fragments.push(opts.factory.create(ActorFragment));
   }
 

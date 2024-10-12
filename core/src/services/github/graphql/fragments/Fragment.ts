@@ -1,4 +1,5 @@
 import { Class } from 'type-fest';
+import { Booleanify, NullableFields } from '../../../../helpers/types.js';
 
 /**
  *  Fragment interface
@@ -10,24 +11,54 @@ export interface Fragment<R = any> {
   parse(data: any): R;
 }
 
-export interface FragmentFactory {
-  create<R>(type: Class<Fragment<R>>): Fragment<R>;
+/**
+ * Abstract fragment
+ */
+export abstract class AbstractFragment<R = any> implements Fragment<R> {
+  readonly fragments: Fragment[] = [];
+
+  constructor(
+    readonly alias: string,
+    protected opts?: { factory?: FragmentFactory }
+  ) {}
+
+  abstract toString(): string;
+  abstract parse(data: any): R;
+}
+
+/**
+ * Custom fragment
+ */
+export abstract class CustomizableFragment<R = any> extends AbstractFragment<R> {
+  constructor(
+    readonly alias: string,
+    protected readonly opts?: { factory?: FragmentFactory; fields?: boolean | Booleanify<NullableFields<R>> }
+  ) {
+    super(alias, opts);
+  }
+
+  public includes(field: string, query: string): string {
+    return this.opts?.fields === true ||
+      (typeof this.opts?.fields === 'object' && (this.opts?.fields as Record<string, any>)[field])
+      ? query
+      : '';
+  }
 }
 
 /**
  *  Partial fragment factory
  */
-export class PartialFragmentFactory implements FragmentFactory {
-  create<R>(Ref: Class<Fragment<R>>): Fragment<R> {
-    return new Ref(Ref.name, { factory: this, full: false });
-  }
+export interface FragmentFactory {
+  create<T extends Fragment>(Ref: Class<T>): T;
 }
 
 /**
- *  Full fragment factory
+ * Base fragment factory
  */
-export class FullFragmentFactory implements FragmentFactory {
-  create<R>(Ref: Class<Fragment<R>>): Fragment<R> {
-    return new Ref(Ref.name, { factory: this, full: true });
+export class BaseFragmentFactory implements FragmentFactory {
+  constructor(private full = false) {}
+
+  create<T extends Fragment>(Ref: Class<T>): T {
+    return new Ref(Ref.name, { factory: this, fields: this.full });
   }
 }

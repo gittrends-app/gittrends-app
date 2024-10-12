@@ -5,19 +5,14 @@ import {
 } from '../../../../entities/base/PullRequestReviewComment.js';
 import { zodSanitize } from '../../../../helpers/sanitize.js';
 import { ActorFragment } from './ActorFragment.js';
-import { Fragment, FragmentFactory } from './Fragment.js';
+import { AbstractFragment, FragmentFactory } from './Fragment.js';
 
 /**
  *  A fragment to get a pull request.
  */
-export class PullRequestReviewCommentFragment implements Fragment {
-  readonly fragments: Fragment[] = [];
-
-  constructor(
-    public alias = 'PullRequestReviewCommentFrag',
-    opts: { factory: FragmentFactory }
-  ) {
-    this.alias = alias;
+export class PullRequestReviewCommentFragment extends AbstractFragment {
+  constructor(alias = 'PullRequestReviewCommentFrag', opts: { factory: FragmentFactory }) {
+    super(alias, opts);
     this.fragments.push(opts.factory.create(ActorFragment));
   }
 

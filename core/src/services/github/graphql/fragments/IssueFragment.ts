@@ -1,18 +1,14 @@
 import { Issue as GsIssue } from '@octokit/graphql-schema';
 import { Issue, IssueSchema } from '../../../../entities/Issue.js';
 import { ActorFragment } from './ActorFragment.js';
-import { Fragment, FragmentFactory } from './Fragment.js';
+import { AbstractFragment, FragmentFactory } from './Fragment.js';
 
 /**
  *  A fragment to get a issue.
  */
-export class IssueFragment implements Fragment {
-  readonly fragments: Fragment[] = [];
-
-  constructor(
-    public alias = 'IssueFrag',
-    opts: { factory: FragmentFactory }
-  ) {
+export class IssueFragment extends AbstractFragment {
+  constructor(alias = 'IssueFrag', opts: { factory: FragmentFactory }) {
+    super(alias, opts);
     this.fragments.push(opts.factory.create(ActorFragment));
   }
 

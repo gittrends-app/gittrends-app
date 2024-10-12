@@ -1,18 +1,14 @@
 import { Tag as GsTag } from '@octokit/graphql-schema';
 import { Tag, TagSchema } from '../../../../entities/Tag.js';
 import { ActorFragment } from './ActorFragment.js';
-import { Fragment, FragmentFactory } from './Fragment.js';
+import { AbstractFragment, FragmentFactory } from './Fragment.js';
 
 /**
  *  A fragment to get a tag.
  */
-export class TagFragment implements Fragment {
-  readonly fragments: Fragment[] = [];
-
-  constructor(
-    public alias = 'TagFrag',
-    opts: { factory: FragmentFactory }
-  ) {
+export class TagFragment extends AbstractFragment<Tag> {
+  constructor(alias = 'TagFrag', opts: { factory: FragmentFactory }) {
+    super(alias, opts);
     this.fragments.push(opts.factory.create(ActorFragment));
   }
 

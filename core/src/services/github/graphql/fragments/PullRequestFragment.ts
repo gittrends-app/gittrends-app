@@ -1,19 +1,14 @@
 import { PullRequest as GsPullRequest } from '@octokit/graphql-schema';
 import { PullRequest, PullRequestSchema } from '../../../../entities/PullRequest.js';
 import { ActorFragment } from './ActorFragment.js';
-import { Fragment, FragmentFactory } from './Fragment.js';
+import { AbstractFragment, FragmentFactory } from './Fragment.js';
 
 /**
  *  A fragment to get a pull request.
  */
-export class PullRequestFragment implements Fragment {
-  readonly fragments: Fragment[] = [];
-
-  constructor(
-    public alias = 'PullRequestFrag',
-    opts: { factory: FragmentFactory }
-  ) {
-    this.alias = alias;
+export class PullRequestFragment extends AbstractFragment {
+  constructor(alias = 'PullRequestFrag', opts: { factory: FragmentFactory }) {
+    super(alias, opts);
     this.fragments.push(opts.factory.create(ActorFragment));
   }
 

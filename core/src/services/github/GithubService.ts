@@ -11,7 +11,7 @@ import { Tag } from '../../entities/Tag.js';
 import { Watcher } from '../../entities/Watcher.js';
 import { Iterable, PageableParams, Service, ServiceCommitsParams, ServiceResourceParams } from '../Service.js';
 import { GithubClient } from './GithubClient.js';
-import { FullFragmentFactory, PartialFragmentFactory } from './graphql/fragments/Fragment.js';
+import { BaseFragmentFactory, FragmentFactory } from './graphql/fragments/Fragment.js';
 import { QueryLookup, QueryLookupParams } from './graphql/lookups/Lookup.js';
 import { SearchLookup } from './graphql/lookups/SearchLookup.js';
 import { StargazersLookup } from './graphql/lookups/StargazersLookup.js';
@@ -44,9 +44,9 @@ export class GithubService implements Service {
    * Searches for repositories.
    * @see Service.search
    */
-  search(total: number, opts?: PageableParams): Iterable<Repository> {
+  search(total: number, opts?: PageableParams & { factory?: FragmentFactory }): Iterable<Repository> {
     const it = QueryRunner.create(this.client).iterator(
-      new SearchLookup({ factory: new PartialFragmentFactory(), per_page: opts?.per_page, limit: total })
+      new SearchLookup({ factory: opts?.factory || new BaseFragmentFactory(), per_page: opts?.per_page, limit: total })
     );
 
     return {
@@ -65,21 +65,27 @@ export class GithubService implements Service {
    * Fetches a user by id or login.
    * @see Service.user
    */
-  async user(id: string, opts?: { byLogin: boolean }): Promise<Actor | null>;
-  async user(id: string[], opts?: { byLogin: boolean }): Promise<(Actor | null)[]>;
-  async user(id: any, opts?: { byLogin: boolean }): Promise<any> {
-    return users(id, { client: this.client, byLogin: opts?.byLogin, factory: new FullFragmentFactory() });
+  async user(id: string, opts?: { byLogin: boolean; factory?: FragmentFactory }): Promise<Actor | null>;
+  async user(id: string[], opts?: { byLogin: boolean; factory?: FragmentFactory }): Promise<(Actor | null)[]>;
+  async user(id: any, opts?: { byLogin: boolean; factory?: FragmentFactory }): Promise<any> {
+    return users(id, {
+      client: this.client,
+      byLogin: opts?.byLogin,
+      factory: opts?.factory || new BaseFragmentFactory(true)
+    });
   }
 
   /**
    * Fetches a repository by owner and name.
    * @see Service.repository
    */
-  async repository(owner: string, name?: string): Promise<Repository | null> {
-    return repos(name ? `${owner}/${name}` : owner, {
+  async repository(owner: string, name?: string): Promise<Repository | null>;
+  async repository(owner: string, opts?: { factory?: FragmentFactory }): Promise<Repository | null>;
+  async repository(owner: string, nameOrOpts?: any, opts?: { factory?: FragmentFactory }): Promise<Repository | null> {
+    return repos(nameOrOpts && typeof nameOrOpts === 'string' ? `${owner}/${nameOrOpts}` : owner, {
       client: this.client,
-      byName: !!name,
-      factory: new FullFragmentFactory()
+      byName: !!nameOrOpts,
+      factory: opts?.factory || new BaseFragmentFactory(true)
     });
   }
 
@@ -87,15 +93,15 @@ export class GithubService implements Service {
    * Fetches a resource from a repository.
    * @see Service.resource
    */
-  resource(name: 'commits', opts: ServiceCommitsParams & { full?: boolean }): Iterable<Commit>;
-  resource(name: 'discussions', opts: ServiceResourceParams & { full?: boolean }): Iterable<Discussion>;
-  resource(name: 'issues', opts: ServiceResourceParams & { full?: boolean }): Iterable<Issue>;
-  resource(name: 'pull_requests', opts: ServiceResourceParams & { full?: boolean }): Iterable<PullRequest>;
-  resource(name: 'releases', opts: ServiceResourceParams & { full?: boolean }): Iterable<Release>;
-  resource(name: 'stargazers', opts: ServiceResourceParams & { full?: boolean }): Iterable<Stargazer>;
-  resource(name: 'tags', opts: ServiceResourceParams & { full?: boolean }): Iterable<Tag>;
-  resource(name: 'watchers', opts: ServiceResourceParams & { full?: boolean }): Iterable<Watcher>;
-  resource<P extends ServiceResourceParams & { full?: boolean } & Record<string, any>>(
+  resource(name: 'commits', opts: ServiceCommitsParams & { factory?: FragmentFactory }): Iterable<Commit>;
+  resource(name: 'discussions', opts: ServiceResourceParams & { factory?: FragmentFactory }): Iterable<Discussion>;
+  resource(name: 'issues', opts: ServiceResourceParams & { factory?: FragmentFactory }): Iterable<Issue>;
+  resource(name: 'pull_requests', opts: ServiceResourceParams & { factory?: FragmentFactory }): Iterable<PullRequest>;
+  resource(name: 'releases', opts: ServiceResourceParams & { factory?: FragmentFactory }): Iterable<Release>;
+  resource(name: 'stargazers', opts: ServiceResourceParams & { factory?: FragmentFactory }): Iterable<Stargazer>;
+  resource(name: 'tags', opts: ServiceResourceParams & { factory?: FragmentFactory }): Iterable<Tag>;
+  resource(name: 'watchers', opts: ServiceResourceParams & { factory?: FragmentFactory }): Iterable<Watcher>;
+  resource<P extends ServiceResourceParams & { factory?: FragmentFactory } & Record<string, any>>(
     name: string,
     opts: P
   ): Iterable<any> {
@@ -103,7 +109,7 @@ export class GithubService implements Service {
       id: opts.repository,
       cursor: opts.cursor,
       per_page: opts.per_page,
-      factory: opts.full ? new FullFragmentFactory() : new PartialFragmentFactory(),
+      factory: opts.factory || new BaseFragmentFactory(),
       since: opts.since,
       until: opts.until
     };

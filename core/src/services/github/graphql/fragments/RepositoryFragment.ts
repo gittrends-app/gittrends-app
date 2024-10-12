@@ -1,118 +1,97 @@
 import { Commit as GsCommit, Repository as GsRepository } from '@octokit/graphql-schema';
 import { Repository, RepositorySchema } from '../../../../entities/Repository.js';
+import { Booleanify, NullableFields } from '../../../../helpers/types.js';
 import { ActorFragment } from './ActorFragment.js';
-import { Fragment, FragmentFactory } from './Fragment.js';
+import { CustomizableFragment, FragmentFactory } from './Fragment.js';
 
 /**
  *  A fragment to get a repository.
  */
-export class RepositoryFragment implements Fragment {
-  readonly fragments: Fragment[] = [];
-
-  private readonly full: boolean;
-
+export class RepositoryFragment extends CustomizableFragment<Repository> {
   constructor(
-    public alias = 'RepositoryFrag',
-    opts: { factory: FragmentFactory; full?: boolean }
+    alias = 'RepositoryFrag',
+    opts: { factory: FragmentFactory; fields: boolean | Booleanify<NullableFields<Repository>> }
   ) {
-    this.fragments = [opts.factory.create(ActorFragment)];
-    this.full = opts.full || false;
+    super(alias, opts);
+    this.fragments.push(opts.factory.create(ActorFragment));
   }
 
   toString(): string {
-    return this.full
-      ? `
+    return `
     fragment ${this.alias} on Repository {
       __typename
-      allowUpdateBranch
+      ${this.includes('allow_update_branch', 'allowUpdateBranch')}
       archivedAt
-      assignableUsers { totalCount }
-      autoMergeAllowed
+      ${this.includes('assignable_users_count', 'assignableUsers { totalCount }')}
+      ${this.includes('auto_merge_allowed', 'autoMergeAllowed')}
       codeOfConduct { key }
-      contributingGuidelines { body }
+      ${this.includes('contributing_guidelines', 'contributingGuidelines { body }')}
       createdAt
       databaseId
-      defaultBranchRef { 
-        name 
-        target { ... on Commit { history { totalCount } } }
-      }
-      deleteBranchOnMerge
-      deployments { totalCount }
+      defaultBranchRef { name target { ... on Commit { history { totalCount } } } }
+      ${this.includes('delete_branch_on_merge', 'deleteBranchOnMerge')}
+      ${this.includes('deployments_count', 'deployments { totalCount }')}
       description
-      discussions { totalCount }
+      ${this.includes('discussions_count', 'discussions { totalCount }')}
       diskUsage
-      environments { totalCount }
+      ${this.includes('environments_count', 'environments { totalCount }')}
       forkCount
-      forkingAllowed
-      fundingLinks { platform url }
-      hasDiscussionsEnabled
-      hasIssuesEnabled
-      hasProjectsEnabled
-      hasSponsorshipsEnabled
-      hasVulnerabilityAlertsEnabled
-      hasWikiEnabled
+      ${this.includes('forking_allowed', 'forkingAllowed')}
+      ${this.includes('funding_links', 'fundingLinks { platform url }')}
+      ${this.includes('has_discussions_enabled', 'hasDiscussionsEnabled')}
+      ${this.includes('has_issues_enabled', 'hasIssuesEnabled')}
+      ${this.includes('has_projects_enabled', 'hasProjectsEnabled')}
+      ${this.includes('has_sponsorships_enabled', 'hasSponsorshipsEnabled')}
+      ${this.includes('has_vulnerability_alerts_enabled', 'hasVulnerabilityAlertsEnabled')}
+      ${this.includes('has_wiki_enabled', 'hasWikiEnabled')}
       homepageUrl
       id
       isArchived
-      isBlankIssuesEnabled
-      isDisabled
-      isEmpty
-      isFork
-      isInOrganization
-      isLocked
-      isMirror
-      isSecurityPolicyEnabled
-      issues { totalCount }
-      languages(first: 100) { edges { size node { name } } }
-      licenseInfo { key }
-      lockReason
-      mergeCommitAllowed
-      mergeCommitMessage
-      mergeCommitTitle
-      milestones { totalCount }
-      mirrorUrl
+      ${this.includes('is_blank_issues_enabled', 'isBlankIssuesEnabled')}
+      ${this.includes('is_disabled', 'isDisabled')}
+      ${this.includes('is_empty', 'isEmpty')}
+      ${this.includes('is_fork', 'isFork')}
+      ${this.includes('is_in_organization', 'isInOrganization')}
+      ${this.includes('is_locked', 'isLocked')}
+      ${this.includes('is_mirror', 'isMirror')}
+      ${this.includes('is_security_policy_enabled', 'isSecurityPolicyEnabled')}
+      ${this.includes('issues_count', 'issues { totalCount }')}
+      ${this.includes('languages', 'languages(first: 100) { edges { node { name } size } }')}
+      ${this.includes('license_info', 'licenseInfo { key }')}
+      ${this.includes('lock_reason', 'lockReason')}
+      ${this.includes('merge_commit_allowed', 'mergeCommitAllowed')}
+      ${this.includes('merge_commit_message', 'mergeCommitMessage')}
+      ${this.includes('merge_commit_title', 'mergeCommitTitle')}
+      ${this.includes('milestones_count', 'milestones { totalCount }')}
+      ${this.includes('mirror_url', 'mirrorUrl')}
       name
       nameWithOwner
       openGraphImageUrl
       owner { ...${this.fragments[0].alias} }
-      packages { totalCount }
-      parent { id nameWithOwner }
+      ${this.includes('packages_count', 'packages { totalCount }')}
+      ${this.includes('parent', 'parent { id nameWithOwner }')}
       primaryLanguage { name }
-      pullRequests { totalCount }
+      ${this.includes('pull_requests_count', 'pullRequests { totalCount }')}
       pushedAt
-      rebaseMergeAllowed
-      branches:refs(refPrefix: "refs/heads/") { totalCount }
-      tags:refs(refPrefix: "refs/tags/") { totalCount }
-      releases { totalCount }
-      repositoryTopics(first: 100) { nodes { topic { name } } }
-      rulesets { totalCount }
-      securityPolicyUrl
-      squashMergeAllowed
-      squashMergeCommitMessage
-      squashMergeCommitTitle
-      sshUrl
+      ${this.includes('rebase_merge_allowed', 'rebaseMergeAllowed')}
+      ${this.includes('branches_count', 'branches:refs(refPrefix: "refs/heads/") { totalCount }')}
+      ${this.includes('tags_count', 'tags:refs(refPrefix: "refs/tags/") { totalCount }')}
+      ${this.includes('releases_count', 'releases { totalCount }')}
+      ${this.includes('repository_topics', 'repositoryTopics(first: 100) { nodes { topic { name } } }')}
+      ${this.includes('rulesets_count', 'rulesets { totalCount }')}
+      ${this.includes('security_policy_url', 'securityPolicyUrl')}
+      ${this.includes('squash_merge_allowed', 'squashMergeAllowed')}
+      ${this.includes('squash_merge_commit_message', 'squashMergeCommitMessage')}
+      ${this.includes('squash_merge_commit_title', 'squashMergeCommitTitle')}
       stargazerCount
-      submodules { totalCount }
-      templateRepository { id nameWithOwner }
+      ${this.includes('submodules_count', 'submodules { totalCount }')}
+      ${this.includes('template_repository', 'templateRepository { nameWithOwner }')}
       updatedAt
-      url
-      usesCustomOpenGraphImage
-      visibility
-      vulnerabilityAlerts { totalCount }
-      watchers { totalCount }
-      webCommitSignoffRequired
-    }`
-      : `fragment ${this.alias} on Repository {
-      __typename
-      databaseId
-      description
-      id
-      name
-      nameWithOwner
-      openGraphImageUrl
-      owner { ...${this.fragments[0].alias} }
-      primaryLanguage { name }
-      stargazerCount
+      ${this.includes('uses_custom_open_graph_image', 'usesCustomOpenGraphImage')}
+      ${this.includes('visibility', 'visibility')}
+      ${this.includes('vulnerability_alerts_count', 'vulnerabilityAlerts { totalCount }')}
+      ${this.includes('watchers_count', 'watchers { totalCount }')}
+      ${this.includes('web_commit_signoff_required', 'webCommitSignoffRequired')}
     }`;
   }
 

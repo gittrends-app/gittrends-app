@@ -1,59 +1,52 @@
 import { Bot, EnterpriseUserAccount, Mannequin, Organization, User } from '@octokit/graphql-schema';
 import snakeCase from 'lodash/snakeCase.js';
 import { Actor, ActorSchema } from '../../../../entities/Actor.js';
-import { Fragment } from './Fragment.js';
+import { CustomizableFragment, Fragment } from './Fragment.js';
 
 /**
  * A fragment to select the common fields for an actor.
  */
-export class ActorFragment implements Fragment {
+export class ActorFragment extends CustomizableFragment {
   readonly fragments: Fragment[] = [];
 
-  constructor(
-    public alias = 'ActorFragment',
-    private opts?: { full?: boolean }
-  ) {}
-
   toString(): string {
-    return this.opts?.full
-      ? `
+    return `
     fragment ${this.alias}_User on User {
       bio
       company
       createdAt
       databaseId
       email
-      hasSponsorsListing
-      isBountyHunter
-      isCampusExpert
-      isDeveloperProgramMember
-      isEmployee
-      isGitHubStar
-      isHireable
-      isSiteAdmin
       location
       name
       pronouns
-      socialAccounts(first: 100) { 
-        nodes { provider displayName } 
-      }
       twitterUsername
       updatedAt
       websiteUrl
       
-      followers { totalCount }
-      following { totalCount }
-      gists { totalCount }
-      issues { totalCount }
-      organizations { totalCount }
-      pullRequests { totalCount }
-      repositories { totalCount }
-      repositoriesContributedTo { totalCount }
-      repositoryDiscussions { totalCount }
-      sponsoring { totalCount }
-      sponsors { totalCount }
-      starredRepositories { totalCount }
-      watching { totalCount }
+      ${this.includes('has_sponsors_listing', 'hasSponsorsListing')}
+      ${this.includes('is_bounty_hunter', 'isBountyHunter')}
+      ${this.includes('is_campus_expert', 'isCampusExpert')}
+      ${this.includes('is_developer_program_member', 'isDeveloperProgramMember')}
+      ${this.includes('is_employee', 'isEmployee')}
+      ${this.includes('is_github_star', 'isGitHubStar')}
+      ${this.includes('is_hireable', 'isHireable')}
+      ${this.includes('is_site_admin', 'isSiteAdmin')}
+      
+      ${this.includes('social_accounts', 'socialAccounts(first: 100) { nodes { provider displayName } }')}
+      ${this.includes('followers_count', 'followers { totalCount }')} 
+      ${this.includes('following_count', 'following { totalCount }')} 
+      ${this.includes('gists_count', 'gists { totalCount }')} 
+      ${this.includes('issues_count', 'issues { totalCount }')} 
+      ${this.includes('organizations_count', 'organizations { totalCount }')} 
+      ${this.includes('pull_requests_count', 'pullRequests { totalCount }')} 
+      ${this.includes('repositories_count', 'repositories { totalCount }')} 
+      ${this.includes('repositories_contributed_to_count', 'repositoriesContributedTo { totalCount }')} 
+      ${this.includes('repository_discussions_count', 'repositoryDiscussions { totalCount }')} 
+      ${this.includes('sponsoring_count', 'sponsoring { totalCount }')} 
+      ${this.includes('sponsors_count', 'sponsors { totalCount }')} 
+      ${this.includes('starred_repositories_count', 'starredRepositories { totalCount }')} 
+      ${this.includes('watching_count', 'watching { totalCount }')} 
     }
 
     fragment ${this.alias} on Actor {
@@ -76,11 +69,11 @@ export class ActorFragment implements Fragment {
         updatedAt
       }
       
-      ... on EnterpriseUserAccount {
-        name
-        updatedAt
-        user { ...${this.alias}_User }
-      }
+      # ... on EnterpriseUserAccount {
+      #  name
+      #  updatedAt
+      #  user { ...${this.alias}_User }
+      #}
       
       ... on User { ...${this.alias}_User }
       
@@ -90,7 +83,6 @@ export class ActorFragment implements Fragment {
         databaseId
         description
         email
-        hasSponsorsListing
         isVerified
         location
         name
@@ -98,53 +90,11 @@ export class ActorFragment implements Fragment {
         updatedAt
         websiteUrl
         
-        membersWithRole { totalCount }
-        repositories { totalCount }
-        sponsoring { totalCount }
-        sponsors { totalCount }
-      }
-    }
-    `
-      : `
-    fragment ${this.alias} on Actor {
-      ... on Node { id }
-      login
-      avatarUrl
-      __typename
-
-      ... on User {
-        bio
-        company
-        createdAt
-        databaseId
-        email
-        hasSponsorsListing
-        isBountyHunter
-        isCampusExpert
-        isDeveloperProgramMember
-        isEmployee
-        isGitHubStar
-        isHireable
-        isSiteAdmin
-        location
-        name
-        pronouns
-        twitterUsername
-        websiteUrl
-      }
-
-      ... on Organization {
-        archivedAt
-        createdAt
-        databaseId
-        description
-        email
-        hasSponsorsListing
-        isVerified
-        location
-        name
-        twitterUsername
-        websiteUrl
+        ${this.includes('has_sponsors_listing', 'hasSponsorsListing')}
+        ${this.includes('members_with_role_count', 'membersWithRole { totalCount }')} 
+        ${this.includes('repositories_count', 'repositories { totalCount }')} 
+        ${this.includes('sponsoring_count', 'sponsoring { totalCount }')} 
+        ${this.includes('sponsors_count', 'sponsors { totalCount }')} 
       }
     }
     `;
@@ -240,7 +190,7 @@ export class ActorFragment implements Fragment {
           is_campus_expert: data.isCampusExpert,
           is_developer_program_member: data.isDeveloperProgramMember,
           is_employee: data.isEmployee,
-          is_git_hub_star: data.isGitHubStar,
+          is_github_star: data.isGitHubStar,
           is_hireable: data.isHireable,
           is_site_admin: data.isSiteAdmin,
           has_sponsors_listing: data.hasSponsorsListing,

@@ -1,20 +1,16 @@
 import { IssueTimelineItems, PullRequestTimelineItems } from '@octokit/graphql-schema';
 import { TimelineItem, TimelineItemSchema } from '../../../../entities/TimelineItem.js';
 import { ActorFragment } from './ActorFragment.js';
-import { Fragment, FragmentFactory } from './Fragment.js';
+import { AbstractFragment, FragmentFactory } from './Fragment.js';
 
 /**
  *  A fragment to get a timeline item.
  */
-class TimelineItemFragment implements Fragment {
-  readonly fragments: Fragment[] = [];
-
+class TimelineItemFragment extends AbstractFragment<TimelineItem> {
   private readonly pullRequest: boolean;
 
-  constructor(
-    public alias = 'IssueTimelineItemFrag',
-    opts: { factory: FragmentFactory; pullRequest?: boolean }
-  ) {
+  constructor(alias = 'IssueTimelineItemFrag', opts: { factory: FragmentFactory; pullRequest?: boolean }) {
+    super(alias, opts);
     this.fragments.push(opts.factory.create(ActorFragment));
     this.pullRequest = opts.pullRequest || false;
   }

@@ -31,7 +31,7 @@ const User = Actor.extend({ __typename: z.literal('User') }).merge(
       is_campus_expert: z.boolean(),
       is_developer_program_member: z.boolean(),
       is_employee: z.boolean(),
-      is_git_hub_star: z.boolean(),
+      is_github_star: z.boolean(),
       is_hireable: z.boolean(),
       is_site_admin: z.boolean(),
       location: z.string().optional(),

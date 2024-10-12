@@ -1,18 +1,14 @@
 import { IssueTimelineItems, PullRequestTimelineItems } from '@octokit/graphql-schema';
 import { Commentable, CommentableSchema } from '../../../../entities/base/Commentable.js';
 import { ActorFragment } from './ActorFragment.js';
-import { Fragment, FragmentFactory } from './Fragment.js';
+import { AbstractFragment, FragmentFactory } from './Fragment.js';
 
 /**
  *  A fragment to fetch comments from a timeline item.
  */
-export class TimelineItemCommentsFragment implements Fragment {
-  readonly fragments: Fragment[] = [];
-
-  constructor(
-    public alias = 'TimelineItemCommentsFrag',
-    opts: { factory: FragmentFactory }
-  ) {
+export class TimelineItemCommentsFragment extends AbstractFragment<Commentable> {
+  constructor(alias = 'TimelineItemCommentsFrag', opts: { factory: FragmentFactory }) {
+    super(alias, opts);
     this.fragments.push(opts.factory.create(ActorFragment));
   }
 
