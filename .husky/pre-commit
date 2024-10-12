@@ -1,1 +1,1 @@
-yarn lerna run verify
+yarn verify

@@ -1,0 +1,21 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "tasks": {
+    "@gittrends-app/cli#build": {
+      "dependsOn": ["@gittrends-app/core#build"]
+    },
+    "build": {
+      "outputs": ["dist/**"]
+    },
+    "@gittrends-app/cli#verify": {
+      "dependsOn": ["@gittrends-app/core#verify"]
+    },
+    "verify": {
+      "outputs": ["dist/**"]
+    },
+    "dev": {
+      "persistent": true,
+      "cache": false
+    }
+  }
+}
