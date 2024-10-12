@@ -9,13 +9,15 @@
     "prepare": "husky",
     "build": "turbo build",
     "verify": "turbo verify",
-    "release": "yarn workspaces run release"
+    "release": "yarn workspace @gittrends-app/core release"
   },
   "workspaces": [
     "core",
     "cli"
   ],
   "devDependencies": {
+    "@commitlint/cli": "^19.5.0",
+    "@commitlint/config-conventional": "^19.5.0",
     "@jest/globals": "^29.7.0",
     "@release-it-plugins/workspaces": "^4.2.0",
     "@release-it/bumper": "^6.0.1",
