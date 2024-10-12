@@ -10,7 +10,8 @@
     "node": ">=18.0.0"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "registry": "https://registry.npmjs.org"
   },
   "scripts": {
     "lint": "eslint --ext .ts ./src",
@@ -23,7 +24,8 @@
     "jest:coverage": "jest --runInBand --collect-coverage",
     "verify": "run-s lint build jest",
     "prettier": "prettier --write src",
-    "prepublishOnly": "npm run verify"
+    "prepublishOnly": "npm run verify",
+    "release": "release-it"
   },
   "dependencies": {
     "@octokit/graphql": "^8.1.1",
@@ -53,5 +55,24 @@
     "package.json",
     "README.md"
   ],
-  "gitHead": "db7deab7d66bfd9e98ad532453263ce38508665d"
+  "release-it": {
+    "git": {
+      "commit": true,
+      "tag": true,
+      "push": true,
+      "changelog": "npx auto-changelog --stdout --commit-limit false --unreleased --template https://raw.githubusercontent.com/release-it/release-it/main/templates/changelog-compact.hbs"
+    },
+    "github": {
+      "release": true,
+      "web": true,
+      "autoGenerate": true
+    },
+    "hooks": {
+      "before:init": [
+        "if [ \"$(git log $(git describe --tags --abbrev=0)..HEAD)\" = \"\" ]; then exit 1; fi;",
+        "yarn turbo verify"
+      ],
+      "after:bump": "npx auto-changelog -p"
+    }
+  }
 }
