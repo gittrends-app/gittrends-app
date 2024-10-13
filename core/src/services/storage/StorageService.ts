@@ -31,10 +31,6 @@ export class StorageService implements Service {
     this.storage = storage;
   }
 
-  /**
-   * Searches for repositories.
-   * @see Service.search
-   */
   search(total: number, opts?: PageableParams): Iterable<Repository> {
     const repoStorage = this.storage.create('Repository');
     const it = this.service.search(total, opts);
@@ -49,10 +45,6 @@ export class StorageService implements Service {
     };
   }
 
-  /**
-   * Fetches a user by id or login.
-   * @see Service.user
-   */
   user(id: string, opts?: { byLogin: boolean }): Promise<Actor | null>;
   user(id: string[], opts?: { byLogin: boolean }): Promise<(Actor | null)[]>;
   async user(id: string | string[], opts?: { byLogin: boolean }): Promise<any> {
@@ -83,10 +75,6 @@ export class StorageService implements Service {
     return Array.isArray(id) ? result : result[0];
   }
 
-  /**
-   * Fetches a repository by owner and name.
-   * @see Service.repository
-   */
   async repository(ownerOrId: string, name?: string): Promise<Repository | null> {
     const repoStorage = this.storage.create('Repository');
 
@@ -100,19 +88,39 @@ export class StorageService implements Service {
     return repo;
   }
 
-  /**
-   * Fetches a resource from a repository.
-   * @see Service.resource
-   */
-  resource(name: 'watchers', opts: ServiceResourceParams & { resume?: boolean }): Iterable<Watcher>;
-  resource(name: 'stargazers', opts: ServiceResourceParams & { resume?: boolean }): Iterable<Stargazer>;
-  resource(name: 'discussions', opts: ServiceResourceParams & { resume?: boolean }): Iterable<Discussion>;
-  resource(name: 'tags', opts: ServiceResourceParams & { resume?: boolean }): Iterable<Tag>;
-  resource(name: 'releases', opts: ServiceResourceParams & { resume?: boolean }): Iterable<Release>;
-  resource(name: 'commits', opts: ServiceCommitsParams & { resume?: boolean }): Iterable<Commit>;
-  resource(name: 'issues', opts: ServiceResourceParams & { resume?: boolean }): Iterable<Issue>;
-  resource(name: 'pull_requests', opts: ServiceResourceParams & { resume?: boolean }): Iterable<PullRequest>;
-  resource(name: string, opts: ServiceResourceParams & { resume?: boolean }): Iterable<any> {
+  watchers(opts: ServiceResourceParams & { resume?: boolean }): Iterable<Watcher> {
+    return this.resource('watchers', opts);
+  }
+
+  stargazers(opts: ServiceResourceParams & { resume?: boolean }): Iterable<Stargazer> {
+    return this.resource('stargazers', opts);
+  }
+
+  discussions(opts: ServiceResourceParams & { resume?: boolean }): Iterable<Discussion> {
+    return this.resource('discussions', opts);
+  }
+
+  tags(opts: ServiceResourceParams & { resume?: boolean }): Iterable<Tag> {
+    return this.resource('tags', opts);
+  }
+
+  releases(opts: ServiceResourceParams & { resume?: boolean }): Iterable<Release> {
+    return this.resource('releases', opts);
+  }
+
+  commits(opts: ServiceCommitsParams & { resume?: boolean }): Iterable<Commit> {
+    return this.resource('commits', opts);
+  }
+
+  issues(opts: ServiceResourceParams & { resume?: boolean }): Iterable<Issue> {
+    return this.resource('issues', opts);
+  }
+
+  pull_requests(opts: ServiceResourceParams & { resume?: boolean }): Iterable<PullRequest> {
+    return this.resource('pull_requests', opts);
+  }
+
+  private resource(name: string, opts: ServiceResourceParams & { resume?: boolean }): Iterable<any> {
     let resourceName;
 
     if (name === 'watchers') resourceName = 'Watcher';
@@ -157,7 +165,7 @@ export class StorageService implements Service {
           }
         }
 
-        for await (const res of service.resource(name as any, params)) {
+        for await (const res of service[name](params)) {
           if (res.data.length) {
             await resourceStorage.save(res.data as unknown as RepositoryNode);
             await metadataStorage.save(

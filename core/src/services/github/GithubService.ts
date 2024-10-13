@@ -12,7 +12,7 @@ import { Watcher } from '../../entities/Watcher.js';
 import { Iterable, PageableParams, Service, ServiceCommitsParams, ServiceResourceParams } from '../Service.js';
 import { GithubClient } from './GithubClient.js';
 import { BaseFragmentFactory, FragmentFactory } from './graphql/fragments/Fragment.js';
-import { QueryLookup, QueryLookupParams } from './graphql/lookups/Lookup.js';
+import { QueryLookup } from './graphql/lookups/Lookup.js';
 import { SearchLookup } from './graphql/lookups/SearchLookup.js';
 import { StargazersLookup } from './graphql/lookups/StargazersLookup.js';
 import { TagsLookup } from './graphql/lookups/TagsLookup.js';
@@ -40,10 +40,6 @@ export class GithubService implements Service {
     this.client = client;
   }
 
-  /**
-   * Searches for repositories.
-   * @see Service.search
-   */
   search(total: number, opts?: PageableParams & { factory?: FragmentFactory }): Iterable<Repository> {
     const it = QueryRunner.create(this.client).iterator(
       new SearchLookup({ factory: opts?.factory || new BaseFragmentFactory(), per_page: opts?.per_page, limit: total })
@@ -61,10 +57,6 @@ export class GithubService implements Service {
     };
   }
 
-  /**
-   * Fetches a user by id or login.
-   * @see Service.user
-   */
   async user(id: string, opts?: { byLogin: boolean; factory?: FragmentFactory }): Promise<Actor | null>;
   async user(id: string[], opts?: { byLogin: boolean; factory?: FragmentFactory }): Promise<(Actor | null)[]>;
   async user(id: any, opts?: { byLogin: boolean; factory?: FragmentFactory }): Promise<any> {
@@ -75,10 +67,6 @@ export class GithubService implements Service {
     });
   }
 
-  /**
-   * Fetches a repository by owner and name.
-   * @see Service.repository
-   */
   async repository(owner: string, name?: string): Promise<Repository | null>;
   async repository(owner: string, opts?: { factory?: FragmentFactory }): Promise<Repository | null>;
   async repository(owner: string, nameOrOpts?: any, opts?: { factory?: FragmentFactory }): Promise<Repository | null> {
@@ -89,51 +77,86 @@ export class GithubService implements Service {
     });
   }
 
-  /**
-   * Fetches a resource from a repository.
-   * @see Service.resource
-   */
-  resource(name: 'commits', opts: ServiceCommitsParams & { factory?: FragmentFactory }): Iterable<Commit>;
-  resource(name: 'discussions', opts: ServiceResourceParams & { factory?: FragmentFactory }): Iterable<Discussion>;
-  resource(name: 'issues', opts: ServiceResourceParams & { factory?: FragmentFactory }): Iterable<Issue>;
-  resource(name: 'pull_requests', opts: ServiceResourceParams & { factory?: FragmentFactory }): Iterable<PullRequest>;
-  resource(name: 'releases', opts: ServiceResourceParams & { factory?: FragmentFactory }): Iterable<Release>;
-  resource(name: 'stargazers', opts: ServiceResourceParams & { factory?: FragmentFactory }): Iterable<Stargazer>;
-  resource(name: 'tags', opts: ServiceResourceParams & { factory?: FragmentFactory }): Iterable<Tag>;
-  resource(name: 'watchers', opts: ServiceResourceParams & { factory?: FragmentFactory }): Iterable<Watcher>;
-  resource<P extends ServiceResourceParams & { factory?: FragmentFactory } & Record<string, any>>(
-    name: string,
-    opts: P
-  ): Iterable<any> {
-    const params: QueryLookupParams & Partial<{ since: Date; until: Date }> = {
+  commits(opts: ServiceCommitsParams & { factory?: FragmentFactory }): Iterable<Commit> {
+    return commits(this.client, {
       id: opts.repository,
       cursor: opts.cursor,
       per_page: opts.per_page,
       factory: opts.factory || new BaseFragmentFactory(),
       since: opts.since,
       until: opts.until
-    };
+    });
+  }
 
-    switch (name) {
-      case 'discussions':
-        return discussions(this.client, params);
-      case 'releases':
-        return releases(this.client, params);
-      case 'commits':
-        return commits(this.client, params);
-      case 'issues':
-        return issues(this.client, params);
-      case 'pull_requests':
-        return pullRequests(this.client, params);
-      case 'stargazers':
-        return genericIterator(this.client, new StargazersLookup(params));
-      case 'watchers':
-        return genericIterator(this.client, new WatchersLookup(params));
-      case 'tags':
-        return genericIterator(this.client, new TagsLookup(params));
-      default:
-        throw new Error(`Resource ${name} not supported`);
-    }
+  discussions(opts: ServiceResourceParams & { factory?: FragmentFactory }): Iterable<Discussion> {
+    return discussions(this.client, {
+      id: opts.repository,
+      cursor: opts.cursor,
+      per_page: opts.per_page,
+      factory: opts.factory || new BaseFragmentFactory()
+    });
+  }
+
+  issues(opts: ServiceResourceParams & { factory?: FragmentFactory }): Iterable<Issue> {
+    return issues(this.client, {
+      id: opts.repository,
+      cursor: opts.cursor,
+      per_page: opts.per_page,
+      factory: opts.factory || new BaseFragmentFactory()
+    });
+  }
+
+  pull_requests(opts: ServiceResourceParams & { factory?: FragmentFactory }): Iterable<PullRequest> {
+    return pullRequests(this.client, {
+      id: opts.repository,
+      cursor: opts.cursor,
+      per_page: opts.per_page,
+      factory: opts.factory || new BaseFragmentFactory()
+    });
+  }
+
+  releases(opts: ServiceResourceParams & { factory?: FragmentFactory }): Iterable<Release> {
+    return releases(this.client, {
+      id: opts.repository,
+      cursor: opts.cursor,
+      per_page: opts.per_page,
+      factory: opts.factory || new BaseFragmentFactory()
+    });
+  }
+
+  stargazers(opts: ServiceResourceParams & { factory?: FragmentFactory }): Iterable<Stargazer> {
+    return genericIterator(
+      this.client,
+      new StargazersLookup({
+        id: opts.repository,
+        cursor: opts.cursor,
+        per_page: opts.per_page,
+        factory: opts.factory || new BaseFragmentFactory()
+      })
+    );
+  }
+
+  tags(opts: ServiceResourceParams & { factory?: FragmentFactory }): Iterable<Tag> {
+    return genericIterator(
+      this.client,
+      new TagsLookup({
+        id: opts.repository,
+        cursor: opts.cursor,
+        per_page: opts.per_page,
+        factory: opts.factory || new BaseFragmentFactory()
+      })
+    );
+  }
+  watchers(opts: ServiceResourceParams & { factory?: FragmentFactory }): Iterable<Watcher> {
+    return genericIterator(
+      this.client,
+      new WatchersLookup({
+        id: opts.repository,
+        cursor: opts.cursor,
+        per_page: opts.per_page,
+        factory: opts.factory || new BaseFragmentFactory()
+      })
+    );
   }
 }
 

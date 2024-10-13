@@ -161,7 +161,7 @@ export class RepositoryUpdater extends AbstractTask<Notification> {
               if (name === 'issues') perPage = 50;
               if (name === 'pull_requests') perPage = 25;
 
-              const it = this.service.resource(name as any, { repository: repo.id, per_page: perPage, resume: true });
+              const it = this.service[name]({ repository: repo.id, per_page: perPage, resume: true });
 
               let total = await this.service.storage
                 .create<RepositoryNode>(upperFirst(camelCase(pluralize.singular(name))))

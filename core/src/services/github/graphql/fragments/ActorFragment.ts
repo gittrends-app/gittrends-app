@@ -21,9 +21,9 @@ export class ActorFragment extends CustomizableFragment {
       name
       pronouns
       twitterUsername
-      updatedAt
       websiteUrl
       
+      ${this.includes('updated_at', 'updatedAt')}
       ${this.includes('has_sponsors_listing', 'hasSponsorsListing')}
       ${this.includes('is_bounty_hunter', 'isBountyHunter')}
       ${this.includes('is_campus_expert', 'isCampusExpert')}
@@ -87,9 +87,9 @@ export class ActorFragment extends CustomizableFragment {
         location
         name
         twitterUsername
-        updatedAt
         websiteUrl
         
+        ${this.includes('updated_at', 'updatedAt')}
         ${this.includes('has_sponsors_listing', 'hasSponsorsListing')}
         ${this.includes('members_with_role_count', 'membersWithRole { totalCount }')} 
         ${this.includes('repositories_count', 'repositories { totalCount }')} 
