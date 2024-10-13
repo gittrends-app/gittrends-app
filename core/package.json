@@ -72,7 +72,12 @@
         "if [ \"$(git log $(git describe --tags --abbrev=0)..HEAD)\" = \"\" ]; then exit 1; fi;",
         "yarn turbo verify"
       ],
-      "after:bump": "npx auto-changelog -p"
+      "before:bump": [
+        "yarn turbo build",
+        "npx auto-changelog -p",
+        "git add ."
+      ],
+      "after:release": "git push origin HEAD"
     }
   }
 }
