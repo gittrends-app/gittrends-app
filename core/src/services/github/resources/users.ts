@@ -20,11 +20,8 @@ async function users(idsArr: string[], params: Params): Promise<(Actor | null)[]
     .then((result) => result.map((d) => d?.data as Actor | undefined))
     .catch((error) => {
       if ([502, 504].includes(error.status)) {
-        if (idsArr.length === 1 && error.status === 504) {
-          return [null];
-        } else if (idsArr.length > 1) {
-          return Promise.all(chunk(idsArr, 1).map((chunk) => users(chunk, params))).then((data) => data.flat());
-        }
+        if (idsArr.length === 1) return [null];
+        else return Promise.all(chunk(idsArr, 1).map((chunk) => users(chunk, params))).then((data) => data.flat());
       }
       throw error;
     });

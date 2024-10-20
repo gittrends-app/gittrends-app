@@ -75,7 +75,7 @@
       "before:bump": [
         "yarn turbo build",
         "npx auto-changelog -p",
-        "git add ."
+        "git add . ../yarn.lock ../package-lock.json"
       ],
       "after:release": "git push origin HEAD"
     }

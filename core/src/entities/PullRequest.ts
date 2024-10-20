@@ -47,7 +47,7 @@ const pr = NodeSchema.merge(RepositoryNodeSchema)
     can_be_rebased: z.boolean(),
     changed_files: z.number().int(),
     deletions: z.number().int(),
-    files_count: z.number().int(),
+    files_count: z.number().int().optional(),
     head_ref_name: z.string(),
     head_ref_oid: z.string(),
     head_repository: z.string().optional(),

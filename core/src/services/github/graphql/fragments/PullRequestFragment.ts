@@ -130,7 +130,7 @@ export class PullRequestFragment extends AbstractFragment {
       can_be_rebased: data.canBeRebased,
       changed_files: data.changedFiles,
       deletions: data.deletions,
-      files_count: data.files!.totalCount,
+      files_count: data.files?.totalCount,
       head_ref_name: data.headRefName,
       head_ref_oid: data.headRefOid,
       head_repository: data.headRepository?.nameWithOwner,
