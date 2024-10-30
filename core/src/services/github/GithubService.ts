@@ -31,18 +31,24 @@ import { default as users } from './resources/users.js';
  */
 export class GithubService implements Service {
   private readonly client: GithubClient;
+  private readonly defaultFragmentFactory?: FragmentFactory;
 
   /**
    * Creates a new GithubService
    * @param client The Github client.
    */
-  constructor(client: GithubClient) {
+  constructor(client: GithubClient, opts?: { factory?: FragmentFactory }) {
     this.client = client;
+    this.defaultFragmentFactory = opts?.factory;
   }
 
   search(total: number, opts?: PageableParams & { factory?: FragmentFactory }): Iterable<Repository> {
     const it = QueryRunner.create(this.client).iterator(
-      new SearchLookup({ factory: opts?.factory || new BaseFragmentFactory(), per_page: opts?.per_page, limit: total })
+      new SearchLookup({
+        factory: this.defaultFragmentFactory || opts?.factory || new BaseFragmentFactory(),
+        per_page: opts?.per_page,
+        limit: total
+      })
     );
 
     return {
@@ -63,7 +69,7 @@ export class GithubService implements Service {
     return users(id, {
       client: this.client,
       byLogin: opts?.byLogin,
-      factory: opts?.factory || new BaseFragmentFactory(true)
+      factory: this.defaultFragmentFactory || opts?.factory || new BaseFragmentFactory(true)
     });
   }
 
@@ -73,7 +79,7 @@ export class GithubService implements Service {
     return repos(nameOrOpts && typeof nameOrOpts === 'string' ? `${owner}/${nameOrOpts}` : owner, {
       client: this.client,
       byName: !!nameOrOpts,
-      factory: opts?.factory || new BaseFragmentFactory(true)
+      factory: this.defaultFragmentFactory || opts?.factory || new BaseFragmentFactory(true)
     });
   }
 
@@ -82,7 +88,7 @@ export class GithubService implements Service {
       id: opts.repository,
       cursor: opts.cursor,
       per_page: opts.per_page,
-      factory: opts.factory || new BaseFragmentFactory(),
+      factory: this.defaultFragmentFactory || opts.factory || new BaseFragmentFactory(),
       since: opts.since,
       until: opts.until
     });
@@ -93,7 +99,7 @@ export class GithubService implements Service {
       id: opts.repository,
       cursor: opts.cursor,
       per_page: opts.per_page,
-      factory: opts.factory || new BaseFragmentFactory()
+      factory: this.defaultFragmentFactory || opts.factory || new BaseFragmentFactory()
     });
   }
 
@@ -102,7 +108,7 @@ export class GithubService implements Service {
       id: opts.repository,
       cursor: opts.cursor,
       per_page: opts.per_page,
-      factory: opts.factory || new BaseFragmentFactory()
+      factory: this.defaultFragmentFactory || opts.factory || new BaseFragmentFactory()
     });
   }
 
@@ -111,7 +117,7 @@ export class GithubService implements Service {
       id: opts.repository,
       cursor: opts.cursor,
       per_page: opts.per_page,
-      factory: opts.factory || new BaseFragmentFactory()
+      factory: this.defaultFragmentFactory || opts.factory || new BaseFragmentFactory()
     });
   }
 
@@ -120,7 +126,7 @@ export class GithubService implements Service {
       id: opts.repository,
       cursor: opts.cursor,
       per_page: opts.per_page,
-      factory: opts.factory || new BaseFragmentFactory()
+      factory: this.defaultFragmentFactory || opts.factory || new BaseFragmentFactory()
     });
   }
 
@@ -131,7 +137,7 @@ export class GithubService implements Service {
         id: opts.repository,
         cursor: opts.cursor,
         per_page: opts.per_page,
-        factory: opts.factory || new BaseFragmentFactory()
+        factory: this.defaultFragmentFactory || opts.factory || new BaseFragmentFactory()
       })
     );
   }
@@ -143,7 +149,7 @@ export class GithubService implements Service {
         id: opts.repository,
         cursor: opts.cursor,
         per_page: opts.per_page,
-        factory: opts.factory || new BaseFragmentFactory()
+        factory: this.defaultFragmentFactory || opts.factory || new BaseFragmentFactory()
       })
     );
   }
@@ -154,7 +160,7 @@ export class GithubService implements Service {
         id: opts.repository,
         cursor: opts.cursor,
         per_page: opts.per_page,
-        factory: opts.factory || new BaseFragmentFactory()
+        factory: this.defaultFragmentFactory || opts.factory || new BaseFragmentFactory()
       })
     );
   }
