@@ -1,9 +1,8 @@
-import { GithubService, Service, StorageService } from '@/core/index.js';
+import { CacheService, GithubService, Service } from '@/core/index.js';
 import { createCache } from '@/helpers/cache.js';
 import githubClient from '@/helpers/github.js';
 import mongo from '@/mongo/mongo.js';
-import { MongoStorageFactory } from '@/mongo/MongoStorage.js';
-import { CacheService } from '@/services/CacheService.js';
+import { MongoStorage } from '@/mongo/MongoStorage.js';
 import { Worker } from 'bullmq';
 import { MultiBar, Presets } from 'cli-progress';
 import { Option, program } from 'commander';
@@ -85,7 +84,7 @@ function reposUpdate(service: Service, concurrency: number, progress: MultiBar):
         .map((r) => RepositoryUpdater.resources.find((res) => res === r))
         .filter((r) => r !== undefined);
 
-      const storageFactory = new MongoStorageFactory(
+      const storage = new MongoStorage(
         mongo.db(
           job.data.name_with_owner
             .replace('/', '@')
@@ -95,7 +94,8 @@ function reposUpdate(service: Service, concurrency: number, progress: MultiBar):
       );
 
       const task = new RepositoryUpdater(job.data.name_with_owner, {
-        service: new StorageService(service, storageFactory),
+        service,
+        storage,
         resources,
         parallel: true
       });
@@ -116,7 +116,7 @@ function reposUpdate(service: Service, concurrency: number, progress: MultiBar):
       const totals: Record<string, number> = {};
 
       const usersUpdateTimeout = setInterval(async () => {
-        return storageFactory
+        return storage
           .create('Actor')
           .count({})
           .then((total) => taskBar.setTotal(resourcesSum + total));
