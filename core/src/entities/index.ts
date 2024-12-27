@@ -8,7 +8,6 @@ export * from './Commit.js';
 export * from './Discussion.js';
 export * from './DiscussionComment.js';
 export * from './Issue.js';
-export * from './Metadata.js';
 export * from './PullRequest.js';
 export * from './Reaction.js';
 export * from './Release.js';
