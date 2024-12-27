@@ -1,44 +1,26 @@
 import { Cache } from '@/core/index.js';
-import { sqliteStore } from '@resolid/cache-manager-sqlite';
-import { caching, MultiCache, multiCaching } from 'cache-manager';
+import KeyvBrotli from '@keyv/compress-brotli';
+import { KeyvSqlite } from '@keyv/sqlite';
+import { Cache as CacheManager, createCache as createCacheManager } from 'cache-manager';
+import { CacheableMemory } from 'cacheable';
 import { existsSync, mkdirSync } from 'fs';
+import { Keyv } from 'keyv';
+import { constants } from 'zlib';
 import env from './env.js';
-
-import { promisify } from 'util';
-import { gunzip, gzip } from 'zlib';
-
-const gzipAsync = promisify(gzip);
-const gunzipAsync = promisify(gunzip);
-
-/**
- *  Compresses a text.
- */
-async function compress(text: string): Promise<Buffer> {
-  return gzipAsync(text);
-}
-
-/**
- *  Decompresses a buffer.
- */
-async function decompress(buffer: Buffer): Promise<string> {
-  const decompressedBuffer = await gunzipAsync(buffer);
-  return decompressedBuffer.toString();
-}
 
 /**
  * A cache implementation for the CLI.
  */
 class CliCache implements Cache {
-  constructor(private base: MultiCache) {}
+  constructor(private base: CacheManager) {}
 
   async get<T>(key: string): Promise<T | null> {
-    const data = await this.base.get<string>(key);
-    if (!data) return null;
-    return JSON.parse(await decompress(Buffer.from(data, 'base64')));
+    const data = await this.base.get<T>(key);
+    return data || null;
   }
 
   async set<T>(key: string, value: T): Promise<void> {
-    await this.base.set(key, (await compress(JSON.stringify(value))).toString('base64'));
+    await this.base.set(key, value, env.CACHE_TTL);
   }
 
   async remove(key: string): Promise<void> {
@@ -46,7 +28,7 @@ class CliCache implements Cache {
   }
 
   async clear(): Promise<void> {
-    await this.base.reset();
+    await this.base.clear();
   }
 }
 
@@ -56,11 +38,24 @@ class CliCache implements Cache {
 export async function createCache(): Promise<Cache> {
   if (!existsSync('./.cache')) mkdirSync('./.cache');
 
-  const sqliteCache = await caching(
-    sqliteStore({ sqliteFile: './.cache/caching.sqlite', cacheTableName: 'caches', ttl: env.CACHE_TTL })
+  return new CliCache(
+    createCacheManager({
+      stores: [
+        //  High performance in-memory cache with LRU and TTL
+        new Keyv({
+          store: new CacheableMemory({ lruSize: env.CACHE_SIZE }),
+          compression: new KeyvBrotli({
+            compressOptions: { params: { [constants.BROTLI_PARAM_QUALITY]: constants.BROTLI_MIN_QUALITY } }
+          })
+        }),
+        //  Sqlite Store
+        new Keyv({
+          store: new KeyvSqlite({ uri: 'sqlite://.cache/caching.sqlite', table: 'caches' }),
+          compression: new KeyvBrotli({
+            compressOptions: { params: { [constants.BROTLI_PARAM_QUALITY]: constants.BROTLI_MAX_QUALITY } }
+          })
+        })
+      ]
+    })
   );
-
-  const memoryCache = await caching('memory', { max: env.CACHE_SIZE, ttl: env.CACHE_TTL });
-
-  return new CliCache(multiCaching([memoryCache, sqliteCache]));
 }
