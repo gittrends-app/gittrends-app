@@ -1,10 +1,9 @@
 import { RepositoryNode } from '@/core/entities/base/RepositoryNode.js';
-import { Actor, GithubService, Repository, StorageService } from '@/core/index.js';
+import { Actor, CacheService, GithubService, Repository, Service } from '@/core/index.js';
 import { createCache } from '@/helpers/cache.js';
 import githubClient from '@/helpers/github.js';
 import mongo from '@/mongo/mongo.js';
-import { MongoStorageFactory } from '@/mongo/MongoStorage.js';
-import { CacheService } from '@/services/CacheService.js';
+import { MongoStorage } from '@/mongo/MongoStorage.js';
 import { MultiBar, SingleBar } from 'cli-progress';
 import { Argument, Option, program } from 'commander';
 import consola from 'consola';
@@ -85,23 +84,28 @@ export class RepositoryUpdater extends AbstractTask<Notification> {
 
   private idOrName: string;
 
-  private service: StorageService;
+  private service: Service;
+  private storage: MongoStorage;
   private resources: UpdatableResource[];
   private queue: PQueue;
 
   constructor(
     idOrName: string,
-    params: { service: StorageService; resources?: UpdatableResource[]; parallel?: boolean }
+    params: { service: Service; storage: MongoStorage; resources?: UpdatableResource[]; parallel?: boolean }
   ) {
     super();
     this.idOrName = idOrName;
     this.service = params.service;
+    this.storage = params.storage;
     this.resources = params.resources || RepositoryUpdater.resources;
     this.queue = new PQueue({ concurrency: params.parallel ? this.resources.length : 1 });
   }
 
   async execute(): Promise<void> {
     if (this.state === 'running') throw new Error('Task already running!');
+
+    const actorStorage = this.storage.create('Actor');
+    const metadataStorage = this.storage.create('Metadata');
 
     try {
       this.state = 'running';
@@ -117,30 +121,34 @@ export class RepositoryUpdater extends AbstractTask<Notification> {
         this.queue
           .add(async () => {
             if (name === 'users') {
-              const storage = this.service.storage.create('Actor');
-
               let users: Actor[] = [];
 
               const [notUpdated, all] = await Promise.all([
-                storage.count({ updated_at: undefined }),
-                storage.count({})
+                actorStorage.count({ updated_at: undefined }),
+                actorStorage.count({})
               ]);
 
               let total = all - notUpdated;
 
               do {
-                users = await storage.find({ updated_at: undefined, _deleted_at: undefined } as any, { limit: 100 });
+                users = await actorStorage.find({ updated_at: undefined, _deleted_at: undefined } as any, {
+                  limit: 100
+                });
 
                 if (users.length > 0) {
                   const updatedUsers = (await this.service.user(users.map((u) => u.id)))
                     .filter((u) => u !== null)
                     .filter((u) => u.updated_at);
 
-                  // workaround to mark users as deleted when not found with the same id
-                  await Promise.all(
-                    users
-                      .filter((u) => !updatedUsers.find((uu) => uu.id === u.id))
-                      .map((u) => storage.save({ ...u, _deleted_at: new Date() } as any, true))
+                  await actorStorage.save(
+                    [
+                      ...updatedUsers,
+                      // workaround to mark users as deleted when not found with the same id
+                      ...users
+                        .filter((u) => !updatedUsers.find((uu) => uu.id === u.id))
+                        .map((u) => Object.assign(u, { _deleted_at: new Date() }))
+                    ],
+                    true
                   );
 
                   this.notify({
@@ -161,13 +169,35 @@ export class RepositoryUpdater extends AbstractTask<Notification> {
               if (name === 'issues') perPage = 50;
               if (name === 'pull_requests') perPage = 25;
 
-              const it = this.service[name]({ repository: repo.id, per_page: perPage, resume: true });
+              const typename = upperFirst(camelCase(pluralize.singular(name)));
+              const [meta] = await metadataStorage.find({ id: `${typename}:${repo.id}:` });
 
-              let total = await this.service.storage
-                .create<RepositoryNode>(upperFirst(camelCase(pluralize.singular(name))))
-                .count({ repository: repo.id });
+              const resourceStorage = this.storage.create<RepositoryNode>(typename);
+
+              let total = await resourceStorage.count({ repository: repo.id });
+
+              const it = this.service[name]({
+                repository: repo.id,
+                per_page: perPage,
+                cursor: meta?.cursor,
+                since: meta?.since,
+                until: meta?.until
+              });
 
               for await (const response of it) {
+                await resourceStorage.save(response.data);
+
+                await metadataStorage.save(
+                  {
+                    id: `${typename}:${repo.id}:`,
+                    __typename: 'Metadata',
+                    repository: repo.id,
+                    resource: typename,
+                    ...response.metadata
+                  },
+                  true
+                );
+
                 this.notify({
                   repository: repo.id,
                   resource: name,
@@ -223,7 +253,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       if (nameWithOwner.split('/').length !== 2) throw new Error('Invalid repository name! Use the format owner/name.');
 
       consola.info('Initializing the Github service...');
-      const storageFactory = new MongoStorageFactory(
+      const storageFactory = new MongoStorage(
         mongo.db(
           nameWithOwner
             .replace('/', '@')
@@ -232,10 +262,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
         )
       );
 
-      const replicaService = new StorageService(
-        new CacheService(new GithubService(githubClient), await createCache()),
-        storageFactory
-      );
+      const replicaService = new CacheService(new GithubService(githubClient), await createCache());
 
       consola.info('Starting the repository update...');
       const progress = new MultiBar({
@@ -261,6 +288,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 
       const task = new RepositoryUpdater(nameWithOwner, {
         service: replicaService,
+        storage: storageFactory,
         resources,
         parallel: opts.parallel
       });
