@@ -1,7 +1,7 @@
 import { input, select } from '@inquirer/prompts';
 import consola from 'consola';
 import prettyjson from 'prettyjson';
-import { FragmentFields, GithubClient, GithubService } from '../src/services/index.js';
+import { EntitiesFields, GithubClient, GithubService } from '../src/index.js';
 
 (async function main() {
   {
@@ -9,7 +9,7 @@ import { FragmentFields, GithubClient, GithubService } from '../src/services/ind
     const client = new GithubClient('https://api.github.com', { apiToken: process.env.GH_TOKEN });
 
     consola.info('Selecting fields from common entities, such as actors ...');
-    const fields: FragmentFields = { actors: { name: true, email: true } };
+    const fields: EntitiesFields = { actors: { name: true, email: true } };
 
     consola.info('Preparing Github service example ...');
     const service = new GithubService(client, { fields });

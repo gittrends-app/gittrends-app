@@ -48,11 +48,11 @@ type RepositoryFragmentFields = Booleanify<
 >;
 
 /**
- * Fragment fields configuration
+ * Entities fields configuration
  * true = include all fields
  * false = include only basic fields
  */
-export type FragmentFields = {
+export type EntitiesFields = {
   actors?: ActorFragmentFields | true | false;
   repositories?: RepositoryFragmentFields | true | false;
 };
@@ -61,9 +61,9 @@ export type FragmentFields = {
  * Custom fragment factory
  */
 class CustomFragmentFactory extends BaseFragmentFactory {
-  private config?: FragmentFields;
+  private config?: EntitiesFields;
 
-  constructor(config?: FragmentFields | boolean) {
+  constructor(config?: EntitiesFields | boolean) {
     if (typeof config === 'boolean') {
       super(config);
     } else {
@@ -115,7 +115,7 @@ export class GithubService implements Service {
    * Creates a new GithubService
    * @param client The Github client.
    */
-  constructor(client: GithubClient, opts?: { fields?: FragmentFields }) {
+  constructor(client: GithubClient, opts?: { fields?: EntitiesFields }) {
     this.client = client;
     this.factory = new CustomFragmentFactory(opts?.fields);
   }
