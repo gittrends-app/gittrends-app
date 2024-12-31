@@ -59,6 +59,6 @@ export class BaseFragmentFactory implements FragmentFactory {
   constructor(private full = false) {}
 
   create<T extends Fragment>(Ref: Class<T>): T {
-    return new Ref(undefined, { factory: this, fields: this.full });
+    return new Ref(Ref.name, { factory: this, fields: this.full });
   }
 }

@@ -198,7 +198,7 @@ export class RepositoryUpdater extends AbstractTask<Notification> {
 
               let total = await resourceStorage.count({ repository: repo.id });
 
-              const it = this.service[name]({
+              const it = this.service.resources(name as any, {
                 repository: repo.id,
                 per_page: perPage,
                 cursor: meta?.cursor,

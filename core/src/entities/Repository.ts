@@ -9,7 +9,6 @@ const baseRepository = NodeSchema.extend({
   description: z.string().optional(),
   name: z.string(),
   name_with_owner: z.string(),
-  open_graph_image_url: z.string(),
   owner: z.union([z.string(), ActorSchema]),
   primary_language: z.string().optional()
 });

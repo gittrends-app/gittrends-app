@@ -48,6 +48,7 @@
     "tsx": "^4.19.2",
     "turbo": "^2.3.3",
     "type-fest": "^4.31.0",
+    "typedoc": "^0.27.6",
     "typescript": "^5.7.2"
   },
   "config": {

@@ -12,18 +12,11 @@ export class ActorFragment extends CustomizableFragment {
   toString(): string {
     return `
     fragment ${this.alias}_User on User {
-      bio
-      company
-      createdAt
-      databaseId
-      email
-      location
-      name
-      pronouns
-      twitterUsername
-      websiteUrl
-      
-      ${this.includes('updated_at', 'updatedAt')}
+      ${this.includes('bio', 'bio')}
+      ${this.includes('company', 'company')}
+      ${this.includes('created_at', 'createdAt')}
+      ${this.includes('database_id', 'databaseId')}
+      ${this.includes('email', 'email')}
       ${this.includes('has_sponsors_listing', 'hasSponsorsListing')}
       ${this.includes('is_bounty_hunter', 'isBountyHunter')}
       ${this.includes('is_campus_expert', 'isCampusExpert')}
@@ -32,6 +25,12 @@ export class ActorFragment extends CustomizableFragment {
       ${this.includes('is_github_star', 'isGitHubStar')}
       ${this.includes('is_hireable', 'isHireable')}
       ${this.includes('is_site_admin', 'isSiteAdmin')}
+      ${this.includes('location', 'location')}
+      ${this.includes('name', 'name')}
+      ${this.includes('pronouns', 'pronouns')}
+      ${this.includes('twitter_username', 'twitterUsername')}
+      ${this.includes('updated_at', 'updatedAt')}
+      ${this.includes('website_url', 'websiteUrl')}
       
       ${this.includes('social_accounts', 'socialAccounts(first: 100) { nodes { provider displayName } }')}
       ${this.includes('followers_count', 'followers { totalCount }')} 
@@ -56,45 +55,44 @@ export class ActorFragment extends CustomizableFragment {
       __typename
       
       ... on Bot {
-        createdAt
-        databaseId
-        updatedAt
+        ${this.includes('created_at', 'createdAt')}
+        ${this.includes('database_id', 'databaseId')}
+        ${this.includes('updated_at', 'updatedAt')}
       }
       
       ... on Mannequin {
-        claimant { ...${this.alias}_User }
-        createdAt
-        databaseId
-        email
-        updatedAt
+        ${this.includes('claimant', 'claimant { ...${this.alias}_User }')}
+        ${this.includes('created_at', 'createdAt')}
+        ${this.includes('database_id', 'databaseId')}
+        ${this.includes('email', 'email')}
+        ${this.includes('updated_at', 'updatedAt')}
       }
       
-      # ... on EnterpriseUserAccount {
-      #  name
-      #  updatedAt
-      #  user { ...${this.alias}_User }
+      #... on EnterpriseUserAccount {
+      #  ${this.includes('name', 'name')}
+      #  ${this.includes('updated_at', 'updatedAt')}
+      #  ${this.includes('user', 'user { ...${this.alias}_User }')}
       #}
       
       ... on User { ...${this.alias}_User }
       
       ... on Organization {
-        archivedAt
-        createdAt
-        databaseId
-        description
-        email
-        isVerified
-        location
-        name
-        twitterUsername
-        websiteUrl
-        
-        ${this.includes('updated_at', 'updatedAt')}
+        ${this.includes('archived_at', 'archivedAt')}
+        ${this.includes('created_at', 'createdAt')}
+        ${this.includes('database_id', 'databaseId')}
+        ${this.includes('description', 'description')}
+        ${this.includes('email', 'email')}
         ${this.includes('has_sponsors_listing', 'hasSponsorsListing')}
+        ${this.includes('is_verified', 'isVerified')}
+        ${this.includes('location', 'location')}
         ${this.includes('members_with_role_count', 'membersWithRole { totalCount }')} 
+        ${this.includes('name', 'name')}
         ${this.includes('repositories_count', 'repositories { totalCount }')} 
         ${this.includes('sponsoring_count', 'sponsoring { totalCount }')} 
         ${this.includes('sponsors_count', 'sponsors { totalCount }')} 
+        ${this.includes('twitter_username', 'twitterUsername')}
+        ${this.includes('updated_at', 'updatedAt')}
+        ${this.includes('website_url', 'websiteUrl')}
       }
     }
     `;

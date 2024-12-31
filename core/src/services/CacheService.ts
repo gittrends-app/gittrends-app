@@ -115,18 +115,15 @@ export class CacheService implements Service {
     return result;
   }
 
-  private generic(res: 'stargazers', opts: object & ServiceResourceParams): Iterable<Stargazer>;
-  private generic(res: 'watchers', opts: object & ServiceResourceParams): Iterable<Watcher>;
-  private generic(res: 'commits', opts: object & ServiceResourceParams): Iterable<Commit>;
-  private generic(res: 'discussions', opts: object & ServiceResourceParams): Iterable<Discussion>;
-  private generic(res: 'issues', opts: object & ServiceResourceParams): Iterable<Issue>;
-  private generic(res: 'pull_requests', opts: object & ServiceResourceParams): Iterable<PullRequest>;
-  private generic(res: 'releases', opts: object & ServiceResourceParams): Iterable<Release>;
-  private generic(res: 'tags', opts: object & ServiceResourceParams): Iterable<Tag>;
-  private generic<T>(
-    res: 'stargazers' | 'watchers' | 'commits' | 'discussions' | 'issues' | 'pull_requests' | 'releases' | 'tags',
-    opts: object & ServiceResourceParams
-  ): Iterable<T> {
+  resources(res: 'commits', opts: object & ServiceCommitsParams): Iterable<Commit, { since?: Date; until?: Date }>;
+  resources(res: 'discussions', opts: object & ServiceResourceParams): Iterable<Discussion>;
+  resources(res: 'issues', opts: object & ServiceResourceParams): Iterable<Issue>;
+  resources(res: 'pull_requests', opts: object & ServiceResourceParams): Iterable<PullRequest>;
+  resources(res: 'releases', opts: object & ServiceResourceParams): Iterable<Release>;
+  resources(res: 'stargazers', opts: object & ServiceResourceParams): Iterable<Stargazer>;
+  resources(res: 'tags', opts: object & ServiceResourceParams): Iterable<Tag>;
+  resources(res: 'watchers', opts: object & ServiceResourceParams): Iterable<Watcher>;
+  resources<T>(res: any, opts: any): Iterable<T> {
     const { cache, service } = this;
 
     return {
@@ -144,44 +141,12 @@ export class CacheService implements Service {
           }
         } while (cached !== null && cached.data.length > 0 && _opts.cursor);
 
-        for await (const { data, metadata } of service[res](_opts)) {
+        for await (const { data, metadata } of service.resources(res, _opts)) {
           cache.set(`${res}:${hash(_opts)}`, { data, metadata });
           yield { data, metadata };
           _opts.cursor = metadata.cursor;
         }
       }
     };
-  }
-
-  commits(opts: ServiceCommitsParams): Iterable<Commit, { since?: Date; until?: Date }> {
-    return this.generic('commits', opts);
-  }
-
-  discussions(opts: ServiceResourceParams): Iterable<Discussion> {
-    return this.generic('discussions', opts);
-  }
-
-  issues(opts: ServiceResourceParams): Iterable<Issue> {
-    return this.generic('issues', opts);
-  }
-
-  pull_requests(opts: ServiceResourceParams): Iterable<PullRequest> {
-    return this.generic('pull_requests', opts);
-  }
-
-  releases(opts: ServiceResourceParams): Iterable<Release> {
-    return this.generic('releases', opts);
-  }
-
-  tags(opts: ServiceResourceParams): Iterable<Tag> {
-    return this.generic('tags', opts);
-  }
-
-  stargazers(opts: ServiceResourceParams): Iterable<Stargazer> {
-    return this.generic('stargazers', opts);
-  }
-
-  watchers(opts: ServiceResourceParams): Iterable<Watcher> {
-    return this.generic('watchers', opts);
   }
 }

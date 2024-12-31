@@ -20,22 +20,29 @@ export class RepositoryFragment extends CustomizableFragment<Repository> {
     return `
     fragment ${this.alias} on Repository {
       __typename
+      databaseId
+      description
+      id
+      name
+      nameWithOwner
+      owner { ...${this.fragments[0].alias} }
+      primaryLanguage { name }
+
       ${this.includes('allow_update_branch', 'allowUpdateBranch')}
-      archivedAt
+      ${this.includes('archived_at', 'archivedAt')}
       ${this.includes('assignable_users_count', 'assignableUsers { totalCount }')}
       ${this.includes('auto_merge_allowed', 'autoMergeAllowed')}
-      codeOfConduct { key }
+      ${this.includes('branches_count', 'branches:refs(refPrefix: "refs/heads/") { totalCount }')}
+      ${this.includes('code_of_conduct', 'codeOfConduct { key }')}
       ${this.includes('contributing_guidelines', 'contributingGuidelines { body }')}
-      createdAt
-      databaseId
-      defaultBranchRef { name target { ... on Commit { history { totalCount } } } }
+      ${this.includes('created_at', 'createdAt')}
+      ${this.includes('default_branch', 'defaultBranchRef { name target { ... on Commit { history { totalCount } } } }')}
       ${this.includes('delete_branch_on_merge', 'deleteBranchOnMerge')}
       ${this.includes('deployments_count', 'deployments { totalCount }')}
-      description
       ${this.includes('discussions_count', 'discussions { totalCount }')}
-      diskUsage
+      ${this.includes('disk_usage', 'diskUsage')}
       ${this.includes('environments_count', 'environments { totalCount }')}
-      forkCount
+      ${this.includes('fork_count', 'forkCount')}
       ${this.includes('forking_allowed', 'forkingAllowed')}
       ${this.includes('funding_links', 'fundingLinks { platform url }')}
       ${this.includes('has_discussions_enabled', 'hasDiscussionsEnabled')}
@@ -44,9 +51,8 @@ export class RepositoryFragment extends CustomizableFragment<Repository> {
       ${this.includes('has_sponsorships_enabled', 'hasSponsorshipsEnabled')}
       ${this.includes('has_vulnerability_alerts_enabled', 'hasVulnerabilityAlertsEnabled')}
       ${this.includes('has_wiki_enabled', 'hasWikiEnabled')}
-      homepageUrl
-      id
-      isArchived
+      ${this.includes('homepage_url', 'homepageUrl')}
+      ${this.includes('is_archived', 'isArchived')}
       ${this.includes('is_blank_issues_enabled', 'isBlankIssuesEnabled')}
       ${this.includes('is_disabled', 'isDisabled')}
       ${this.includes('is_empty', 'isEmpty')}
@@ -64,18 +70,12 @@ export class RepositoryFragment extends CustomizableFragment<Repository> {
       ${this.includes('merge_commit_title', 'mergeCommitTitle')}
       ${this.includes('milestones_count', 'milestones { totalCount }')}
       ${this.includes('mirror_url', 'mirrorUrl')}
-      name
-      nameWithOwner
-      openGraphImageUrl
-      owner { ...${this.fragments[0].alias} }
+      ${this.includes('open_graph_image_url', 'openGraphImageUrl')}
       ${this.includes('packages_count', 'packages { totalCount }')}
       ${this.includes('parent', 'parent { id nameWithOwner }')}
-      primaryLanguage { name }
       ${this.includes('pull_requests_count', 'pullRequests { totalCount }')}
-      pushedAt
+      ${this.includes('pushed_at', 'pushedAt')}
       ${this.includes('rebase_merge_allowed', 'rebaseMergeAllowed')}
-      ${this.includes('branches_count', 'branches:refs(refPrefix: "refs/heads/") { totalCount }')}
-      ${this.includes('tags_count', 'tags:refs(refPrefix: "refs/tags/") { totalCount }')}
       ${this.includes('releases_count', 'releases { totalCount }')}
       ${this.includes('repository_topics', 'repositoryTopics(first: 100) { nodes { topic { name } } }')}
       ${this.includes('rulesets_count', 'rulesets { totalCount }')}
@@ -83,10 +83,11 @@ export class RepositoryFragment extends CustomizableFragment<Repository> {
       ${this.includes('squash_merge_allowed', 'squashMergeAllowed')}
       ${this.includes('squash_merge_commit_message', 'squashMergeCommitMessage')}
       ${this.includes('squash_merge_commit_title', 'squashMergeCommitTitle')}
-      stargazerCount
+      ${this.includes('stargazers_count', 'stargazerCount')}
       ${this.includes('submodules_count', 'submodules { totalCount }')}
+      ${this.includes('tags_count', 'tags:refs(refPrefix: "refs/tags/") { totalCount }')}
       ${this.includes('template_repository', 'templateRepository { nameWithOwner }')}
-      updatedAt
+      ${this.includes('updated_at', 'updatedAt')}
       ${this.includes('uses_custom_open_graph_image', 'usesCustomOpenGraphImage')}
       ${this.includes('visibility', 'visibility')}
       ${this.includes('vulnerability_alerts_count', 'vulnerabilityAlerts { totalCount }')}

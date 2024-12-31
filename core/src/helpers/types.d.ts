@@ -14,4 +14,4 @@ export type NullableFields<T> = Pick<
 /**
  *  Booleanify a type
  */
-export type Booleanify<T> = Partial<Record<keyof T, boolean>>;
+export type Booleanify<T> = Partial<Record<keyof T, boolean | 0 | 1>>;

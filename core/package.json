@@ -39,7 +39,9 @@
   "devDependencies": {
     "@octokit/graphql-schema": "^15.25.0",
     "@types/lodash": "^4.17.13",
-    "consola": "^3.3.3"
+    "@types/prettyjson": "^0.0.33",
+    "consola": "^3.3.3",
+    "prettyjson": "^1.2.5"
   },
   "files": [
     "dist",
