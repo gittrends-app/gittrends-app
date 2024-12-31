@@ -4,6 +4,7 @@ import { createCache } from '@/helpers/cache.js';
 import githubClient from '@/helpers/github.js';
 import mongo from '@/mongo/mongo.js';
 import { MongoStorage } from '@/mongo/MongoStorage.js';
+import { Cache, OpenStreetMap } from '@gittrends-app/geocoder-core';
 import { MultiBar, SingleBar } from 'cli-progress';
 import { Argument, Option, program } from 'commander';
 import consola from 'consola';
@@ -130,6 +131,8 @@ export class RepositoryUpdater extends AbstractTask<Notification> {
 
               let total = all - notUpdated;
 
+              const geocoder = new Cache(new OpenStreetMap({ concurrency: 2 }), { dirname: '.cache' });
+
               do {
                 users = await actorStorage.find({ updated_at: undefined, _deleted_at: undefined } as any, {
                   limit: 100
@@ -139,6 +142,25 @@ export class RepositoryUpdater extends AbstractTask<Notification> {
                   const updatedUsers = (await this.service.user(users.map((u) => u.id)))
                     .filter((u) => u !== null)
                     .filter((u) => u.updated_at);
+
+                  await Promise.all(
+                    updatedUsers.map(async (u) => {
+                      const anyUser: any = u;
+                      if (!anyUser.location) return null;
+                      const location = await geocoder
+                        .search(
+                          anyUser.location
+                            .toLowerCase()
+                            .trim()
+                            .replace(/[\s.,]+/g, ' ')
+                        )
+                        .catch((error) => {
+                          if (error.code === 418) return null;
+                          throw error;
+                        });
+                      if (location) Object.assign(u, { __location: location });
+                    })
+                  );
 
                   await actorStorage.save(
                     [

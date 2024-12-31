@@ -30,7 +30,6 @@
   "dependencies": {
     "@octokit/graphql": "^8.1.1",
     "@octokit/types": "^13.6.2",
-    "consola": "^3.3.3",
     "dayjs": "^1.11.13",
     "lodash": "^4.17.21",
     "p-limit": "^6.2.0",
@@ -39,11 +38,11 @@
   },
   "devDependencies": {
     "@octokit/graphql-schema": "^15.25.0",
-    "@types/lodash": "^4.17.13"
+    "@types/lodash": "^4.17.13",
+    "consola": "^3.3.3"
   },
   "files": [
     "dist",
-    "CHANGELOG.md",
     "package.json",
     "README.md"
   ],
@@ -52,6 +51,8 @@
       "commit": true,
       "commitMessage": "chore(release): v${version}",
       "tag": true,
+      "tagName": "v${version}",
+      "tagAnnotation": "Release v${version}",
       "push": true
     },
     "github": {
@@ -64,12 +65,10 @@
         "if [ \"$(git log $(git describe --tags --abbrev=0)..HEAD)\" = \"\" ]; then exit 1; fi;",
         "yarn turbo verify"
       ],
-      "before:bump": [
-        "yarn turbo build",
-        "npx auto-changelog -p",
-        "git add . ../yarn.lock ../package-lock.json"
-      ],
-      "after:release": "git push origin HEAD"
+      "after:bump": [
+        "yarn install",
+        "yarn turbo build"
+      ]
     }
   }
 }

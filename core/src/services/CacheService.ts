@@ -142,7 +142,7 @@ export class CacheService implements Service {
             yield cached as any;
             _opts.cursor = cached.metadata.cursor;
           }
-        } while (cached !== null && cached.data.length > 0);
+        } while (cached !== null && cached.data.length > 0 && _opts.cursor);
 
         for await (const { data, metadata } of service[res](_opts)) {
           cache.set(`${res}:${hash(_opts)}`, { data, metadata });

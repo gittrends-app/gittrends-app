@@ -27,6 +27,7 @@
   "dependencies": {
     "@bull-board/api": "^6.5.4",
     "@bull-board/express": "^6.5.4",
+    "@gittrends-app/geocoder-core": "^3.2.1",
     "@inquirer/prompts": "^7.2.1",
     "@keyv/compress-brotli": "^2.0.2",
     "@keyv/compress-gzip": "^2.0.2",
