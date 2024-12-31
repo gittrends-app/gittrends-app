@@ -37,6 +37,7 @@
     "zod-validation-error": "^3.4.0"
   },
   "devDependencies": {
+    "@inquirer/prompts": "^7.2.1",
     "@octokit/graphql-schema": "^15.25.0",
     "@types/lodash": "^4.17.13",
     "@types/prettyjson": "^0.0.33",
