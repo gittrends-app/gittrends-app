@@ -1,8 +1,8 @@
-import { CacheService, GithubService, Repository } from '@/core/index.js';
 import { createCache } from '@/helpers/cache.js';
 import githubClient from '@/helpers/github.js';
 import mongo from '@/mongo/mongo.js';
 import { MongoStorage } from '@/mongo/MongoStorage.js';
+import { CacheService, GithubService, Repository } from '@gittrends-app/core';
 import { SingleBar } from 'cli-progress';
 import { Argument, Option, program } from 'commander';
 import consola from 'consola';

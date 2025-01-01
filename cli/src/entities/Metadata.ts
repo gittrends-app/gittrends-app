@@ -1,5 +1,4 @@
-import { NodeSchema } from '@/core/entities/base/Node.js';
-import { RepositoryNodeSchema } from '@/core/entities/base/RepositoryNode.js';
+import { NodeSchema, RepositoryNodeSchema } from '@gittrends-app/core';
 import { z } from 'zod';
 import { cleanNulls } from '../helpers/utils.js';
 

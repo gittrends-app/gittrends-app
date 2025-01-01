@@ -1,8 +1,8 @@
-import { CacheService, GithubService, Service } from '@/core/index.js';
 import { createCache } from '@/helpers/cache.js';
 import githubClient from '@/helpers/github.js';
 import mongo from '@/mongo/mongo.js';
 import { MongoStorage } from '@/mongo/MongoStorage.js';
+import { CacheService, GithubService, Service } from '@gittrends-app/core';
 import { Worker } from 'bullmq';
 import { MultiBar, Presets } from 'cli-progress';
 import { Option, program } from 'commander';

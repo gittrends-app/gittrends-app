@@ -1,4 +1,4 @@
-import { Cache } from '@/core/index.js';
+import { Cache } from '@gittrends-app/core';
 import KeyvBrotli from '@keyv/compress-brotli';
 import { KeyvSqlite } from '@keyv/sqlite';
 import { Cache as CacheManager, createCache as createCacheManager } from 'cache-manager';

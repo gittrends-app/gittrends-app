@@ -1,9 +1,8 @@
-import { RepositoryNode } from '@/core/entities/base/RepositoryNode.js';
-import { Actor, CacheService, GithubService, Repository, Service } from '@/core/index.js';
 import { createCache } from '@/helpers/cache.js';
 import githubClient from '@/helpers/github.js';
 import mongo from '@/mongo/mongo.js';
 import { MongoStorage } from '@/mongo/MongoStorage.js';
+import { Actor, CacheService, GithubService, Repository, RepositoryNode, Service } from '@gittrends-app/core';
 import { Cache, OpenStreetMap } from '@gittrends-app/geocoder-core';
 import { MultiBar, SingleBar } from 'cli-progress';
 import { Argument, Option, program } from 'commander';

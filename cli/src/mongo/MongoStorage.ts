@@ -1,5 +1,5 @@
-import { Node } from '@/core/entities/base/Node.js';
-import { RepositoryNode } from '@/core/entities/base/RepositoryNode.js';
+import { Metadata, MetadataSchema } from '@/entities/Metadata.js';
+import { extract } from '@/helpers/extract.js';
 import {
   Actor,
   ActorSchema,
@@ -11,6 +11,7 @@ import {
   DiscussionSchema,
   Issue,
   IssueSchema,
+  Node,
   PullRequest,
   PullRequestSchema,
   Reaction,
@@ -18,6 +19,7 @@ import {
   Release,
   ReleaseSchema,
   Repository,
+  RepositoryNode,
   RepositorySchema,
   Stargazer,
   StargazerSchema,
@@ -27,9 +29,7 @@ import {
   TimelineItemSchema,
   Watcher,
   WatcherSchema
-} from '@/core/index.js';
-import { Metadata, MetadataSchema } from '@/entities/Metadata.js';
-import { extract } from '@/helpers/extract.js';
+} from '@gittrends-app/core';
 import { Db, ObjectId } from 'mongodb';
 import objectHash from 'object-hash';
 import { ZodType } from 'zod';

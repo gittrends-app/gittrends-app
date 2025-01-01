@@ -1,4 +1,4 @@
-import { GithubClient } from '@/core/index.js';
+import { GithubClient } from '@gittrends-app/core';
 import fetchRetry from 'fetch-retry';
 import env from './env.js';
 

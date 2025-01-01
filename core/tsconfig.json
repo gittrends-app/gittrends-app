@@ -1,25 +1,14 @@
 {
-  "extends": "@tsconfig/node18/tsconfig.json",
+  "extends": "../tsconfig.json",
   "compilerOptions": {
-    "composite": true,
-    "target": "ESNext",                                  /* Set the JavaScript language version for emitted JavaScript and include compatible library declarations. */
-    "module": "Node16",                                  /* Specify what module code is generated. */
-    "rootDir": "src",                                    /* Specify the root folder within your source files. */
-    "rootDirs": ["src", "samples"],                     /* Allow multiple folders to be treated as one when resolving modules. */
-    "declaration": true,                                 /* Generate .d.ts files from TypeScript and JavaScript files in your project. */
-    "outDir": "./dist",                                  /* Specify an output folder for all emitted files. */
-    "removeComments": false,                             /* Disable emitting comments. */
-    "esModuleInterop": true,                             /* Emit additional JavaScript to ease support for importing CommonJS modules. This enables 'allowSyntheticDefaultImports' for type compatibility. */
-    "forceConsistentCasingInFileNames": true,            /* Ensure that casing is correct in imports. */
-    "strict": true,                                      /* Enable all strict type-checking options. */
-    "skipLibCheck": true                                 /* Skip type checking all .d.ts files. */
+    "rootDir": "./src",
+    "rootDirs": ["./src", "./samples"],
+    "outDir": "./dist",
+    "baseUrl": "./",
+    "declaration": true,
+    "declarationMap": true,
+    "removeComments": false
   },
-  "include": [
-    "src/**/*",
-  ],
-  "exclude": [
-    "node_modules",
-    "src/**/*.spec.ts",
-    "src/**/*.test.ts"
-  ]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "src/**/*.spec.ts", "src/**/*.test.ts"]
 }

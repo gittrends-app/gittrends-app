@@ -1,15 +1,14 @@
 {
-  "extends": "@tsconfig/node18/tsconfig.json",
-  "include": [
-    "(core|cli)/src/**/*",
-  ],
-  "exclude": [
-    "node_modules",
-    "(core|cli)/src/**/*.spec.ts",
-    "(core|cli)/src/**/*.test.ts"
-  ],
-  "references": [
-    { "path": "./core" },
-    { "path": "./cli" },
-  ]
+  "extends": "@tsconfig/node20/tsconfig.json",
+  "compilerOptions": {
+    "target": "es2016",
+    "module": "NodeNext",
+    "declaration": true,
+    "declarationMap": true,
+    "removeComments": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "skipLibCheck": true
+  }
 }

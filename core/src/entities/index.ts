@@ -3,6 +3,8 @@ import { errorMap } from 'zod-validation-error';
 
 z.setErrorMap(errorMap);
 
+export * from './base/index.js';
+
 export * from './Actor.js';
 export * from './Commit.js';
 export * from './Discussion.js';
