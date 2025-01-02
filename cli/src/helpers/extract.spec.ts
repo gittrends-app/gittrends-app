@@ -1,5 +1,5 @@
-import { ActorSchema, Mannequin, Organization, User } from '@/core/entities/index.js';
-import { describe, expect, it } from '@jest/globals';
+import { ActorSchema, Mannequin, Organization, User } from '@gittrends-app/core';
+import { describe, expect, it } from 'vitest';
 import { extract } from './extract.js';
 
 describe('extract', () => {

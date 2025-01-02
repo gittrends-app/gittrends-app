@@ -11,14 +11,14 @@
   "scripts": {
     "lint": "eslint --ext .ts ./src",
     "build:compile": "tsc && tsc-alias",
+    "build:tsup": "tsup src/scripts/*.ts --format esm --sourcemap --minify",
     "build:clean": "shx rm -rf ./dist tsconfig.tsbuildinfo",
-    "build": "run-s build:clean build:compile",
+    "build": "run-s build:clean build:tsup",
     "tsx": "tsx -r \"dotenv-flow/config\"",
     "dev": "tsx  -r \"dotenv-flow/config\" src/scripts/main.ts",
     "start": "node -r \"dotenv-flow/config\" dist/scripts/main.js",
-    "jest": "jest --runInBand",
-    "test": "jest --runInBand",
-    "test:coverage": "jest --collect-coverage",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "verify": "run-s lint build test",
     "prettier": "prettier --write src",
     "prepublishOnly": "npm run verify"
