@@ -104,6 +104,7 @@ export class RepositoryUpdater extends AbstractTask<Notification> {
   async execute(): Promise<void> {
     if (this.state === 'running') throw new Error('Task already running!');
 
+    const repoStorage = this.storage.create('Repository');
     const actorStorage = this.storage.create('Actor');
     const metadataStorage = this.storage.create('Metadata');
 
@@ -114,6 +115,7 @@ export class RepositoryUpdater extends AbstractTask<Notification> {
 
       const repo = await this.service.repository(owner, name);
       if (!repo) throw new Error('Repository not found!');
+      else await repoStorage.save(repo, true);
 
       this.notify({ repository: repo.id, data: repo });
 
@@ -130,7 +132,7 @@ export class RepositoryUpdater extends AbstractTask<Notification> {
 
               let total = all - notUpdated;
 
-              const geocoder = new Cache(new OpenStreetMap({ concurrency: 2 }), { dirname: '.cache' });
+              const geocoder = new Cache(new OpenStreetMap({ concurrency: 5 }), { dirname: '.cache' });
 
               do {
                 users = await actorStorage.find({ updated_at: undefined, _deleted_at: undefined } as any, {

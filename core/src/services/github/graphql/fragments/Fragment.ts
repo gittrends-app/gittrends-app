@@ -56,7 +56,7 @@ export interface FragmentFactory {
  * Base fragment factory
  */
 export class BaseFragmentFactory implements FragmentFactory {
-  constructor(private full = false) {}
+  constructor(protected full = false) {}
 
   create<T extends Fragment>(Ref: Class<T>): T {
     return new Ref(Ref.name, { factory: this, fields: this.full });

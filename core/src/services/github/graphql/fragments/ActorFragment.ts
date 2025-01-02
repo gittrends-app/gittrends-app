@@ -61,7 +61,7 @@ export class ActorFragment extends CustomizableFragment {
       }
       
       ... on Mannequin {
-        ${this.includes('claimant', 'claimant { ...${this.alias}_User }')}
+        ${this.includes('claimant', `claimant { ...${this.alias}_User }`)}
         ${this.includes('created_at', 'createdAt')}
         ${this.includes('database_id', 'databaseId')}
         ${this.includes('email', 'email')}
@@ -71,7 +71,7 @@ export class ActorFragment extends CustomizableFragment {
       #... on EnterpriseUserAccount {
       #  ${this.includes('name', 'name')}
       #  ${this.includes('updated_at', 'updatedAt')}
-      #  ${this.includes('user', 'user { ...${this.alias}_User }')}
+      #  ${this.includes('user', `user { ...${this.alias}_User }`)}
       #}
       
       ... on User { ...${this.alias}_User }

@@ -91,13 +91,18 @@ class CustomFragmentFactory extends BaseFragmentFactory {
 
   create<T extends Fragment>(Ref: Class<T>): T {
     switch (Ref.name) {
-      case ActorFragment.name:
-        return new ActorFragment(Ref.name, { factory: this, fields: this.config?.actors || false }) as unknown as T;
-      case RepositoryFragment.name:
-        return new RepositoryFragment(Ref.name, {
-          factory: this,
-          fields: this.config?.repositories || false
+      case ActorFragment.name: {
+        return new ActorFragment(Ref.name, {
+          factory: new CustomFragmentFactory(this.config),
+          fields: this.config?.actors || this.full
         }) as unknown as T;
+      }
+      case RepositoryFragment.name: {
+        return new RepositoryFragment(Ref.name, {
+          factory: new CustomFragmentFactory(this.config),
+          fields: this.config?.repositories || this.full
+        }) as unknown as T;
+      }
       default:
         return super.create(Ref);
     }
