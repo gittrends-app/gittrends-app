@@ -12,6 +12,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     .command('update', 'Process scheduled tasks', { executableFile: 'update' })
     .command('update:repo', 'Update a given repository', { executableFile: 'repository' })
     .command('schedule', 'Schedule updating tasks', { executableFile: 'schedule' })
+    .command('board', 'Open queue board', { executableFile: 'board' })
     .helpOption('-h, --help', 'Display this help message')
     .parse(process.argv);
 }
