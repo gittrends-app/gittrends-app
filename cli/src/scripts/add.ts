@@ -23,7 +23,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     .helpOption('-h, --help', 'Display this help message')
     .action(async (names: string[], options: { total: number }) => {
       consola.info('Initializing services and storages...');
-      const service = new CacheService(new GithubService(githubClient), await createCache());
+      const service = new CacheService(new GithubService(githubClient), createCache({ namespace: 'public' }));
       const storage = new MongoStorage(mongo.db('public'));
 
       const progress = new SingleBar({

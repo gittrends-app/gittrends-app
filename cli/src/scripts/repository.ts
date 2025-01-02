@@ -1,9 +1,10 @@
 import { createCache } from '@/helpers/cache.js';
+import env from '@/helpers/env';
 import githubClient from '@/helpers/github.js';
 import mongo from '@/mongo/mongo.js';
 import { MongoStorage } from '@/mongo/MongoStorage.js';
 import { Actor, CacheService, GithubService, Repository, RepositoryNode, Service } from '@gittrends-app/core';
-import { Cache, OpenStreetMap } from '@gittrends-app/geocoder-core';
+import { Cache, Geocoder, OpenStreetMap } from '@gittrends-app/geocoder-core';
 import { MultiBar, SingleBar } from 'cli-progress';
 import { Argument, Option, program } from 'commander';
 import consola from 'consola';
@@ -86,17 +87,25 @@ export class RepositoryUpdater extends AbstractTask<Notification> {
 
   private service: Service;
   private storage: MongoStorage;
+  private geocoder: Geocoder;
   private resources: UpdatableResource[];
   private queue: PQueue;
 
   constructor(
     idOrName: string,
-    params: { service: Service; storage: MongoStorage; resources?: UpdatableResource[]; parallel?: boolean }
+    params: {
+      service: Service;
+      storage: MongoStorage;
+      geocoder: Geocoder;
+      resources?: UpdatableResource[];
+      parallel?: boolean;
+    }
   ) {
     super();
     this.idOrName = idOrName;
     this.service = params.service;
     this.storage = params.storage;
+    this.geocoder = params.geocoder;
     this.resources = params.resources || RepositoryUpdater.resources;
     this.queue = new PQueue({ concurrency: params.parallel ? this.resources.length : 1 });
   }
@@ -132,8 +141,6 @@ export class RepositoryUpdater extends AbstractTask<Notification> {
 
               let total = all - notUpdated;
 
-              const geocoder = new Cache(new OpenStreetMap({ concurrency: 5 }), { dirname: '.cache' });
-
               do {
                 users = await actorStorage.find({ updated_at: undefined, _deleted_at: undefined } as any, {
                   limit: 100
@@ -146,9 +153,10 @@ export class RepositoryUpdater extends AbstractTask<Notification> {
 
                   await Promise.all(
                     updatedUsers.map(async (u) => {
-                      const anyUser: any = u;
+                      const anyUser = u as { location?: string };
                       if (!anyUser.location) return null;
-                      const location = await geocoder
+
+                      const location = await this.geocoder
                         .search(
                           anyUser.location
                             .toLowerCase()
@@ -275,17 +283,25 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 
       if (nameWithOwner.split('/').length !== 2) throw new Error('Invalid repository name! Use the format owner/name.');
 
+      const dbName = nameWithOwner
+        .replace('/', '@')
+        .replace(/[^a-zA-Z0-9@_]/g, '_')
+        .toLowerCase();
+
       consola.info('Initializing the Github service...');
-      const storageFactory = new MongoStorage(
-        mongo.db(
-          nameWithOwner
-            .replace('/', '@')
-            .replace(/[^a-zA-Z0-9@_]/g, '_')
-            .toLowerCase()
-        )
+      const storageFactory = new MongoStorage(mongo.db(dbName));
+
+      const replicaService = new CacheService(
+        new CacheService(new GithubService(githubClient), createCache({ resource: 'users' })),
+        createCache({ namespace: dbName })
       );
 
-      const replicaService = new CacheService(new GithubService(githubClient), await createCache());
+      consola.info('Initializing the geocoder...');
+      const geocoder = new Cache(new OpenStreetMap({ concurrency: env.GEOCODER_CONCURRENCY }), {
+        dirname: env.GEOCODER_CACHE_DIR,
+        size: env.GEOCODER_CACHE_SIZE,
+        ttl: env.GEOCODER_CACHE_TTL
+      });
 
       consola.info('Starting the repository update...');
       const progress = new MultiBar({
@@ -312,6 +328,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       const task = new RepositoryUpdater(nameWithOwner, {
         service: replicaService,
         storage: storageFactory,
+        geocoder: geocoder,
         resources,
         parallel: opts.parallel
       });

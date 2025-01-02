@@ -1,10 +1,11 @@
 import { Cache } from '@gittrends-app/core';
 import KeyvBrotli from '@keyv/compress-brotli';
-import { KeyvSqlite } from '@keyv/sqlite';
 import { Cache as CacheManager, createCache as createCacheManager } from 'cache-manager';
-import { CacheableMemory } from 'cacheable';
-import { existsSync, mkdirSync } from 'fs';
 import { Keyv } from 'keyv';
+import { KeyvFile } from 'keyv-file';
+import path from 'path';
+import QuickLRU from 'quick-lru';
+import { MergeExclusive } from 'type-fest';
 import { constants } from 'zlib';
 import env from './env.js';
 
@@ -12,7 +13,10 @@ import env from './env.js';
  * A cache implementation for the CLI.
  */
 class CliCache implements Cache {
-  constructor(private base: CacheManager) {}
+  constructor(
+    private base: CacheManager,
+    private opts?: { keyValidator?: (k: string) => boolean }
+  ) {}
 
   async get<T>(key: string): Promise<T | null> {
     const data = await this.base.get<T>(key);
@@ -20,7 +24,9 @@ class CliCache implements Cache {
   }
 
   async set<T>(key: string, value: T): Promise<void> {
-    await this.base.set(key, value, env.CACHE_TTL);
+    if (!this.opts?.keyValidator || this.opts.keyValidator(key)) {
+      await this.base.set(key, value);
+    }
   }
 
   async remove(key: string): Promise<void> {
@@ -35,27 +41,36 @@ class CliCache implements Cache {
 /**
  *  Create a cache manager instance.
  */
-export async function createCache(): Promise<Cache> {
-  if (!existsSync('./.cache')) mkdirSync('./.cache');
+export function createCache(params: MergeExclusive<{ namespace: string }, { resource: 'users' }>): Cache {
+  const namespace = (params.namespace || params.resource) as string;
 
   return new CliCache(
     createCacheManager({
+      ttl: env.CACHE_TTL,
       stores: [
-        //  High performance in-memory cache with LRU and TTL
+        //  In-memory cache with LRU
         new Keyv({
-          store: new CacheableMemory({ lruSize: env.CACHE_SIZE }),
+          store: new QuickLRU({ maxSize: env.CACHE_SIZE }),
           compression: new KeyvBrotli({
             compressOptions: { params: { [constants.BROTLI_PARAM_QUALITY]: constants.BROTLI_MIN_QUALITY } }
           })
         }),
-        //  Sqlite Store
+        //  File Store
         new Keyv({
-          store: new KeyvSqlite({ uri: 'sqlite://.cache/caching.sqlite', table: 'caches' }),
+          store: new KeyvFile({ filename: path.resolve(env.CACHE_DIR, `${namespace}.json`) }),
           compression: new KeyvBrotli({
             compressOptions: { params: { [constants.BROTLI_PARAM_QUALITY]: constants.BROTLI_MAX_QUALITY } }
           })
         })
       ]
-    })
+    }),
+    {
+      keyValidator: params.resource
+        ? (k) => {
+            if (params.resource === 'users') return k.startsWith('user:') || k.startsWith('users:');
+            throw new Error('Invalid resource');
+          }
+        : undefined
+    }
   );
 }

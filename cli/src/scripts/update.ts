@@ -1,8 +1,10 @@
 import { createCache } from '@/helpers/cache.js';
+import env from '@/helpers/env.js';
 import githubClient from '@/helpers/github.js';
 import mongo from '@/mongo/mongo.js';
 import { MongoStorage } from '@/mongo/MongoStorage.js';
 import { CacheService, GithubService, Service } from '@gittrends-app/core';
+import { Cache, Geocoder, OpenStreetMap } from '@gittrends-app/geocoder-core';
 import { Worker } from 'bullmq';
 import { MultiBar, Presets } from 'cli-progress';
 import { Option, program } from 'commander';
@@ -21,7 +23,14 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       process.stdin.setRawMode(true);
 
       consola.info('Initializing the storage service...');
-      const service = new CacheService(new GithubService(githubClient), await createCache());
+      const service = new CacheService(new GithubService(githubClient), createCache({ resource: 'users' }));
+
+      consola.info('Initializing the geocoder...');
+      const geocoder = new Cache(new OpenStreetMap({ concurrency: env.GEOCODER_CONCURRENCY }), {
+        dirname: env.GEOCODER_CACHE_DIR,
+        size: env.GEOCODER_CACHE_SIZE,
+        ttl: env.GEOCODER_CACHE_TTL
+      });
 
       const progress = new MultiBar(
         {
@@ -34,7 +43,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
         Presets.shades_classic
       );
 
-      const worker = reposUpdate(service, opts.workers, progress);
+      const worker = reposUpdate(service, geocoder, opts.workers, progress);
 
       process.stdin.on('keypress', async (str, key) => {
         if (key.sequence === '+') {
@@ -63,7 +72,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 /**
  *
  */
-function reposUpdate(service: Service, concurrency: number, progress: MultiBar): Worker {
+function reposUpdate(service: Service, geocoder: Geocoder, concurrency: number, progress: MultiBar): Worker {
   const queue = createQueue('repos');
 
   const queueBar = progress.create(Infinity, 0, { name: 'jobs'.padStart(13), repo: '' });
@@ -84,18 +93,17 @@ function reposUpdate(service: Service, concurrency: number, progress: MultiBar):
         .map((r) => RepositoryUpdater.resources.find((res) => res === r))
         .filter((r) => r !== undefined);
 
-      const storage = new MongoStorage(
-        mongo.db(
-          job.data.name_with_owner
-            .replace('/', '@')
-            .replace(/[^a-zA-Z0-9@_]/g, '_')
-            .toLowerCase()
-        )
-      );
+      const dbName = job.data.name_with_owner
+        .replace('/', '@')
+        .replace(/[^a-zA-Z0-9@_]/g, '_')
+        .toLowerCase();
+
+      const storage = new MongoStorage(mongo.db(dbName));
 
       const task = new RepositoryUpdater(job.data.name_with_owner, {
-        service,
+        service: new CacheService(service, createCache({ namespace: dbName })),
         storage,
+        geocoder,
         resources,
         parallel: true
       });
