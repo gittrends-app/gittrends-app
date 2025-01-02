@@ -1,7 +1,7 @@
 import { input, select } from '@inquirer/prompts';
 import consola from 'consola';
 import prettyjson from 'prettyjson';
-import { EntitiesFields, GithubClient, GithubService } from '../src/index.js';
+import { EntitiesFields, GithubClient, GithubService } from '../dist/index.js';
 
 (async function main() {
   {

@@ -1,4 +1,4 @@
-import hash from 'object-hash';
+import hash from 'hash-it';
 import { Actor } from '../entities/Actor.js';
 import { Commit } from '../entities/Commit.js';
 import { Discussion } from '../entities/Discussion.js';

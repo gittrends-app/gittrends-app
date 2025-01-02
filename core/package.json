@@ -31,6 +31,7 @@
     "@octokit/graphql": "^8.1.2",
     "@octokit/types": "^13.6.2",
     "dayjs": "^1.11.13",
+    "hash-it": "^6.0.0",
     "lodash": "^4.17.21",
     "p-limit": "^6.2.0",
     "zod": "^3.24.1",
