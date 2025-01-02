@@ -11,8 +11,11 @@ import { Option, program } from 'commander';
 import consola from 'consola';
 import readline from 'readline';
 import { createQueue, createWorker } from './queue/queues.js';
-import { RepositoryUpdater } from './repository.js';
+import { RepositoryUpdater } from './shared/RepositoryUpdater.js';
 
+/**
+ * CLI script to update repositories.
+ */
 if (import.meta.url === `file://${process.argv[1]}`) {
   program
     .name('update')

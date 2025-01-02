@@ -3,8 +3,11 @@ import { Command, Option, program } from 'commander';
 import consola from 'consola';
 import pick from 'lodash/pick.js';
 import { createQueue } from './queue/queues.js';
-import { RepositoryUpdater } from './repository.js';
+import { RepositoryUpdater } from './shared/RepositoryUpdater.js';
 
+/**
+ * CLI script to schedule updating tasks.
+ */
 if (import.meta.url === `file://${process.argv[1]}`) {
   program
     .name('schedule')

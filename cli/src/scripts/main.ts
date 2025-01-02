@@ -2,6 +2,9 @@ import { program } from 'commander';
 
 import packageJson from '../../package.json' with { type: 'json' };
 
+/**
+ * CLI script
+ */
 if (import.meta.url === `file://${process.argv[1]}`) {
   program
     .version(packageJson.version || '0.0.0')
