@@ -8,7 +8,7 @@ import packageJson from '../../package.json' with { type: 'json' };
  */
 if (import.meta.url === `file://${process.argv[1]}`) {
   clear();
-  process.stdout.write('\n\n==== Gittrends CLI ====\n\n');
+  process.stdout.write('==== Gittrends CLI ====\n\n');
 
   program
     .version(packageJson.version || '0.0.0')
