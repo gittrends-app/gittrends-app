@@ -147,19 +147,17 @@ export class RepositoryUpdater extends AbstractTask<Notification> {
                   await Promise.all(
                     updatedUsers.map(async (u) => {
                       const anyUser = u as { location?: string };
-                      if (!anyUser.location) return null;
+                      const query = anyUser.location
+                        ?.toLowerCase()
+                        .replace(/[\s.,]+/g, ' ')
+                        .trim();
 
-                      const location = await this.geocoder
-                        .search(
-                          anyUser.location
-                            .toLowerCase()
-                            .trim()
-                            .replace(/[\s.,]+/g, ' ')
-                        )
-                        .catch((error) => {
-                          if (error.code === 418) return null;
-                          throw error;
-                        });
+                      if (!query) return null;
+
+                      const location = await this.geocoder.search(query).catch((error) => {
+                        if (error.code === 418) return null;
+                        throw Object.assign(error, { location: query });
+                      });
                       if (location) Object.assign(u, { __location: location });
                     })
                   );
