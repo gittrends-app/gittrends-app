@@ -73,6 +73,9 @@
       "after:bump": [
         "yarn install",
         "yarn turbo build"
+      ],
+      "after:release": [
+        "yarn shx rm ../package-lock.json"
       ]
     }
   }
