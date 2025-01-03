@@ -17,7 +17,9 @@ export class SearchLookup extends QueryLookup<Repository[], SearchQueryLookupPar
   }
 
   toString(): string {
-    const name = this.params.name?.toLocaleLowerCase().trim() || '';
+    let name = this.params.name?.toLocaleLowerCase().trim() || '';
+    if (name) name = `${name} in:name`;
+
     const query = [name, 'stars:1..*', 'sort:stars-desc'];
 
     if (this.params.language) query.push(`language:${this.params.language}`);
