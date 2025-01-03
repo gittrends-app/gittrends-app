@@ -34,35 +34,15 @@ export class PassThroughService implements Service {
     return this.service.repository(ownerOrId, name);
   }
 
-  commits(opts: ServiceCommitsParams): Iterable<Commit, { since?: Date; until?: Date }> {
-    return this.service.commits(opts);
-  }
-
-  discussions(opts: ServiceResourceParams): Iterable<Discussion> {
-    return this.service.discussions(opts);
-  }
-
-  issues(opts: ServiceResourceParams): Iterable<Issue> {
-    return this.service.issues(opts);
-  }
-
-  pull_requests(opts: ServiceResourceParams): Iterable<PullRequest> {
-    return this.service.pull_requests(opts);
-  }
-
-  releases(opts: ServiceResourceParams): Iterable<Release> {
-    return this.service.releases(opts);
-  }
-
-  stargazers(opts: ServiceResourceParams): Iterable<Stargazer> {
-    return this.service.stargazers(opts);
-  }
-
-  tags(opts: ServiceResourceParams): Iterable<Tag> {
-    return this.service.tags(opts);
-  }
-
-  watchers(opts: ServiceResourceParams): Iterable<Watcher> {
-    return this.service.watchers(opts);
+  resources(resource: 'commits', opts: ServiceCommitsParams): Iterable<Commit, { since?: Date; until?: Date }>;
+  resources(resource: 'discussions', opts: ServiceResourceParams): Iterable<Discussion>;
+  resources(resource: 'issues', opts: ServiceResourceParams): Iterable<Issue>;
+  resources(resource: 'pull_requests', opts: ServiceResourceParams): Iterable<PullRequest>;
+  resources(resource: 'releases', opts: ServiceResourceParams): Iterable<Release>;
+  resources(resource: 'stargazers', opts: ServiceResourceParams): Iterable<Stargazer>;
+  resources(resource: 'tags', opts: ServiceResourceParams): Iterable<Tag>;
+  resources(resource: 'watchers', opts: ServiceResourceParams): Iterable<Watcher>;
+  resources<T>(resource: any, opts: any): Iterable<T> {
+    return this.service.resources(resource, opts) as Iterable<T>;
   }
 }

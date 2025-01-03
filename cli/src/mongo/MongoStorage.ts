@@ -1,6 +1,5 @@
-import { Node } from '@/core/entities/base/Node.js';
-import { RepositoryNode, RepositoryNodeSchema } from '@/core/entities/base/RepositoryNode.js';
-import { Metadata } from '@/core/entities/Metadata.js';
+import { Metadata, MetadataSchema } from '@/entities/Metadata.js';
+import { extract } from '@/helpers/extract.js';
 import {
   Actor,
   ActorSchema,
@@ -12,7 +11,7 @@ import {
   DiscussionSchema,
   Issue,
   IssueSchema,
-  NodeStorage,
+  Node,
   PullRequest,
   PullRequestSchema,
   Reaction,
@@ -20,19 +19,17 @@ import {
   Release,
   ReleaseSchema,
   Repository,
+  RepositoryNode,
   RepositorySchema,
   Stargazer,
   StargazerSchema,
-  Storage,
-  StorageFactory,
   Tag,
   TagSchema,
   TimelineItem,
   TimelineItemSchema,
   Watcher,
   WatcherSchema
-} from '@/core/index.js';
-import { extract } from '@/helpers/extract.js';
+} from '@gittrends-app/core';
 import { Db, ObjectId } from 'mongodb';
 import objectHash from 'object-hash';
 import { ZodType } from 'zod';
@@ -44,7 +41,7 @@ const Schemas = {
   DiscussionComment: DiscussionCommentSchema,
   Issue: IssueSchema,
   TimelineItem: TimelineItemSchema,
-  Metadata: RepositoryNodeSchema.passthrough(),
+  Metadata: MetadataSchema,
   PullRequest: PullRequestSchema,
   Reaction: ReactionSchema,
   Release: ReleaseSchema,
@@ -66,9 +63,26 @@ function getId(node: (Node | RepositoryNode) & Record<string, any>): ObjectId {
 }
 
 /**
+ * Storage interface for a single entity.
+ */
+export interface Storage<T extends Record<string, any>> {
+  get?: (query: Partial<T>) => Promise<T | null>;
+  find: (query: Partial<T>, opts?: { limit: number; offset?: number }) => Promise<T[]>;
+  save: (data: T | T[], replace?: boolean) => Promise<void>;
+  count: (query: Partial<T>) => Promise<number>;
+}
+
+/**
+ * Storage interface for a single entity.
+ */
+export interface NodeStorage<T extends Node> extends Storage<T> {
+  get: (query: Partial<T>) => Promise<T | null>;
+}
+
+/**
  * MongoDB storage factory.
  */
-export class MongoStorageFactory implements StorageFactory {
+export class MongoStorage {
   private db: Db;
 
   private actorStorage: NodeStorage<Actor>;

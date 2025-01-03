@@ -16,42 +16,37 @@
   "scripts": {
     "lint": "eslint --ext .ts ./src",
     "build:compile": "tsup src/index.ts --format esm --sourcemap --minify",
+    "build:types": "tsc --emitDeclarationOnly",
     "build:bundle": "esbuild src/index.ts --bundle --minify --sourcemap --outfile=dist/index.bundle.js",
     "build:clean": "shx rm -rf ./dist tsconfig.tsbuildinfo",
-    "build:declarations": "tsc --emitDeclarationOnly --declaration",
-    "build": "run-s build:clean build:compile build:declarations",
-    "jest": "jest --runInBand",
-    "jest:coverage": "jest --runInBand --collect-coverage",
-    "verify": "run-s lint build jest",
+    "build": "run-s build:clean build:compile build:types",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "verify": "run-s lint build test",
     "prettier": "prettier --write src",
     "prepublishOnly": "npm run verify",
     "release": "release-it"
   },
   "dependencies": {
-    "@octokit/graphql": "^8.1.1",
-    "@octokit/types": "^13.5.0",
-    "consola": "^3.2.3",
+    "@octokit/graphql": "^8.1.2",
+    "@octokit/types": "^13.6.2",
     "dayjs": "^1.11.13",
+    "hash-it": "^6.0.0",
     "lodash": "^4.17.21",
-    "p-limit": "^6.1.0",
-    "zod": "^3.23.8",
-    "zod-validation-error": "^3.3.1"
+    "p-limit": "^6.2.0",
+    "zod": "^3.24.1",
+    "zod-validation-error": "^3.4.0"
   },
   "devDependencies": {
+    "@inquirer/prompts": "^7.2.1",
     "@octokit/graphql-schema": "^15.25.0",
-    "@types/lodash": "^4.17.7",
-    "@types/node": "^22.5.4",
-    "esbuild": "^0.23.1",
-    "husky": "^9.1.5",
-    "prettier": "^3.3.3",
-    "ts-jest": "^29.2.5",
-    "tsx": "^4.19.0",
-    "type-fest": "^4.26.0",
-    "typescript": "^5.5.4"
+    "@types/lodash": "^4.17.13",
+    "@types/prettyjson": "^0.0.33",
+    "consola": "^3.3.3",
+    "prettyjson": "^1.2.5"
   },
   "files": [
     "dist",
-    "CHANGELOG.md",
     "package.json",
     "README.md"
   ],
@@ -60,6 +55,8 @@
       "commit": true,
       "commitMessage": "chore(release): v${version}",
       "tag": true,
+      "tagName": "v${version}",
+      "tagAnnotation": "Release v${version}",
       "push": true
     },
     "github": {
@@ -72,12 +69,10 @@
         "if [ \"$(git log $(git describe --tags --abbrev=0)..HEAD)\" = \"\" ]; then exit 1; fi;",
         "yarn turbo verify"
       ],
-      "before:bump": [
-        "yarn turbo build",
-        "npx auto-changelog -p",
-        "git add . ../yarn.lock ../package-lock.json"
-      ],
-      "after:release": "git push origin HEAD"
+      "after:bump": [
+        "yarn install",
+        "yarn turbo build"
+      ]
     }
   }
 }

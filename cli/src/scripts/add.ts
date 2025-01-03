@@ -1,7 +1,8 @@
-import { GithubService, Repository, StorageService } from '@/core/index.js';
+import { createCache } from '@/helpers/cache.js';
 import githubClient from '@/helpers/github.js';
 import mongo from '@/mongo/mongo.js';
-import { MongoStorageFactory } from '@/mongo/MongoStorage.js';
+import { MongoStorage } from '@/mongo/MongoStorage.js';
+import { CacheService, GithubService, Repository } from '@gittrends-app/core';
 import { SingleBar } from 'cli-progress';
 import { Argument, Option, program } from 'commander';
 import consola from 'consola';
@@ -21,8 +22,9 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     .addArgument(new Argument('<name...>').argOptional())
     .helpOption('-h, --help', 'Display this help message')
     .action(async (names: string[], options: { total: number }) => {
-      consola.info('Initializing the storage service...');
-      const service = new StorageService(new GithubService(githubClient), new MongoStorageFactory(mongo.db('public')));
+      consola.info('Initializing services and storages...');
+      const service = new CacheService(new GithubService(githubClient), createCache({ namespace: 'public' }));
+      const storage = new MongoStorage(mongo.db('public'));
 
       const progress = new SingleBar({
         format: '{task}: [{bar}] {percentage}% | {duration_formatted} | {value}/{total}',
@@ -43,7 +45,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
         }
       } else {
         progress.start(options.total, 0, { task: 'searching' });
-        for await (const { data } of service.search(options.total)) {
+        for await (const { data } of service.search(options.total, { per_page: 50 })) {
           progress.increment(data.length);
           repos.push(...data);
         }
@@ -53,7 +55,11 @@ if (import.meta.url === `file://${process.argv[1]}`) {
         .then(() => {
           progress.start(repos.length, 0, { task: 'updating' });
           return Promise.all(
-            repos.map((repo) => repo.id).map((id) => service.repository(id).then(() => progress.increment(1)))
+            repos.map(async (repo) => {
+              const detailedRepo = await service.repository(repo.id);
+              if (detailedRepo) await storage.create('Repository').save(detailedRepo, true);
+              progress.increment(1);
+            })
           );
         })
         .then(() => {

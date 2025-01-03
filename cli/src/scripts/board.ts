@@ -4,8 +4,11 @@ import { ExpressAdapter } from '@bull-board/express';
 import { Option, program } from 'commander';
 import consola from 'consola';
 import express from 'express';
-import { createQueue } from './queues.js';
+import { createQueue } from './shared/queues.js';
 
+/**
+ * CLI script to open the queue board.
+ */
 if (import.meta.url === `file://${process.argv[1]}`) {
   program
     .name('bull-queue')
