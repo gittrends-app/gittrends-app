@@ -12,7 +12,7 @@ import { Stargazer } from '../../entities/Stargazer.js';
 import { Tag } from '../../entities/Tag.js';
 import { Watcher } from '../../entities/Watcher.js';
 import { Booleanify, NullableFields } from '../../helpers/types.js';
-import { Iterable, PageableParams, Service, ServiceCommitsParams, ServiceResourceParams } from '../Service.js';
+import { Iterable, SearchParams, Service, ServiceCommitsParams, ServiceResourceParams } from '../Service.js';
 import { GithubClient } from './GithubClient.js';
 import { ActorFragment } from './graphql/fragments/ActorFragment.js';
 import { BaseFragmentFactory, Fragment, FragmentFactory } from './graphql/fragments/Fragment.js';
@@ -125,12 +125,14 @@ export class GithubService implements Service {
     this.factory = new CustomFragmentFactory(opts?.fields);
   }
 
-  search(total: number, opts?: PageableParams): Iterable<Repository> {
+  search(total: number, opts?: SearchParams): Iterable<Repository> {
     const it = QueryRunner.create(this.client).iterator(
       new SearchLookup({
         factory: this.factory,
+        limit: total,
         per_page: opts?.per_page,
-        limit: total
+        name: opts?.name,
+        language: opts?.language
       })
     );
 

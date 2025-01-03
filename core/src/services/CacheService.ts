@@ -9,7 +9,7 @@ import { Repository } from '../entities/Repository.js';
 import { Stargazer } from '../entities/Stargazer.js';
 import { Tag } from '../entities/Tag.js';
 import { Watcher } from '../entities/Watcher.js';
-import { Iterable, PageableParams, Service, ServiceCommitsParams, ServiceResourceParams } from './Service.js';
+import { Iterable, SearchParams, Service, ServiceCommitsParams, ServiceResourceParams } from './Service.js';
 
 /**
  * Represents a mechanism for caching data.
@@ -53,7 +53,7 @@ export class CacheService implements Service {
     this.cache = cache;
   }
 
-  search(total: number, opts?: PageableParams): Iterable<Repository> {
+  search(total: number, opts?: SearchParams): Iterable<Repository> {
     const { cache, service } = this;
 
     return {

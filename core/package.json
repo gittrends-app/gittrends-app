@@ -43,7 +43,8 @@
     "@types/lodash": "^4.17.13",
     "@types/prettyjson": "^0.0.33",
     "consola": "^3.3.3",
-    "prettyjson": "^1.2.5"
+    "prettyjson": "^1.2.5",
+    "table": "^6.9.0"
   },
   "files": [
     "dist",

@@ -2,16 +2,26 @@ import { Repository } from '@octokit/graphql-schema';
 import { RepositoryFragment } from '../fragments/RepositoryFragment.js';
 import { QueryLookup, QueryLookupParams } from './Lookup.js';
 
+type SearchQueryLookupParams = {
+  limit: number;
+  name?: string;
+  language?: string;
+};
+
 /**
  *  A lookup to get a user by ID.
  */
-export class SearchLookup extends QueryLookup<Repository[], { limit: number }> {
-  constructor(params: Omit<QueryLookupParams, 'id'> & { limit: number }) {
+export class SearchLookup extends QueryLookup<Repository[], SearchQueryLookupParams> {
+  constructor(params: Omit<QueryLookupParams, 'id'> & SearchQueryLookupParams) {
     super({ ...params, id: 'search' });
   }
 
   toString(): string {
-    const query = ['stars:1..*', 'sort:stars-desc'];
+    const name = this.params.name?.toLocaleLowerCase().trim() || '';
+    const query = [name, 'stars:1..*', 'sort:stars-desc'];
+
+    if (this.params.language) query.push(`language:${this.params.language}`);
+    if (this.params.name) query.push(this.params.name);
 
     const total = Math.min(this.params.per_page || 100, this.params.limit);
 

@@ -6,6 +6,9 @@
     "rootDirs": ["./src", "./samples"],
     "outDir": "./dist",
     "baseUrl": "./",
+    "paths": {
+      "@gittrends-app/core": ["./src/index.ts"]
+    },
     "declaration": true,
     "declarationMap": true,
     "removeComments": false

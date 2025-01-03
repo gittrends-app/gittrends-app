@@ -1,8 +1,8 @@
 /* eslint-disable require-jsdoc */
-import { Cache, CacheService, EntitiesFields, GithubClient, GithubService, Service } from '@gittrends-app/core';
 import { input, select } from '@inquirer/prompts';
 import consola from 'consola';
 import prettyjson from 'prettyjson';
+import { Cache, CacheService, EntitiesFields, GithubClient, GithubService, Service } from '../src/index.js';
 
 // This class implements a simple in-memory cache.
 class MemCache implements Cache {

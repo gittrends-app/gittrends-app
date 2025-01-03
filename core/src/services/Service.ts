@@ -44,6 +44,14 @@ export type Iterable<T = any, P extends object = object> = AsyncIterable<{
 export type ServiceResourceParams = RepositoryNode & PageableParams;
 
 /**
+ * Search parameters.
+ */
+export type SearchParams = PageableParams & {
+  name?: string;
+  language?: string;
+};
+
+/**
  * Service commits parameters.
  */
 export type ServiceCommitsParams = ServiceResourceParams & { since?: Date; until?: Date };
@@ -58,7 +66,7 @@ export interface Service {
    * @param opts The search options.
    * @returns An iterable of repositories.
    */
-  search(total: number, opts?: PageableParams): Iterable<Repository>;
+  search(total: number, opts?: SearchParams): Iterable<Repository>;
 
   /**
    * Fetches a user by id or login.

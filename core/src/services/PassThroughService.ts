@@ -8,7 +8,7 @@ import { Repository } from '../entities/Repository.js';
 import { Stargazer } from '../entities/Stargazer.js';
 import { Tag } from '../entities/Tag.js';
 import { Watcher } from '../entities/Watcher.js';
-import { Iterable, PageableParams, Service, ServiceCommitsParams, ServiceResourceParams } from './Service.js';
+import { Iterable, SearchParams, Service, ServiceCommitsParams, ServiceResourceParams } from './Service.js';
 
 /**
  * A service that passes all requests through to the underlying service.
@@ -20,7 +20,7 @@ export class PassThroughService implements Service {
    */
   constructor(public readonly service: Service) {}
 
-  search(total: number, opts?: PageableParams): Iterable<Repository> {
+  search(total: number, opts?: SearchParams): Iterable<Repository> {
     return this.service.search(total, opts);
   }
 
