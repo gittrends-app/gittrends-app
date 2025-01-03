@@ -1,11 +1,15 @@
 import { program } from 'commander';
 
+import clear from 'clear';
 import packageJson from '../../package.json' with { type: 'json' };
 
 /**
  * CLI script
  */
 if (import.meta.url === `file://${process.argv[1]}`) {
+  clear();
+  process.stdout.write('\n\n==== Gittrends CLI ====\n\n');
+
   program
     .version(packageJson.version || '0.0.0')
     .command('add', 'Add repositories', { executableFile: 'add' })

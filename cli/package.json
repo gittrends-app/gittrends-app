@@ -32,6 +32,7 @@
     "@keyv/compress-brotli": "^2.0.2",
     "bullmq": "^5.34.6",
     "cache-manager": "^6.3.2",
+    "clear": "^0.1.0",
     "cli-progress": "^3.12.0",
     "commander": "^13.0.0",
     "consola": "^3.3.3",
@@ -48,6 +49,7 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@types/clear": "^0.1.4",
     "@types/cli-progress": "^3.11.6",
     "@types/express": "^5.0.0",
     "@types/lodash": "^4.17.13",
