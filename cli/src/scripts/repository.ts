@@ -51,6 +51,9 @@ if (import.meta.url === `file://${process.argv[1]}`) {
         ttl: env.GEOCODER_CACHE_TTL
       });
 
+      consola.info('Connecting to the database...');
+      await mongo.connect();
+
       consola.info('Starting the repository update...');
       const progress = new MultiBar({
         format: ' {bar} | {resource} | {value}/{total} ({percentage}%) | {duration_formatted}',

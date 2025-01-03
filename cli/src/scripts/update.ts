@@ -35,6 +35,10 @@ if (import.meta.url === `file://${process.argv[1]}`) {
         ttl: env.GEOCODER_CACHE_TTL
       });
 
+      consola.info('Connecting to the database...');
+      await mongo.connect();
+
+      consola.info('Preparing update process bars...');
       const progress = new MultiBar(
         {
           format: `{name} | {bar} | {percentage}% | {value}/{total} | {repo}`,
@@ -46,6 +50,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
         Presets.shades_classic
       );
 
+      consola.info('Starting update process...');
       const worker = reposUpdate(service, geocoder, opts.workers, progress);
 
       process.stdin.on('keypress', async (str, key) => {
@@ -69,11 +74,12 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       consola.error(error);
       process.exit(1);
     })
+    .finally(() => mongo.close())
     .finally(() => process.exit(0));
 }
 
 /**
- *
+ *  Update repositories.
  */
 function reposUpdate(service: Service, geocoder: Geocoder, concurrency: number, progress: MultiBar): Worker {
   const queue = createQueue('repos');
@@ -172,8 +178,7 @@ function reposUpdate(service: Service, geocoder: Geocoder, concurrency: number, 
           taskBar.stop();
           progress.remove(taskBar);
         })
-        .finally(() => clearInterval(usersUpdateTimeout))
-        .finally(() => mongo.close());
+        .finally(() => clearInterval(usersUpdateTimeout));
     },
     concurrency
   );
