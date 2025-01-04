@@ -9,6 +9,8 @@ import { Worker } from 'bullmq';
 import { MultiBar, Presets } from 'cli-progress';
 import { Option, program } from 'commander';
 import consola from 'consola';
+import { KeyvFile } from 'keyv-file';
+import path from 'node:path';
 import readline from 'readline';
 import { createQueue, createWorker } from './shared/queues.js';
 import { RepositoryUpdater } from './shared/RepositoryUpdater.js';
@@ -30,9 +32,9 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 
       consola.info('Initializing the geocoder...');
       const geocoder = new Cache(new OpenStreetMap({ concurrency: env.GEOCODER_CONCURRENCY }), {
-        dirname: env.GEOCODER_CACHE_DIR,
         size: env.GEOCODER_CACHE_SIZE,
-        ttl: env.GEOCODER_CACHE_TTL
+        ttl: env.GEOCODER_CACHE_TTL,
+        secondary: new KeyvFile({ filename: path.resolve(env.GEOCODER_CACHE_DIR, 'locations.json') })
       });
 
       consola.info('Connecting to the database...');

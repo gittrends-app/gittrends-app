@@ -708,14 +708,13 @@
     "@shikijs/types" "^1.24.2"
     "@shikijs/vscode-textmate" "^9.3.1"
 
-"@gittrends-app/geocoder-core@^3.3.0":
-  version "3.3.0"
-  resolved "https://registry.npmjs.org/@gittrends-app/geocoder-core/-/geocoder-core-3.3.0.tgz"
-  integrity sha512-8dznV6E5Dd18Qjs8YRMdAeGVjZwIJJeMeDf+q+R+tmPntRKfjxY+e7OyJ6yzqq+xkdr2onzlBoJGbjQZsZh5TQ==
+"@gittrends-app/geocoder-core@^4.0.2":
+  version "4.0.2"
+  resolved "https://registry.yarnpkg.com/@gittrends-app/geocoder-core/-/geocoder-core-4.0.2.tgz#bc0e43a040206082227ce111116f90b4631d42d0"
+  integrity sha512-4w4n5+fiU+LNb7/uoU2CR+evuYS0To1yNKYBr/sh6mcoa/NW8qxvxKbybyDR+6HiLsIQtBRtMW8PWm39jACCBQ==
   dependencies:
     "@keyv/compress-brotli" "^2.0.2"
     cache-manager "^6.3.2"
-    cacheable "^1.8.7"
     fetch-retry "^6.0.0"
     keyv "^5.2.3"
     keyv-file "^5.1.1"
@@ -723,6 +722,7 @@
     node-geocoder "^4.4.1"
     p-queue "^8.0.1"
     pretty-format "^29.7.0"
+    quick-lru "^7.0.0"
     zod "^3.24.1"
 
 "@humanwhocodes/config-array@^0.11.14":
@@ -2123,14 +2123,6 @@ cache-manager@^6.3.2:
   resolved "https://registry.npmjs.org/cache-manager/-/cache-manager-6.3.2.tgz"
   integrity sha512-VmLouPUrvpm9dfwYB6OE7YVXDZ7BCfbt7hq10EHiBYaW9K9ZthK1bbjDQAtXGDK7d9u8t4G/7dMWSJOwN33msg==
   dependencies:
-    keyv "^5.2.3"
-
-cacheable@^1.8.7:
-  version "1.8.7"
-  resolved "https://registry.npmjs.org/cacheable/-/cacheable-1.8.7.tgz"
-  integrity sha512-AbfG7dAuYNjYxFUtL1lAqmlWdxczCJ47w7cFjhGcnGnUdwSo6VgmSojfoW3tUI12HUkgTJ5kqj78yyq6TsFtlg==
-  dependencies:
-    hookified "^1.6.0"
     keyv "^5.2.3"
 
 cachedir@2.3.0:
@@ -3926,11 +3918,6 @@ homedir-polyfill@^1.0.1:
   dependencies:
     parse-passwd "^1.0.0"
 
-hookified@^1.6.0:
-  version "1.6.0"
-  resolved "https://registry.npmjs.org/hookified/-/hookified-1.6.0.tgz"
-  integrity sha512-se7cpwTA+iA/eY548Bu03JJqBiEZAqU2jnyKdj5B5qurtBg64CZGHTgqCv4Yh7NWu6FGI09W61MCq+NoPj9GXA==
-
 hosted-git-info@^2.1.4:
   version "2.8.9"
   resolved "https://registry.npmjs.org/hosted-git-info/-/hosted-git-info-2.8.9.tgz"
@@ -4556,7 +4543,7 @@ jsonparse@^1.2.0:
 
 keyv-file@^5.1.1:
   version "5.1.1"
-  resolved "https://registry.npmjs.org/keyv-file/-/keyv-file-5.1.1.tgz"
+  resolved "https://registry.yarnpkg.com/keyv-file/-/keyv-file-5.1.1.tgz#b92bb42e2cc278a6d36fcf10a29b82d43841bc9c"
   integrity sha512-chTGWqsccp2sB/NJA3W6+25iNUE811OkY/nTOZZg/nd3hH8iARpppNUInst8CeAZgykzfVfwVQ9WVAUKC7UwGw==
   dependencies:
     "@keyv/serialize" "^1.0.1"

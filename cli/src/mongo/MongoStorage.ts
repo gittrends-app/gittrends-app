@@ -30,7 +30,7 @@ import {
   Watcher,
   WatcherSchema
 } from '@gittrends-app/core';
-import { Db, ObjectId } from 'mongodb';
+import { Db, Filter, ObjectId } from 'mongodb';
 import objectHash from 'object-hash';
 import { ZodType } from 'zod';
 
@@ -66,17 +66,17 @@ function getId(node: (Node | RepositoryNode) & Record<string, any>): ObjectId {
  * Storage interface for a single entity.
  */
 export interface Storage<T extends Record<string, any>> {
-  get?: (query: Partial<T>) => Promise<T | null>;
-  find: (query: Partial<T>, opts?: { limit: number; offset?: number }) => Promise<T[]>;
+  get?: (query: Filter<T>) => Promise<T | null>;
+  find: (query: Filter<T>, opts?: { limit: number; offset?: number }) => Promise<T[]>;
   save: (data: T | T[], replace?: boolean) => Promise<void>;
-  count: (query: Partial<T>) => Promise<number>;
+  count: (query: Filter<T>) => Promise<number>;
 }
 
 /**
  * Storage interface for a single entity.
  */
 export interface NodeStorage<T extends Node> extends Storage<T> {
-  get: (query: Partial<T>) => Promise<T | null>;
+  get: (query: Filter<T>) => Promise<T | null>;
 }
 
 /**

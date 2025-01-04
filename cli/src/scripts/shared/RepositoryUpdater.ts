@@ -59,7 +59,8 @@ const UpdatableResources = [
   'pull_requests',
   'commits',
   'users',
-  'discussions'
+  'discussions',
+  'locations'
 ] as const;
 
 type UpdatableResource = ArrayValues<typeof UpdatableResources>;
@@ -135,32 +136,12 @@ export class RepositoryUpdater extends AbstractTask<Notification> {
               let total = all - notUpdated;
 
               do {
-                users = await actorStorage.find({ updated_at: undefined, _deleted_at: undefined } as any, {
-                  limit: 100
-                });
+                users = await actorStorage.find({ updated_at: undefined, _deleted_at: undefined }, { limit: 100 });
 
                 if (users.length > 0) {
                   const updatedUsers = (await this.service.user(users.map((u) => u.id)))
                     .filter((u) => u !== null)
                     .filter((u) => u.updated_at);
-
-                  await Promise.all(
-                    updatedUsers.map(async (u) => {
-                      const anyUser = u as { location?: string };
-                      const query = anyUser.location
-                        ?.toLowerCase()
-                        .replace(/[\s.,]+/g, ' ')
-                        .trim();
-
-                      if (!query) return null;
-
-                      const location = await this.geocoder.search(query).catch((error) => {
-                        if (error.code === 418) return null;
-                        throw Object.assign(error, { location: query });
-                      });
-                      if (location) Object.assign(u, { __location: location });
-                    })
-                  );
 
                   await actorStorage.save(
                     [
@@ -186,6 +167,64 @@ export class RepositoryUpdater extends AbstractTask<Notification> {
               } while (users.length > 0 || this.queue.pending > 1);
 
               this.notify({ repository: repo.id, resource: 'users', done: true });
+            } else if (name === 'locations') {
+              let users: Actor[] = [];
+
+              const [notUpdated, all] = await Promise.all([
+                actorStorage.count({
+                  updated_at: { $ne: undefined },
+                  location: { $ne: undefined },
+                  __location: undefined
+                }),
+                actorStorage.count({ updated_at: { $ne: undefined }, location: { $ne: undefined } })
+              ]);
+
+              let total = all - notUpdated;
+
+              do {
+                users = await actorStorage.find(
+                  { updated_at: { $ne: undefined }, location: { $ne: undefined }, __location: undefined },
+                  { limit: 100 }
+                );
+
+                if (users.length > 0) {
+                  const updatedUsers = await Promise.all(
+                    users.map(async (u) => {
+                      const anyUser = u as { location?: string };
+                      const query = anyUser.location
+                        ?.toLowerCase()
+                        .replace(/[\s]+/g, ' ')
+                        .replace(/\s*,[\s\\p{L}]*/g, ', ')
+                        .trim();
+
+                      if (!query) return null;
+
+                      const location = await this.geocoder.search(query).catch((error) => {
+                        if (error.code === 418) return null;
+                        throw Object.assign(error, { location: query });
+                      });
+                      return Object.assign(u, { __location: location || {} });
+                    })
+                  );
+
+                  await actorStorage.save(
+                    updatedUsers.filter((u) => u !== null),
+                    true
+                  );
+
+                  this.notify({
+                    repository: repo.id,
+                    resource: 'locations',
+                    data: users,
+                    total: (total += users.length),
+                    done: false
+                  });
+                } else if (this.queue.pending > 1) {
+                  await new Promise((resolve) => setTimeout(resolve, 1000));
+                }
+              } while (users.length > 0 || this.queue.pending > 1);
+
+              this.notify({ repository: repo.id, resource: 'locations', done: true });
             } else {
               let perPage = 100;
               if (name === 'issues') perPage = 50;
@@ -207,18 +246,19 @@ export class RepositoryUpdater extends AbstractTask<Notification> {
               });
 
               for await (const response of it) {
-                await resourceStorage.save(response.data);
-
-                await metadataStorage.save(
-                  {
-                    id: `${typename}:${repo.id}:`,
-                    __typename: 'Metadata',
-                    repository: repo.id,
-                    resource: typename,
-                    ...response.metadata
-                  },
-                  true
-                );
+                if (response.data.length > 0) {
+                  await resourceStorage.save(response.data);
+                  await metadataStorage.save(
+                    {
+                      id: `${typename}:${repo.id}:`,
+                      __typename: 'Metadata',
+                      repository: repo.id,
+                      resource: typename,
+                      ...response.metadata
+                    },
+                    true
+                  );
+                }
 
                 this.notify({
                   repository: repo.id,
@@ -232,6 +272,7 @@ export class RepositoryUpdater extends AbstractTask<Notification> {
               this.notify({ repository: repo.id, resource: name, done: true });
             }
           })
+
           .catch((err) => {
             this.notify(err);
             throw err;

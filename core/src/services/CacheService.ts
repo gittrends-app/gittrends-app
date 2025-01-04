@@ -129,22 +129,17 @@ export class CacheService implements Service {
     return {
       async *[Symbol.asyncIterator]() {
         const _opts: ServiceResourceParams = { ...opts };
-
         let cached: { data: T[]; metadata: any } | null;
 
-        do {
-          cached = await cache.get(`${res}:${hash(_opts)}`);
-          if (cached) {
-            cached.metadata.has_more = true;
-            yield cached as any;
-            _opts.cursor = cached.metadata.cursor;
-          }
-        } while (cached !== null && cached.data.length > 0 && _opts.cursor);
+        while ((cached = await cache.get(`${res}:${hash(_opts)}`))) {
+          yield cached as any;
+          Object.assign(_opts, { cursor: cached.metadata.cursor });
+        }
 
         for await (const { data, metadata } of service.resources(res, _opts)) {
-          cache.set(`${res}:${hash(_opts)}`, { data, metadata });
+          if (metadata.has_more) cache.set(`${res}:${hash(_opts)}`, { data, metadata });
           yield { data, metadata };
-          _opts.cursor = metadata.cursor;
+          Object.assign(_opts, { cursor: metadata.cursor });
         }
       }
     };

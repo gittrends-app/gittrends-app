@@ -27,7 +27,7 @@
     "@bull-board/api": "^6.5.4",
     "@bull-board/express": "^6.5.4",
     "@gittrends-app/core": "*",
-    "@gittrends-app/geocoder-core": "^3.3.0",
+    "@gittrends-app/geocoder-core": "^4.0.2",
     "@inquirer/prompts": "^7.2.1",
     "@keyv/compress-brotli": "^2.0.2",
     "bullmq": "^5.34.6",

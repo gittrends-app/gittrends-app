@@ -8,6 +8,8 @@ import { Cache, OpenStreetMap } from '@gittrends-app/geocoder-core';
 import { MultiBar, SingleBar } from 'cli-progress';
 import { Argument, Option, program } from 'commander';
 import consola from 'consola';
+import { KeyvFile } from 'keyv-file';
+import path from 'node:path';
 import { RepositoryUpdater } from './shared/RepositoryUpdater';
 
 /**
@@ -46,9 +48,9 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 
       consola.info('Initializing the geocoder...');
       const geocoder = new Cache(new OpenStreetMap({ concurrency: env.GEOCODER_CONCURRENCY }), {
-        dirname: env.GEOCODER_CACHE_DIR,
         size: env.GEOCODER_CACHE_SIZE,
-        ttl: env.GEOCODER_CACHE_TTL
+        ttl: env.GEOCODER_CACHE_TTL,
+        secondary: new KeyvFile({ filename: path.resolve(env.GEOCODER_CACHE_DIR, 'locations.json') })
       });
 
       consola.info('Connecting to the database...');
@@ -68,12 +70,18 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       };
 
       const interval = setInterval(async () => {
-        if (!resources.includes('users')) return;
-
-        return storageFactory
-          .create('Actor')
-          .count({})
-          .then((total) => bars.users.setTotal(total));
+        await Promise.all([
+          resources.includes('users') &&
+            storageFactory
+              .create('Actor')
+              .count({})
+              .then((total) => bars.users.setTotal(total)),
+          resources.includes('locations') &&
+            storageFactory
+              .create('Actor')
+              .count({ updated_at: { $ne: undefined } })
+              .then((total) => bars.locations.setTotal(total))
+        ]);
       }, 1000 * 15);
 
       const task = new RepositoryUpdater(nameWithOwner, {

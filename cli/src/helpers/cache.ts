@@ -19,8 +19,10 @@ class CliCache implements Cache {
   ) {}
 
   async get<T>(key: string): Promise<T | null> {
-    const data = await this.base.get<T>(key);
-    return data || null;
+    if (!this.opts?.keyValidator || this.opts.keyValidator(key)) {
+      return (await this.base.get<T>(key)) || null;
+    }
+    return null;
   }
 
   async set<T>(key: string, value: T): Promise<void> {
@@ -30,7 +32,9 @@ class CliCache implements Cache {
   }
 
   async remove(key: string): Promise<void> {
-    await this.base.del(key);
+    if (!this.opts?.keyValidator || this.opts.keyValidator(key)) {
+      await this.base.del(key);
+    }
   }
 
   async clear(): Promise<void> {
